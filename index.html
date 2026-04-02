@@ -196,7 +196,7 @@
     <div class="modal-content">
         <h3>🛒 Купить предметы</h3>
         <div class="shop-item" data-item="trava" data-cost="2">🌿 Трава (2 монеты)</div>
-        <div class="shop-item" data-item="sok" data-cost="5">🧃 Сок (5 монет)</div>
+        <div class="shop-item" data-item="sok" data-cost="5">🧃 Сок (5 монеты)</div>
         <div class="shop-item" data-item="kamen" data-cost="8">Камень (8 монет)</div>
         <div class="shop-item" data-item="mech" data-cost="30">⚔️ Меч (30 монет)</div>
         <button id="closeShopBtn" class="close-btn">Закрыть</button>
@@ -239,7 +239,7 @@
         "zhelezo", "mech", "zelie", "svitok"
     ];
 
-    let coins = 100;   // ✅ СТАРТОВЫЕ МОНЕТЫ
+    let coins = 100;
     let selectedIndex = null;
 
     // ---------- СОХРАНЕНИЕ ----------
@@ -306,7 +306,7 @@
             const newItem = mergeRules[firstItem];
             grid[firstIdx] = newItem;
             grid[secondIdx] = newItem;
-            coins += 2;  // бонус за слияние
+            coins += 2;
             saveGame();
             renderAll();
             tg.impactFeedback?.(tg.ImpactFeedbackStyle.LIGHT);
@@ -315,7 +315,7 @@
         }
     }
 
-    // ---------- ПОКУПКА ПРЕДМЕТА (ДОБАВЛЯЕТ В ПЕРВУЮ СВОБОДНУЮ ЯЧЕЙКУ) ----------
+    // ---------- ПОКУПКА ПРЕДМЕТА ----------
     function buyItem(itemId, cost) {
         if (coins < cost) {
             tg.showPopup({ title: "Нет монет", message: `Нужно ${cost} монет`, buttons: [{type: "ok"}] });
@@ -372,7 +372,7 @@
         tg.showPopup({ title: "🔄 Сброс", message: "Игра перезапущена", buttons: [{type: "ok"}] });
     }
 
-    // ---------- МАГАЗИН (МОДАЛЬНОЕ ОКНО) ----------
+    // ---------- МАГАЗИН ----------
     function openShop() {
         const modal = document.getElementById("shopModal");
         modal.style.display = "flex";
@@ -389,7 +389,6 @@
     document.getElementById("resetGameBtn").onclick = resetGame;
     document.getElementById("closeShopBtn").onclick = closeShop;
 
-    // Обработчики покупки в магазине
     document.querySelectorAll(".shop-item").forEach(el => {
         el.onclick = () => {
             const itemId = el.getAttribute("data-item");
@@ -399,7 +398,6 @@
         };
     });
 
-    // Закрыть магазин при клике вне окна
     window.onclick = (e) => {
         const modal = document.getElementById("shopModal");
         if (e.target === modal) closeShop();

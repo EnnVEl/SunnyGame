@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sunny Game — Крафт и Торговля</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #1e2a1f;
+            margin: 0;
+            padding: 16px;
+            color: #f5e7d9;
+            min-height: 100vh;
+        }
+
+        .npc-card {
+            background: #2c3e2a;
+            border-radius: 28px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #ffd966;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .npc-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffd966;
+        }
+
+        .npc-wants {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .want-item {
+            background: #3e5a3b;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 13px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #2a3a27;
+            padding: 12px;
+            border-radius: 28px;
+        }
+
+        .cell {
+            aspect-ratio: 1 / 1;
+            background: #3a2e28;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            cursor: pointer;
+            border: 2px solid #6b4e3a;
+            transition: 0.07s linear;
+        }
+
+        .cell.selected {
+            border: 3px solid #ffb347;
+            background: #5e4b3a;
+            transform: scale(0.97);
+        }
+
+        .info-panel {
+            background: #2c2b26;
+            border-radius: 28px;
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .coins {
+            background: #ffd966;
+            color: #2c2b26;
+            padding: 8px 20px;
+            border-radius: 60px;
+            font-weight: bold;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 8px 0;
+        }
+
+        button {
+            background: #5e7c5a;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 60px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.08s linear;
+            font-family: inherit;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .sell-btn {
+            background: #b86f2c;
+        }
+
+        .reset-btn {
+            background: #5a3e2e;
+        }
+        
+        .shop-btn {
+            background: #2c6e5c;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #2c3e2a;
+            padding: 24px;
+            border-radius: 36px;
+            width: 280px;
+            text-align: center;
+        }
+        .shop-item {
+            background: #3e5a3b;
+            margin: 12px 0;
+            padding: 12px;
+            border-radius: 60px;
+            cursor: pointer;
+        }
+        .close-btn {
+            margin-top: 16px;
+            background: #5a3e2e;
+        }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+<div class="npc-card">
+    <div class="npc-name">🧙 Волшебник Мерлин</div>
+    <div class="npc-wants">
+        <span class="want-item">⚔️ Меч → 100 🪙</span>
+        <span class="want-item">🧪 Зелье → 50 🪙</span>
+        <span class="want-item">📜 Свиток → 30 🪙</span>
+    </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="info-panel">
+    <span>🔮 Соединяй одинаковые предметы</span>
+    <span class="coins" id="coinsDisplay">💰 100</span>
+</div>
+
+<div class="buttons">
+    <button id="shopBtn" class="shop-btn">🛒 Магазин</button>
+    <button id="sellToNpcBtn" class="sell-btn">💎 Продать NPC</button>
+    <button id="resetGameBtn" class="reset-btn">🔄 Сброс</button>
+</div>
+
+<div id="shopModal" class="modal">
+    <div class="modal-content">
+        <h3>🛒 Купить предметы</h3>
+        <div class="shop-item" data-item="trava" data-cost="2">🌿 Трава (2 монеты)</div>
+        <div class="shop-item" data-item="sok" data-cost="5">🧃 Сок (5 монеты)</div>
+        <div class="shop-item" data-item="kamen" data-cost="8">Камень (8 монет)</div>
+        <div class="shop-item" data-item="mech" data-cost="30">⚔️ Меч (30 монет)</div>
+        <button id="closeShopBtn" class="close-btn">Закрыть</button>
+    </div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    // ---------- БАЗА ДАННЫХ ПРЕДМЕТОВ ----------
+    const itemsDB = {
+        "trava": { name: "🌿 Трава", price: 1, level: 1 },
+        "brevno": { name: "🪵 Бревно", price: 2, level: 2 },
+        "kamen": { name: "Камень", price: 5, level: 3 },
+        "zhelezo": { name: "⛏️ Железо", price: 10, level: 4 },
+        "sok": { name: "🧃 Сок", price: 8, level: 2 },
+        "hleb": { name: "🍞 Хлеб", price: 15, level: 3 },
+        "mech": { name: "⚔️ Меч", price: 100, level: 5 },
+        "zelie": { name: "🧪 Зелье", price: 50, level: 4 },
+        "svitok": { name: "📜 Свиток", price: 30, level: 3 }
+    };
+
+    // ПРАВИЛА СЛИЯНИЯ (одинаковые → новый предмет)
+    const mergeRules = {
+        "trava": "brevno",
+        "brevno": "kamen",
+        "kamen": "zhelezo",
+        "zhelezo": "mech",
+        "sok": "hleb",
+        "hleb": "zelie"
+    };
+
+    // НАЧАЛЬНАЯ СЕТКА 4x4
+    let grid = [
+        "trava", "trava", "brevno", "kamen",
+        "sok", "trava", "brevno", "zhelezo",
+        "kamen", "sok", "trava", "brevno",
+        "zhelezo", "mech", "zelie", "svitok"
+    ];
+
+    let coins = 100;
+    let selectedIndex = null;
+
+    // ---------- СОХРАНЕНИЕ ----------
+    function saveGame() {
+        localStorage.setItem("sunnyGrid", JSON.stringify(grid));
+        localStorage.setItem("sunnyCoins", coins);
+    }
+
+    function loadGame() {
+        const savedGrid = localStorage.getItem("sunnyGrid");
+        const savedCoins = localStorage.getItem("sunnyCoins");
+        if (savedGrid) grid = JSON.parse(savedGrid);
+        if (savedCoins) coins = parseInt(savedCoins);
+        renderAll();
+    }
+
+    // ---------- ОТРИСОВКА ----------
+    function renderAll() {
+        renderGrid();
+        document.getElementById("coinsDisplay").innerHTML = `💰 ${coins}`;
+    }
+
+    function renderGrid() {
+        const container = document.getElementById("grid");
+        container.innerHTML = "";
+        for (let i = 0; i < grid.length; i++) {
+            const itemKey = grid[i];
+            const display = itemsDB[itemKey]?.name || "❓";
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            if (selectedIndex === i) cell.classList.add("selected");
+            cell.textContent = display;
+            cell.onclick = (function(idx) { return function() { onCellClick(idx); }; })(i);
+            container.appendChild(cell);
+        }
+    }
+
+    // ---------- ЛОГИКА СОЕДИНЕНИЯ ----------
+    function onCellClick(index) {
+        if (selectedIndex === null) {
+            selectedIndex = index;
+            renderGrid();
+            return;
+        }
+
+        const firstIdx = selectedIndex;
+        const secondIdx = index;
+        selectedIndex = null;
+
+        if (firstIdx === secondIdx) {
+            renderGrid();
+            return;
+        }
+
+        const firstItem = grid[firstIdx];
+        const secondItem = grid[secondIdx];
+
+        if (!firstItem || !secondItem) {
+            renderGrid();
+            return;
+        }
+
+        if (firstItem === secondItem && mergeRules[firstItem]) {
+            const newItem = mergeRules[firstItem];
+            grid[firstIdx] = newItem;
+            grid[secondIdx] = newItem;
+            coins += 2;
+            saveGame();
+            renderAll();
+            tg.impactFeedback?.(tg.ImpactFeedbackStyle.LIGHT);
+        } else {
+            renderGrid();
+        }
+    }
+
+    // ---------- ПОКУПКА ПРЕДМЕТА ----------
+    function buyItem(itemId, cost) {
+        if (coins < cost) {
+            tg.showPopup({ title: "Нет монет", message: `Нужно ${cost} монет`, buttons: [{type: "ok"}] });
+            return false;
+        }
+        const emptyIndex = grid.findIndex(cell => cell === null || cell === undefined);
+        if (emptyIndex === -1) {
+            tg.showPopup({ title: "Сетка полна", message: "Соедини предметы, чтобы освободить место", buttons: [{type: "ok"}] });
+            return false;
+        }
+        coins -= cost;
+        grid[emptyIndex] = itemId;
+        saveGame();
+        renderAll();
+        tg.impactFeedback?.(tg.ImpactFeedbackStyle.MEDIUM);
+        return true;
+    }
+
+    // ---------- ПРОДАЖА NPC ----------
+    function sellToNpc() {
+        let soldSomething = false;
+        const npcBuys = { "mech": 100, "zelie": 50, "svitok": 30 };
+
+        for (let i = 0; i < grid.length; i++) {
+            const item = grid[i];
+            if (npcBuys[item]) {
+                coins += npcBuys[item];
+                grid[i] = null;
+                soldSomething = true;
+            }
+        }
+
+        if (soldSomething) {
+            saveGame();
+            renderAll();
+            tg.showPopup({ title: "✅ Продано!", message: "NPC купил редкие предметы", buttons: [{type: "ok"}] });
+        } else {
+            tg.showPopup({ title: "Нет товара", message: "У тебя в сетке нет Меча, Зелья или Свитка", buttons: [{type: "ok"}] });
+        }
+    }
+
+    // ---------- СБРОС ----------
+    function resetGame() {
+        grid = [
+            "trava", "trava", "brevno", "kamen",
+            "sok", "trava", "brevno", "zhelezo",
+            "kamen", "sok", "trava", "brevno",
+            "zhelezo", "mech", "zelie", "svitok"
+        ];
+        coins = 100;
+        selectedIndex = null;
+        saveGame();
+        renderAll();
+        tg.showPopup({ title: "🔄 Сброс", message: "Игра перезапущена", buttons: [{type: "ok"}] });
+    }
+
+    // ---------- МАГАЗИН ----------
+    function openShop() {
+        const modal = document.getElementById("shopModal");
+        modal.style.display = "flex";
+    }
+
+    function closeShop() {
+        const modal = document.getElementById("shopModal");
+        modal.style.display = "none";
+    }
+
+    // ---------- ПРИВЯЗКА КНОПОК ----------
+    document.getElementById("shopBtn").onclick = openShop;
+    document.getElementById("sellToNpcBtn").onclick = sellToNpc;
+    document.getElementById("resetGameBtn").onclick = resetGame;
+    document.getElementById("closeShopBtn").onclick = closeShop;
+
+    document.querySelectorAll(".shop-item").forEach(el => {
+        el.onclick = () => {
+            const itemId = el.getAttribute("data-item");
+            const cost = parseInt(el.getAttribute("data-cost"));
+            buyItem(itemId, cost);
+            closeShop();
+        };
+    });
+
+    window.onclick = (e) => {
+        const modal = document.getElementById("shopModal");
+        if (e.target === modal) closeShop();
+    };
+
+    loadGame();
+</script>
+</body>
+</html>

@@ -343,6 +343,114 @@
     })();
 
     if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("white"); }
+        (function setupSmartConsole() {
+        let tg = window.Telegram?.WebApp;
+        let userId = tg?.initDataUnsafe?.user?.id;
+        // Явное объявление и проверка админа
+        let isAdminUser = (userId == 1577899640);
+        
+        if(isAdminUser) {
+            console.log("✅ Админ-режим АКТИВИРОВАН для ID:", userId);
+        } else {
+            console.log("Обычный игрок. ID:", userId);
+        }
+        
+        let rusToEng = {};
+        for (let [eng, rus] of Object.entries(itemNames)) { 
+            let cleanRus = rus.replace(/[^\w\sа-яА-ЯёЁ]/g, '').trim(); 
+            rusToEng[cleanRus.toLowerCase()] = eng; 
+            rusToEng[rus.toLowerCase()] = eng; 
+        }
+        const synonyms = { "трава":"grass","бревно":"wood","камень":"stone","железо":"iron","золото":"gold","алмаз":"diamond","меч":"sword","лук":"shortbow","кожа":"leather","ягоды":"berry","бутылёк":"vial" };
+        for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
+        
+        function findItemByRussianName(russianName) { 
+            if(!russianName) return null; 
+            let search = russianName.toLowerCase().trim(); 
+            if(rusToEng[search]) return rusToEng[search]; 
+            for(let [eng,rus] of Object.entries(itemNames)){ 
+                if(rus.toLowerCase().includes(search)) return eng; 
+            } 
+            return null; 
+        }
+        
+        function openConsole() {
+            let cmd = prompt("🔧 КОНСОЛЬ РАЗРАБОТЧИКА\n\nMoney [сумма]\nGive [предмет]\nUnlockAll\nEnergy [кол-во]\nList\nDelet — полный сброс");
+            if(!cmd) return;
+            let lowerCmd = cmd.toLowerCase();
+            if(lowerCmd.startsWith("money ")){ 
+                let amount = parseInt(cmd.split(" ")[1]); 
+                if(!isNaN(amount) && amount>0){ 
+                    coins += amount; 
+                    updateUI(); 
+                    saveGame(); 
+                    alert(`✅ +${amount} монет`); 
+                } else alert("❌ Неверная сумма"); 
+            }
+            else if(lowerCmd.startsWith("give ")){ 
+                let rusName = cmd.substring(5).trim(); 
+                let itemKey = findItemByRussianName(rusName); 
+                if(itemKey && itemNames[itemKey]){ 
+                    if(addToGridAndDiscover(itemKey)){ 
+                        updateUI(); 
+                        saveGame(); 
+                        alert(`✅ Выдан ${itemNames[itemKey]}`); 
+                    } else alert("❌ Нет места"); 
+                } else alert(`❌ Предмет "${rusName}" не найден`); 
+            }
+            else if(lowerCmd === "unlockall"){ 
+                unlocked.weapons = true; 
+                unlocked.ranged = true; 
+                unlocked.armor = true; 
+                unlocked.food = true; 
+                unlocked.potions = true; 
+                updateCraftBtns(); 
+                renderShop(); 
+                saveGame(); 
+                alert("✅ Все категории разблокированы!"); 
+            }
+            else if(lowerCmd.startsWith("energy ")){ 
+                let amount = parseInt(cmd.split(" ")[1]); 
+                if(!isNaN(amount) && amount>0){ 
+                    energy += amount; 
+                    updateUI(); 
+                    saveGame(); 
+                    alert(`✅ +${amount} энергии`); 
+                } else alert("❌ Неверная сумма"); 
+            }
+            else if(lowerCmd === "list"){ 
+                alert("📋 Список предметов:\n"+Object.keys(itemNames).map(k=>itemNames[k]).join(", ")); 
+            }
+            else if(lowerCmd === "delet"){ 
+                if(confirm("⚠️ ПОЛНЫЙ СБРОС ИГРЫ (кроме фонов)?\nВесь прогресс будет удалён!")){ 
+                    localStorage.removeItem("balanceSave"); 
+                    location.reload(); 
+                } 
+            }
+            else alert("❌ Неизвестная команда. Доступно: Money, Give, UnlockAll, Energy, List, Delet");
+        }
+        
+        let devBtn = document.getElementById("devConsoleBtn");
+        if(devBtn) {
+            devBtn.onclick = (e) => { 
+                if(isAdminUser) {
+                    openConsole(); 
+                } else { 
+                    alert("⛔ Доступ ограничен. Команды только для администратора.");
+                }
+            };
+        }
+        
+        // Горячая клавиша для админа
+        if(isAdminUser) {
+            document.addEventListener('keydown', (e) => {
+                if(e.ctrlKey && e.shiftKey && e.key === 'D') {
+                    e.preventDefault();
+                    openConsole();
+                }
+            });
+        }
+    })();
 </script>
 </body>
 </html>

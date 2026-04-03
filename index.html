@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Баланс · Перерождение и битва</title>
     <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-        }
+        * { box-sizing: border-box; user-select: none; }
         body {
             font-family: 'Segoe UI', 'Arial', system-ui;
             margin: 0;
@@ -23,23 +20,11 @@
         body.bg-white .shop-panel, body.bg-white .npc-section, body.bg-white .battle-panel,
         body.bg-white .inventory-col, body.bg-white .single-npc-card, body.bg-white .npc-wishlist,
         body.bg-white .grid, body.bg-white .title, body.bg-white button,
-        body.bg-white .res-item {
-            color: #111111 !important;
-            text-shadow: none !important;
-        }
-        body.bg-white .badge,
-        body.bg-white .enchant-shop .badge,
-        body.bg-white #enchantShopContainer .badge,
-        body.bg-white .warning,
-        body.bg-white .unlock-btn,
-        body.bg-white .enchant-btn,
-        body.bg-white .bg-option,
-        body.bg-white .dev-console,
-        body.bg-white .inventory-slot .badge,
-        body.bg-white .battle-panel .badge,
-        body.bg-white .monster-hp {
-            color: #ffffff !important;
-        }
+        body.bg-white .res-item { color: #111111 !important; text-shadow: none !important; }
+        body.bg-white .badge, body.bg-white .enchant-shop .badge, body.bg-white #enchantShopContainer .badge,
+        body.bg-white .warning, body.bg-white .unlock-btn, body.bg-white .enchant-btn, body.bg-white .bg-option,
+        body.bg-white .dev-console, body.bg-white .inventory-slot .badge, body.bg-white .battle-panel .badge,
+        body.bg-white .monster-hp { color: #ffffff !important; }
         body.bg-white .game-container { background: rgba(245, 245, 245, 0.7); backdrop-filter: blur(2px); }
         body.bg-white .header, body.bg-white .resources, body.bg-white .shop-panel, 
         body.bg-white .npc-section, body.bg-white .inventory-col, body.bg-white .grid {
@@ -54,14 +39,8 @@
         body.bg-white .badge { background: #222; color: white; }
         body.bg-white .bg-option { background: #2c2b1f; color: #ffefb9 !important; }
         body.bg-white .warning { color: #cc6600 !important; background: rgba(0,0,0,0.7); display: inline-block; padding: 4px 12px; border-radius: 30px; }
-        
-        body.bg-black, body.bg-black .game-container, body.bg-black .header, 
-        body.bg-black .resources, body.bg-black .shop-panel, body.bg-black .npc-section,
-        body.bg-black .battle-panel, body.bg-black .inventory-col {
-            color: #f0f0f0;
-        }
-        
-        /* Уникальные текстурные фоны */
+        body.bg-black, body.bg-black .game-container, body.bg-black .header, body.bg-black .resources, 
+        body.bg-black .shop-panel, body.bg-black .npc-section, body.bg-black .battle-panel, body.bg-black .inventory-col { color: #f0f0f0; }
         body.bg-red { background: repeating-linear-gradient(45deg, #7a2e2e, #4a1a1a 50px); }
         body.bg-orange { background: repeating-radial-gradient(circle at 20% 30%, #c97e2a, #8a4f12 80px); }
         body.bg-yellow { background: linear-gradient(135deg, #d4b42c 0%, #a07d1a 100%); background-image: radial-gradient(circle at 10% 20%, #ffdd77 2px, transparent 2px); background-size: 30px 30px; }
@@ -119,7 +98,7 @@
         .bg-option { background: #2c2b1f; border-radius: 30px; padding: 5px 10px; font-size: 11px; cursor: pointer; border: 1px solid gold; text-align: center; min-width: 85px; }
         .battle-panel { background: #1e1a2ecc; border-radius: 48px; padding: 20px; margin-top: 20px; text-align: center; }
         .monster-hp { font-size: 32px; font-weight: bold; background: black; display: inline-block; padding: 10px 30px; border-radius: 60px; margin: 10px; color: white; }
-        .attack-btn { background: #d64531; color: white; font-size: 24px; padding: 12px 40px; transition: 0.1s; }
+        .attack-btn { background: #d64531; color: white; font-size: 24px; padding: 12px 40px; transition: 0.1s; cursor: pointer; }
         .attack-btn.charging { background: #ff8833; transform: scale(1.02); }
         hr { border-color: #7faa5a; margin: 12px 0; }
         .badge { background: #222; padding: 4px 12px; border-radius: 30px; font-size: 12px; display: inline-block; margin-top: 8px; color: white; }
@@ -127,100 +106,25 @@
         .inventory-slot { background: #3a2a1a; border-radius: 24px; padding: 12px; margin: 10px 0; text-align: center; border: 2px solid #c7a15e; }
         .slot-item { font-size: 24px; font-weight: bold; cursor: pointer; }
         .slot-item:hover { background: #5a4a3a; border-radius: 16px; }
-        .empty-slot { color: #aa9f7b; font-size: 18px; }
         .warning { color: #ffaa66; font-size: 12px; margin-top: 5px; background: rgba(0,0,0,0.7); display: inline-block; padding: 4px 12px; border-radius: 30px; }
-        .collection-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: 300px; overflow-y: auto; padding: 10px; }
-        .collection-item { background: #2c2b1f; border-radius: 20px; padding: 8px; text-align: center; font-size: 14px; border: 1px solid gold; }
+        .collection-category { margin-bottom: 20px; }
+        .collection-category h4 { margin: 10px 0 5px; font-size: 18px; }
+        .collection-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 32px; }
+        .collection-item { background: #2c2b1f; border-radius: 20px; padding: 8px; text-align: center; font-size: 12px; border: 1px solid gold; cursor: pointer; transition: 0.1s; }
         .collection-item.unlocked { background: #4f6b3e; border-color: #ffd966; }
         .collection-item.locked { opacity: 0.5; filter: grayscale(0.5); }
+        .collection-item:hover { transform: scale(1.02); }
+        .tooltip { position: fixed; background: #111; color: #ffd966; padding: 8px 15px; border-radius: 20px; font-size: 13px; z-index: 1000; pointer-events: none; white-space: nowrap; font-weight: bold; }
     </style>
 </head>
 <body class="bg-white">
 <div class="game-container">
-    <div class="header">
-        <div class="title">⚖️ БАЛАНС</div>
-        <div class="resources">
-            <div class="res-item">🪙 <span id="coins">200</span></div>
-            <div class="res-item">⚡ <span id="energy">0</span></div>
-        </div>
-    </div>
-
-    <div class="tabs">
-        <button id="tabCraftBtn" style="background:#f5b642;">🏭 Крафт</button>
-        <button id="tabBattleBtn">⚔️ Битва</button>
-        <button id="tabCollectionBtn">📜 Коллекция</button>
-    </div>
-
-    <div id="craftSection">
-        <div class="main-row">
-            <div class="craft-col">
-                <div class="grid" id="grid"></div>
-                <div class="action-bar">
-                    <button id="craftResourceBtn">🌾 Материалы - 5 🪙</button>
-                    <button id="craftWeaponBtn" disabled>⚔️ Оружие - 10 🪙</button>
-                    <button id="craftArmorBtn" disabled>🛡️ Броня - 20 🪙</button>
-                    <button id="craftFoodBtn" disabled>🍇 Еда - 30 🪙</button>
-                    <button id="craftPotionBtn" disabled>🧪 Зелье - 40 🪙</button>
-                    <button id="craftRangedBtn" disabled>🔒 Заблокировано (перерождение)</button>
-                    <button id="rebirthBtn">🌀 Перерождение (1.000.000 🪙)</button>
-                </div>
-                <div class="warning" id="rebirthWarning" style="text-align:center; margin-top:5px;"></div>
-            </div>
-            <div class="inventory-col">
-                <h3>🎒 ИНВЕНТАРЬ</h3>
-                <div class="inventory-slot">
-                    <div>⚔️ Экипированное оружие</div>
-                    <div class="slot-item" id="equippedWeapon">— пусто —</div>
-                    <button id="unequipWeaponBtn" style="font-size:12px; padding:5px 10px; margin-top:5px;">Снять</button>
-                </div>
-                <div class="inventory-slot">
-                    <div>🏹 Экипированный лук</div>
-                    <div class="slot-item" id="equippedRanged">— пусто —</div>
-                    <button id="unequipRangedBtn" style="font-size:12px; padding:5px 10px; margin-top:5px;">Снять</button>
-                </div>
-                <div class="badge">Оружие: +1 урона за тир | Лук: +1 за тир, заряд +5</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="battleSection" style="display:none;">
-        <div class="battle-panel">
-            <h2>🐉 ДРЕВНИЙ МОНСТР</h2>
-            <div class="monster-hp">❤️ <span id="monsterHp">10000</span> / 10000</div>
-            <button id="attackBtn" class="attack-btn">💥 АТАКОВАТЬ</button>
-            <div class="badge" style="margin-top:15px;">🏆 За убийство +100 монет</div>
-            <div id="enchantBonusInfo" style="margin-top:10px; font-size:14px;"></div>
-            <div class="badge" style="margin-top:8px;">⌛ Лук: зажмите кнопку на 3 сек для заряженного удара (+5 урона)</div>
-        </div>
-    </div>
-
-    <div id="collectionSection" style="display:none;">
-        <div class="shop-panel" style="margin-top:20px;">
-            <h3>📜 КОЛЛЕКЦИЯ ПРЕДМЕТОВ</h3>
-            <div id="collectionContainer" class="collection-grid"></div>
-            <div class="badge">Скрафтите предмет, чтобы открыть его в коллекции</div>
-        </div>
-    </div>
-
-    <div class="shop-npc-row">
-        <div class="shop-panel">
-            <h3>🏪 ЛАВКА РАЗБЛОКИРОВОК</h3>
-            <div class="unlock-buttons" id="shopUnlockList"></div>
-            <button id="exchangeEnergyBtn" class="exchange-btn">🔄 Обменять 10⚡ → 10🪙</button>
-            <hr>
-            <h3>✨ ЛАВКА ЗАЧАРОВАНИЙ</h3>
-            <div id="enchantShopContainer" class="enchant-shop"></div>
-            <div class="badge">Чары +15 урона в битве | 100 🪙</div>
-            <hr>
-            <h3>🎨 МАГАЗИН ФОНОВ</h3>
-            <div id="bgShopContainer" class="bg-shop-row" style="max-height: none; margin-top: 5px;"></div>
-        </div>
-        <div class="npc-section">
-            <h3>📦 ПРОДАЖИ</h3>
-            <div id="npcSingleContainer" class="single-npc-card"></div>
-        </div>
-    </div>
-</div>
+    <div class="header"><div class="title">⚖️ БАЛАНС</div><div class="resources"><div class="res-item">🪙 <span id="coins">200</span></div><div class="res-item">⚡ <span id="energy">0</span></div></div></div>
+    <div class="tabs"><button id="tabCraftBtn" style="background:#f5b642;">🏭 Крафт</button><button id="tabBattleBtn">⚔️ Битва</button><button id="tabCollectionBtn">📜 Коллекция</button></div>
+    <div id="craftSection"><div class="main-row"><div class="craft-col"><div class="grid" id="grid"></div><div class="action-bar"><button id="craftResourceBtn">🌾 Материалы - 5 🪙</button><button id="craftWeaponBtn" disabled>⚔️ Оружие - 10 🪙</button><button id="craftArmorBtn" disabled>🛡️ Броня - 20 🪙</button><button id="craftFoodBtn" disabled>🍇 Еда - 30 🪙</button><button id="craftPotionBtn" disabled>🧪 Зелье - 40 🪙</button><button id="craftRangedBtn" disabled>🔒 Заблокировано (перерождение)</button><button id="rebirthBtn">🌀 Перерождение (1.000.000 🪙)</button></div><div class="warning" id="rebirthWarning" style="text-align:center; margin-top:5px;"></div></div><div class="inventory-col"><h3>🎒 ИНВЕНТАРЬ</h3><div class="inventory-slot"><div>⚔️ Оружие</div><div class="slot-item" id="equippedWeapon">— пусто —</div><button id="unequipWeaponBtn" style="font-size:12px; padding:5px 10px; margin-top:5px;">Снять</button></div><div class="inventory-slot"><div>🏹 Лук</div><div class="slot-item" id="equippedRanged">— пусто —</div><button id="unequipRangedBtn" style="font-size:12px; padding:5px 10px; margin-top:5px;">Снять</button></div></div></div></div>
+    <div id="battleSection" style="display:none;"><div class="battle-panel"><h2>🐉 ДРЕВНИЙ МОНСТР</h2><div class="monster-hp">❤️ <span id="monsterHp">10000</span> / 10000</div><button id="attackBtn" class="attack-btn">💥 АТАКОВАТЬ</button><div class="badge" style="margin-top:15px;">🏆 За убийство +100 монет</div><div id="enchantBonusInfo" style="margin-top:10px; font-size:14px;"></div><div class="badge" style="margin-top:8px;">⌛ Лук: зажмите кнопку на 3 сек для заряженного удара (+5 урона)</div></div></div>
+    <div id="collectionSection" style="display:none;"><div class="shop-panel" style="margin-top:20px;"><h3>📜 КОЛЛЕКЦИЯ ПРЕДМЕТОВ</h3><div id="collectionContainer"></div><div class="badge">Нажмите на предмет, чтобы узнать рецепт</div></div></div>
+    <div class="shop-npc-row"><div class="shop-panel"><h3>🏪 ЛАВКА РАЗБЛОКИРОВОК</h3><div class="unlock-buttons" id="shopUnlockList"></div><button id="exchangeEnergyBtn" class="exchange-btn">🔄 Обменять 10⚡ → 10🪙</button><hr><h3>✨ ЛАВКА ЗАЧАРОВАНИЙ</h3><div id="enchantShopContainer" class="enchant-shop"></div><div class="badge">Чары +15 урона в битве | 100 🪙</div><hr><h3>🎨 МАГАЗИН ФОНОВ</h3><div id="bgShopContainer" class="bg-shop-row" style="max-height: none; margin-top: 5px;"></div></div><div class="npc-section"><h3>📦 ПРОДАЖИ</h3><div id="npcSingleContainer" class="single-npc-card"></div></div></div></div>
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
 
 <script>
@@ -241,17 +145,48 @@
         "slingshot":"🎯 Рогатка","shortbow":"🏹 Короткий лук","longbow":"🏹 Длинный лук","crossbow_r":"🏹 Арбалет","arbalest":"🏹 Арбалет-арбалет","recurve":"🏹 Рекурв","compound":"🏹 Блочный","windbow":"🌪️ Ветровой лук","eagleeye":"🦅 Глаз орла","dragonshot":"🐉 Драконий выстрел"
     };
     
+    const craftCost = {
+        "grass":5,"wood":5,"stone":5,"iron":5,"gold":5,"diamond":5,"nerite":5,"mithril":5,"adamant":5,"aether":5,
+        "sword":10,"greatsword":10,"spear":10,"axe":10,"dagger":10,"bow":10,"crossbow":10,"staff":10,"scythe":10,"legendary_blade":10,
+        "leather":20,"gambeson":20,"chainmail":20,"plate":20,"chestplate":20,"leggings":20,"helmet":20,"boots":20,"pauldrons":20,"legendary_armor":20,
+        "berry":30,"bread":30,"cheese":30,"meat":30,"fish":30,"soup":30,"cake":30,"pie":30,"elven_bread":30,"ambrosia":30,
+        "vial":40,"weak_potion":40,"medium_potion":40,"strong_potion":40,"elixir":40,"poison":40,"stamina":40,"invisibility":40,"healing":40,"immortality":40,
+        "slingshot":50,"shortbow":50,"longbow":50,"crossbow_r":50,"arbalest":50,"recurve":50,"compound":50,"windbow":50,"eagleeye":50,"dragonshot":50
+    };
+    
     function getItemTier(item, chain) { let idx = chain.indexOf(item); return idx >=0 ? idx+1 : 0; }
-    function getMergeResult(item) {
-        if(materialChain.includes(item)){ let i=materialChain.indexOf(item); if(i<materialChain.length-1) return materialChain[i+1]; }
-        else if(weaponChain.includes(item)){ let i=weaponChain.indexOf(item); if(i<weaponChain.length-1) return weaponChain[i+1]; }
-        else if(armorChain.includes(item)){ let i=armorChain.indexOf(item); if(i<armorChain.length-1) return armorChain[i+1]; }
-        else if(foodChain.includes(item)){ let i=foodChain.indexOf(item); if(i<foodChain.length-1) return foodChain[i+1]; }
-        else if(potionChain.includes(item)){ let i=potionChain.indexOf(item); if(i<potionChain.length-1) return potionChain[i+1]; }
-        else if(rangedChain.includes(item)){ let i=rangedChain.indexOf(item); if(i<rangedChain.length-1) return rangedChain[i+1]; }
+    function getChain(item) {
+        if(materialChain.includes(item)) return materialChain;
+        if(weaponChain.includes(item)) return weaponChain;
+        if(armorChain.includes(item)) return armorChain;
+        if(foodChain.includes(item)) return foodChain;
+        if(potionChain.includes(item)) return potionChain;
+        if(rangedChain.includes(item)) return rangedChain;
         return null;
     }
-
+    function getMergeResult(item) {
+        let chain = getChain(item);
+        if(chain){ let i=chain.indexOf(item); if(i<chain.length-1) return chain[i+1]; }
+        return null;
+    }
+    function calculateItemPrice(item) {
+        let chain = getChain(item);
+        if(!chain) return 20;
+        let tier = chain.indexOf(item);
+        let baseCost = craftCost[chain[0]] || 5;
+        return baseCost * Math.pow(2, tier) + tier * 10;
+    }
+    // Получить информацию о рецепте: из какого предмета и сколько начальных нужно
+    function getRecipeInfo(item) {
+        let chain = getChain(item);
+        if(!chain) return null;
+        let tier = chain.indexOf(item);
+        if(tier === 0) return { fromItem: null, count: 1, baseItem: item };
+        let prevItem = chain[tier-1];
+        let needed = Math.pow(2, tier);
+        return { fromItem: prevItem, count: needed, baseItem: chain[0] };
+    }
+    
     let unlocked = { weapons:false, armor:false, food:false, potions:false, ranged:false };
     let unlocksCount = { weapons:0, armor:0, food:0, potions:0, ranged:0 };
     let coins = 200, energy = 0;
@@ -261,75 +196,38 @@
     let enchantWeapons = Array(10).fill(false);
     let enchantArmors = Array(10).fill(false);
     let enchantRanged = Array(10).fill(false);
-    let totalEnchantBonus = 0;
     let equippedWeapon = null;
     let equippedRanged = null;
-    let discoveredItems = new Set(); // коллекция открытых предметов
+    let discoveredItems = new Set();
     
     function discoverItem(item) { if(item && !discoveredItems.has(item)) { discoveredItems.add(item); renderCollection(); } }
-    function addToGridAndDiscover(itemId) { discoverItem(itemId); return addItemToGrid(itemId); }
+    function addToGridAndDiscover(itemId) { discoverItem(itemId); let empty=grid.findIndex(c=>c===null); if(empty===-1) return false; grid[empty]=itemId; renderGrid(); return true; }
     
     function recalcDamage() {
         let base = 1;
         let enchant = enchantWeapons.filter(v=>v).length + enchantArmors.filter(v=>v).length + enchantRanged.filter(v=>v).length;
         let weaponBonus = equippedWeapon ? getItemTier(equippedWeapon, weaponChain) : 0;
         let rangedBonus = equippedRanged ? getItemTier(equippedRanged, rangedChain) : 0;
-        let total = base + enchant * 15 + weaponBonus + rangedBonus;
-        return total;
+        return base + enchant * 15 + weaponBonus + rangedBonus;
     }
     
     let monsterHp = 10000;
     let chargeTimeout = null;
     let isCharging = false;
     let chargedAttackReady = false;
-    
     function attackMonster(normal=true) {
         let dmg = recalcDamage();
-        if(!normal && chargedAttackReady && equippedRanged) {
-            dmg += 5;
-            chargedAttackReady = false;
-        }
+        if(!normal && chargedAttackReady && equippedRanged) { dmg += 5; chargedAttackReady = false; }
         monsterHp = Math.max(0, monsterHp - dmg);
         document.getElementById("monsterHp").innerText = monsterHp;
-        if(monsterHp === 0) {
-            coins += 100;
-            updateUI();
-            monsterHp = 10000;
-            document.getElementById("monsterHp").innerText = 10000;
-            alert("Вы убили монстра! +100 монет");
-        }
-        updateUI();
-        saveGame();
+        if(monsterHp === 0) { coins += 100; updateUI(); monsterHp = 10000; document.getElementById("monsterHp").innerText = 10000; alert("Вы убили монстра! +100 монет"); }
+        updateUI(); saveGame();
     }
+    function startCharge() { if(!equippedRanged) { attackMonster(true); return; } isCharging=true; const btn=document.getElementById("attackBtn"); btn.classList.add("charging"); chargeTimeout=setTimeout(()=>{ chargedAttackReady=true; btn.style.background="#44aa44"; },3000); }
+    function endCharge() { if(chargeTimeout) clearTimeout(chargeTimeout); const btn=document.getElementById("attackBtn"); btn.classList.remove("charging"); btn.style.background=""; if(isCharging && chargedAttackReady) attackMonster(false); else if(isCharging) attackMonster(true); isCharging=false; chargedAttackReady=false; }
     
-    function startCharge() {
-        if(!equippedRanged) return;
-        isCharging = true;
-        const btn = document.getElementById("attackBtn");
-        btn.classList.add("charging");
-        chargeTimeout = setTimeout(() => {
-            chargedAttackReady = true;
-            btn.classList.add("charging");
-            btn.style.background = "#44aa44";
-        }, 3000);
-    }
-    function endCharge() {
-        if(chargeTimeout) clearTimeout(chargeTimeout);
-        const btn = document.getElementById("attackBtn");
-        btn.classList.remove("charging");
-        btn.style.background = "";
-        if(isCharging && chargedAttackReady) {
-            attackMonster(false);
-        } else if(isCharging) {
-            attackMonster(true);
-        }
-        isCharging = false;
-        chargedAttackReady = false;
-    }
-    
-    const npcNames = ["Северус Снейп", "Арагорн", "Геральт", "Эльза", "Торин", "Сэм", "Бриенна", "Добби", "Мерлин", "Красная Шапочка", "Да Винчи", "Рипли"];
-    let npcList = [];
-    let currentNpc = null;
+    const npcNames = ["Северус Снейп","Арагорн","Геральт","Эльза","Торин","Сэм","Бриенна","Добби","Мерлин","Красная Шапочка","Да Винчи","Рипли"];
+    let npcList = [], currentNpc = null;
     function getAvailableItemsForWish() {
         let items = [...materialChain];
         if(unlocked.weapons) items.push(...weaponChain);
@@ -341,38 +239,27 @@
     }
     function generateWishlist() {
         let pool = getAvailableItemsForWish();
-        if(pool.length === 0) return ["grass"];
-        let count = Math.min(3, pool.length);
+        if(pool.length===0) return ["grass"];
         let shuffled = [...pool];
         for(let i=shuffled.length-1;i>0;i--){ let j=Math.floor(Math.random()*(i+1)); [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]; }
-        return shuffled.slice(0,count);
+        return shuffled.slice(0, Math.min(3, pool.length));
     }
     function initNPC() { npcList = npcNames.map((name,idx)=>({ id:idx, name:name, wishlist:generateWishlist() })); currentNpc = npcList[0]; renderNPC(); }
     function nextNPC() { let idx = npcList.findIndex(n=>n===currentNpc); let next = (idx+1)%npcList.length; currentNpc = npcList[next]; currentNpc.wishlist = generateWishlist(); renderNPC(); }
     function sellToNPC() {
         if(!currentNpc) return;
-        let sellIdx = -1, sellItem=null;
+        let sellIdx=-1, sellItem=null;
         for(let i=0;i<grid.length;i++){ if(grid[i] && currentNpc.wishlist.includes(grid[i])){ sellItem=grid[i]; sellIdx=i; break; } }
         if(!sellItem){ alert("Нет нужного предмета!"); return; }
-        let price = 5 + (materialChain.includes(sellItem)?materialChain.indexOf(sellItem)*3 : 
-                        weaponChain.includes(sellItem)?weaponChain.indexOf(sellItem)*6 :
-                        armorChain.includes(sellItem)?armorChain.indexOf(sellItem)*5 :
-                        foodChain.includes(sellItem)?foodChain.indexOf(sellItem)*4 :
-                        potionChain.includes(sellItem)?potionChain.indexOf(sellItem)*7 : 20);
+        let price = calculateItemPrice(sellItem);
         grid[sellIdx]=null; coins+=price; selectedIndex=null; renderGrid(); updateUI(); nextNPC(); saveGame();
     }
     
-    function addItemToGrid(itemId) {
-        let empty=grid.findIndex(c=>c===null);
-        if(empty===-1){ alert("Нет места (3x3)"); return false; }
-        grid[empty]=itemId; renderGrid(); return true;
-    }
     function craftBase(cost, item, unlockedFlag, needRebirth=false){
         if(needRebirth && rebirthLevel===0){ alert("Метательное оружие доступно только после перерождения!"); return; }
         if(!unlockedFlag){ alert("Категория не разблокирована"); return; }
         if(coins>=cost){ coins-=cost; if(addToGridAndDiscover(item)) { updateUI(); saveGame(); } } else alert(`Нужно ${cost} монет`);
     }
-    // Слияние: результат в первой ячейке (первый клик), вторую очищаем
     function mergeItems(first, second){
         let item = grid[first];
         if(!item || grid[first] !== grid[second]) return false;
@@ -382,8 +269,7 @@
         grid[second] = null;
         discoverItem(next);
         coins += 3;
-        updateUI();
-        saveGame();
+        updateUI(); saveGame();
         return true;
     }
     function clickCell(idx){
@@ -396,17 +282,46 @@
     }
     
     function renderCollection() {
-        let allItems = [...materialChain, ...weaponChain, ...armorChain, ...foodChain, ...potionChain];
-        if(rebirthLevel>=1) allItems.push(...rangedChain);
         let container = document.getElementById("collectionContainer");
         if(!container) return;
+        let categories = [
+            {name:"🌾 Материалы", items:materialChain},
+            {name:"⚔️ Оружие", items:weaponChain},
+            {name:"🛡️ Броня", items:armorChain},
+            {name:"🍇 Еда", items:foodChain},
+            {name:"🧪 Зелья", items:potionChain}
+        ];
+        if(rebirthLevel>=1) categories.push({name:"🎯 Метательные", items:rangedChain});
         container.innerHTML = "";
-        for(let item of allItems) {
-            let unlocked = discoveredItems.has(item);
-            let div = document.createElement("div");
-            div.className = "collection-item " + (unlocked ? "unlocked" : "locked");
-            div.innerHTML = `<div style="font-size:24px;">${itemNames[item]?.split(" ")[0]||"?"}</div><div style="font-size:10px;">${itemNames[item]||item}</div>`;
-            container.appendChild(div);
+        for(let cat of categories) {
+            let catDiv = document.createElement("div"); catDiv.className = "collection-category";
+            catDiv.innerHTML = `<h4>${cat.name}</h4><div class="collection-grid"></div>`;
+            let gridDiv = catDiv.querySelector(".collection-grid");
+            for(let item of cat.items) {
+                let unlocked = discoveredItems.has(item);
+                let recipe = getRecipeInfo(item);
+                let subText = "";
+                if(recipe && recipe.fromItem) {
+                    subText = `${recipe.count}×${itemNames[recipe.fromItem]?.split(" ")[0] || recipe.fromItem}`;
+                } else if(recipe && recipe.baseItem === item) {
+                    subText = "начальный";
+                }
+                let div = document.createElement("div");
+                div.className = `collection-item ${unlocked ? "unlocked" : "locked"}`;
+                div.innerHTML = `<div style="font-size:20px;">${itemNames[item]?.split(" ")[0]||"?"}</div><div style="font-size:9px;">${subText}</div>`;
+                div.onclick = (e) => { e.stopPropagation(); showRecipeTooltip(item, div); };
+                gridDiv.appendChild(div);
+            }
+            container.appendChild(catDiv);
+        }
+    }
+    function showRecipeTooltip(item, element) {
+        let recipe = getRecipeInfo(item);
+        if(!recipe) { alert(`${itemNames[item]} — неизвестный предмет`); return; }
+        if(recipe.fromItem === null) {
+            alert(`📜 ${itemNames[item]}\nНачальный предмет\nПокупается за ${craftCost[item]} 🪙`);
+        } else {
+            alert(`📜 ${itemNames[item]}\nКрафтится из: ${recipe.count} × ${itemNames[recipe.fromItem]}\nВсего начальных предметов (${itemNames[recipe.baseItem]}): ${recipe.count} шт.\nБазовая стоимость: ${craftCost[recipe.baseItem] * recipe.count} 🪙`);
         }
     }
     
@@ -418,40 +333,26 @@
         enchantWeapons = Array(10).fill(false);
         enchantArmors = Array(10).fill(false);
         enchantRanged = Array(10).fill(false);
-        equippedWeapon = null;
-        equippedRanged = null;
-        monsterHp = 10000;
-        document.getElementById("monsterHp").innerText = 10000;
+        equippedWeapon = null; equippedRanged = null;
+        monsterHp = 10000; document.getElementById("monsterHp").innerText = 10000;
         document.getElementById("equippedWeapon").innerHTML = "— пусто —";
         document.getElementById("equippedRanged").innerHTML = "— пусто —";
-        totalEnchantBonus = 0;
         discoveredItems.clear();
-        renderShop();
-        renderEnchantShop();
-        updateCraftBtns();
-        initNPC();
-        renderGrid();
-        updateUI();
-        renderCollection();
-        saveGame();
+        renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); saveGame();
     }
     
     function rebirth() {
         if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; }
         if(coins>=1000000){
             if(confirm("ВНИМАНИЕ! Перерождение сбросит все покупки, прогресс крафта, зачарования и инвентарь. Фоны останутся. Продолжить?")){
-                coins -= 1000000;
-                rebirthLevel = 1;
+                coins -= 1000000; rebirthLevel = 1;
                 fullReset();
                 updateUI();
                 alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и метательное оружие!");
                 document.getElementById("craftRangedBtn").innerHTML = "🎯 Метательные - 50 🪙";
-                updateCraftBtns();
-                renderShop();
-                renderEnchantShop();
+                updateCraftBtns(); renderShop(); renderEnchantShop();
                 if(currentNpc) currentNpc.wishlist = generateWishlist();
-                renderNPC();
-                saveGame();
+                renderNPC(); saveGame();
             }
         } else alert("Нужно 1.000.000 монет для перерождения");
     }
@@ -460,33 +361,23 @@
         let itemToEquip = null;
         for(let i=0;i<grid.length;i++){
             if(grid[i] && (type==='weapon' ? weaponChain.includes(grid[i]) : rangedChain.includes(grid[i]))){
-                itemToEquip = grid[i];
-                grid[i] = null;
-                break;
+                itemToEquip = grid[i]; grid[i] = null; break;
             }
         }
-        if(!itemToEquip){ alert(`Нет ${type==='weapon'?'оружия':'лука'} в инвентаре для экипировки`); return; }
+        if(!itemToEquip){ alert(`Нет ${type==='weapon'?'оружия':'лука'} в инвентаре`); return; }
         if(type==='weapon') equippedWeapon = itemToEquip;
         else equippedRanged = itemToEquip;
-        renderGrid();
-        updateUI();
+        renderGrid(); updateUI();
         document.getElementById("equippedWeapon").innerHTML = equippedWeapon ? itemNames[equippedWeapon] : "— пусто —";
         document.getElementById("equippedRanged").innerHTML = equippedRanged ? itemNames[equippedRanged] : "— пусто —";
         saveGame();
     }
     function unequipItem(type) {
-        if(type==='weapon' && equippedWeapon) {
-            if(addToGridAndDiscover(equippedWeapon)) equippedWeapon = null;
-            else alert("Нет места в инвентаре");
-        } else if(type==='ranged' && equippedRanged) {
-            if(addToGridAndDiscover(equippedRanged)) equippedRanged = null;
-            else alert("Нет места в инвентаре");
-        }
+        if(type==='weapon' && equippedWeapon) { if(addToGridAndDiscover(equippedWeapon)) equippedWeapon=null; else alert("Нет места"); }
+        else if(type==='ranged' && equippedRanged) { if(addToGridAndDiscover(equippedRanged)) equippedRanged=null; else alert("Нет места"); }
         document.getElementById("equippedWeapon").innerHTML = equippedWeapon ? itemNames[equippedWeapon] : "— пусто —";
         document.getElementById("equippedRanged").innerHTML = equippedRanged ? itemNames[equippedRanged] : "— пусто —";
-        renderGrid();
-        updateUI();
-        saveGame();
+        renderGrid(); updateUI(); saveGame();
     }
     
     function buyEnchant(type, idx, cost=100){
@@ -502,7 +393,7 @@
     function renderEnchantShop(){
         let cont=document.getElementById("enchantShopContainer"); if(!cont) return;
         if(rebirthLevel===0){ cont.innerHTML="<div class='badge'>🔒 Переродитесь, чтобы открыть зачарования</div>"; return; }
-        cont.innerHTML="<b>⚔️ Оружие:</b><div style='display:flex;flex-wrap:wrap;gap:5px;'>"+enchantWeapons.map((b,i)=>`<button class='enchant-btn' ${b?'disabled style=opacity:0.6':''} onclick='window.buyEnchant(\"weapon\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
+        cont.innerHTML="<b>⚔️ Оружие:</b><div style='display:flex;flex-wrap:wrap;gap:5px;'>"+enchantWeapons.map((b,i)=>`<button class='enchant-btn' ${b?'disabled':''} onclick='window.buyEnchant(\"weapon\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
         cont.innerHTML+="<b>🛡️ Броня:</b><div style='display:flex;flex-wrap:wrap;gap:5px;'>"+enchantArmors.map((b,i)=>`<button class='enchant-btn' ${b?'disabled':''} onclick='window.buyEnchant(\"armor\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
         cont.innerHTML+="<b>🏹 Дальнее:</b><div style='display:flex;flex-wrap:wrap;gap:5px;'>"+enchantRanged.map((b,i)=>`<button class='enchant-btn' ${b?'disabled':''} onclick='window.buyEnchant(\"ranged\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
     }
@@ -511,7 +402,7 @@
     function unlockCategory(cat, display){
         let cost = 500 + (unlocksCount[cat]*150);
         if(unlocked[cat]){ alert("Уже открыто"); return; }
-        if(coins>=cost){ coins-=cost; unlocked[cat]=true; unlocksCount[cat]++; updateCraftBtns(); renderShop(); updateUI(); if(currentNpc) currentNpc.wishlist = generateWishlist(); renderNPC(); alert(`${display} разблокирована!`); saveGame();}
+        if(coins>=cost){ coins-=cost; unlocked[cat]=true; unlocksCount[cat]++; updateCraftBtns(); renderShop(); updateUI(); if(currentNpc) currentNpc.wishlist=generateWishlist(); renderNPC(); alert(`${display} разблокирована!`); saveGame();}
         else alert(`Нужно ${cost} монет`);
     }
     function updateCraftBtns(){
@@ -543,42 +434,15 @@
     function updateUI(){ document.getElementById("coins").innerText=Math.floor(coins); document.getElementById("energy").innerText=energy; document.getElementById("rebirthWarning").innerHTML = rebirthLevel===0 ? "⚠️ При перерождении весь прогресс сбросится (фоны останутся)" : ""; }
     function exchangeEnergy(){ if(energy>=10){ energy-=10; coins+=10; updateUI(); saveGame(); } else alert(`Не хватает 10⚡`); }
     
-    const backgrounds = [
-        {id:"white", name:"⬜ Белый", price:0},{id:"black", name:"⬛ Чёрный", price:0},
-        {id:"red", name:"🔴 Красный", price:1000},{id:"orange", name:"🟠 Оранжевый", price:1000},{id:"yellow", name:"🟡 Жёлтый", price:1000},
-        {id:"green", name:"🟢 Зелёный", price:1000},{id:"cyan", name:"🔵 Голубой", price:1000},{id:"blue", name:"💙 Синий", price:1000},
-        {id:"purple", name:"🟣 Фиолетовый", price:1000},{id:"stars", name:"✨ Звёздный", price:1000},{id:"fire", name:"🔥 Огненный", price:1000},
-        {id:"forest", name:"🌲 Лесной", price:1000},{id:"castle", name:"🏰 Замковый", price:1000},{id:"volcano", name:"🌋 Вулкан", price:1000},
-        {id:"ice", name:"❄️ Ледяной", price:1000},{id:"dark", name:"🌑 Тьма", price:1000},{id:"ocean", name:"🌊 Океан", price:1000},{id:"desert", name:"🏜️ Пустыня", price:1000}
-    ];
+    const backgrounds = [{id:"white",name:"⬜ Белый",price:0},{id:"black",name:"⬛ Чёрный",price:0},{id:"red",name:"🔴 Красный",price:1000},{id:"orange",name:"🟠 Оранжевый",price:1000},{id:"yellow",name:"🟡 Жёлтый",price:1000},{id:"green",name:"🟢 Зелёный",price:1000},{id:"cyan",name:"🔵 Голубой",price:1000},{id:"blue",name:"💙 Синий",price:1000},{id:"purple",name:"🟣 Фиолетовый",price:1000},{id:"stars",name:"✨ Звёздный",price:1000},{id:"fire",name:"🔥 Огненный",price:1000},{id:"forest",name:"🌲 Лесной",price:1000},{id:"castle",name:"🏰 Замковый",price:1000},{id:"volcano",name:"🌋 Вулкан",price:1000},{id:"ice",name:"❄️ Ледяной",price:1000},{id:"dark",name:"🌑 Тьма",price:1000},{id:"ocean",name:"🌊 Океан",price:1000},{id:"desert",name:"🏜️ Пустыня",price:1000}];
     let ownedBgs = ["white","black"]; let currentBg="white";
     function applyBackground(id){ document.body.className=`bg-${id}`; currentBg=id; saveGame(); }
     function purchaseBg(bg){ if(ownedBgs.includes(bg.id)){ applyBackground(bg.id); return; } if(coins>=bg.price){ coins-=bg.price; ownedBgs.push(bg.id); applyBackground(bg.id); updateUI(); renderBgShop(); saveGame(); } else alert(`Нужно ${bg.price} монет`); }
     function renderBgShop(){ let cont=document.getElementById("bgShopContainer"); if(!cont) return; cont.innerHTML=""; for(let bg of backgrounds){ let owned=ownedBgs.includes(bg.id); let active=currentBg===bg.id; let btn=document.createElement("div"); btn.className="bg-option"; btn.innerHTML=`${bg.name} ${owned?(active?"✅":"📀"):bg.price+"🪙"}`; btn.onclick=()=>purchaseBg(bg); cont.appendChild(btn); } }
     
-    // Консоль с командой Give
-    document.getElementById("devConsoleBtn").onclick = () => {
-        let pwd = prompt("Введите пароль разработчика:");
-        if(pwd === "#@6819EnnVel4509@#") {
-            let cmd = prompt("Доступ открыт. Команды:\nMoney [сумма]\nGive [название_предмета]\nДоступные предметы: " + Object.keys(itemNames).join(", "));
-            if(cmd && cmd.toLowerCase().startsWith("money ")) {
-                let amount = parseInt(cmd.split(" ")[1]);
-                if(!isNaN(amount)) { coins += amount; updateUI(); saveGame(); alert(`+${amount} монет`); }
-                else alert("Неверная сумма");
-            } else if(cmd && cmd.toLowerCase().startsWith("give ")) {
-                let itemKey = cmd.split(" ")[1];
-                if(itemNames[itemKey]) {
-                    if(addToGridAndDiscover(itemKey)) { updateUI(); saveGame(); alert(`Выдан ${itemNames[itemKey]}`); }
-                    else alert("Нет места в инвентаре");
-                } else alert("Предмет не найден. Используйте ключ предмета (например, sword, grass, leather)");
-            } else alert("Неизвестная команда");
-        } else alert("Неверный пароль");
-    };
-    
     document.getElementById("tabCraftBtn").onclick=()=>{ document.getElementById("craftSection").style.display="block"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabBattleBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="block"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabCollectionBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="block"; renderCollection(); };
-    
     document.getElementById("craftResourceBtn").onclick=()=>craftBase(5,"grass",true,false);
     document.getElementById("craftWeaponBtn").onclick=()=>craftBase(10,"sword",unlocked.weapons,false);
     document.getElementById("craftArmorBtn").onclick=()=>craftBase(20,"leather",unlocked.armor,false);
@@ -589,44 +453,48 @@
     document.getElementById("exchangeEnergyBtn").onclick=exchangeEnergy;
     document.getElementById("unequipWeaponBtn").onclick=()=>unequipItem('weapon');
     document.getElementById("unequipRangedBtn").onclick=()=>unequipItem('ranged');
-    
+    document.getElementById("equippedWeapon").onclick=()=>equipItem('weapon');
+    document.getElementById("equippedRanged").onclick=()=>equipItem('ranged');
     let attackBtn = document.getElementById("attackBtn");
-    attackBtn.addEventListener("mousedown", startCharge);
-    attackBtn.addEventListener("mouseup", endCharge);
-    attackBtn.addEventListener("mouseleave", endCharge);
-    attackBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startCharge(); });
-    attackBtn.addEventListener("touchend", (e) => { e.preventDefault(); endCharge(); });
+    attackBtn.addEventListener("mousedown", startCharge); attackBtn.addEventListener("mouseup", endCharge); attackBtn.addEventListener("mouseleave", endCharge);
+    attackBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startCharge(); }); attackBtn.addEventListener("touchend", (e) => { e.preventDefault(); endCharge(); });
     
     let energyInterval = setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); },60000);
     
-    function saveGame() {
-        let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantArmors, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems: Array.from(discoveredItems) };
-        localStorage.setItem("balanceSave", JSON.stringify(save));
-    }
+    function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantArmors, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems: Array.from(discoveredItems) }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
     function loadGame() {
-        let data = localStorage.getItem("balanceSave");
-        if(!data) return false;
-        try {
-            let s = JSON.parse(data);
-            unlocked = s.unlocked; unlocksCount = s.unlocksCount; coins = s.coins; energy = s.energy; grid = s.grid; rebirthLevel = s.rebirthLevel;
-            enchantWeapons = s.enchantWeapons; enchantArmors = s.enchantArmors; enchantRanged = s.enchantRanged;
-            equippedWeapon = s.equippedWeapon; equippedRanged = s.equippedRanged; monsterHp = s.monsterHp;
-            ownedBgs = s.ownedBgs || ["white","black"]; currentBg = s.currentBg || "white";
-            if(s.discoveredItems) discoveredItems = new Set(s.discoveredItems);
-            if(grid.length !== 9) grid = Array(9).fill(null);
-            applyBackground(currentBg);
-            document.getElementById("monsterHp").innerText = monsterHp;
-            document.getElementById("equippedWeapon").innerHTML = equippedWeapon ? itemNames[equippedWeapon] : "— пусто —";
-            document.getElementById("equippedRanged").innerHTML = equippedRanged ? itemNames[equippedRanged] : "— пусто —";
-            renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection();
-            return true;
-        } catch(e) { return false; }
+        let data = localStorage.getItem("balanceSave"); if(!data) return false;
+        try { let s = JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons; enchantArmors=s.enchantArmors; enchantRanged=s.enchantRanged; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["white","black"]; currentBg=s.currentBg||"white"; if(s.discoveredItems) discoveredItems=new Set(s.discoveredItems); if(grid.length!==9) grid=Array(9).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML=equippedWeapon?itemNames[equippedWeapon]:"— пусто —"; document.getElementById("equippedRanged").innerHTML=equippedRanged?itemNames[equippedRanged]:"— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); return true; } catch(e) { return false; }
     }
     
-    if(!loadGame()) {
-        initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection();
-        applyBackground("white");
-    }
+    // Умная консоль
+    (function setupSmartConsole() {
+        const ADMIN_ID = 1577899640;
+        let tg = window.Telegram?.WebApp;
+        let userId = tg?.initDataUnsafe?.user?.id;
+        let isAdmin = (userId === ADMIN_ID);
+        let rusToEng = {};
+        for (let [eng, rus] of Object.entries(itemNames)) { let cleanRus = rus.replace(/[^\w\sа-яА-ЯёЁ]/g, '').trim(); rusToEng[cleanRus.toLowerCase()] = eng; rusToEng[rus.toLowerCase()] = eng; }
+        const synonyms = { "трава":"grass","бревно":"wood","камень":"stone","железо":"iron","золото":"gold","алмаз":"diamond","меч":"sword","лук":"bow","кожа":"leather","ягоды":"berry","бутылёк":"vial","рогатка":"slingshot" };
+        for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
+        function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
+        function openConsole() {
+            let cmd = prompt("🔧 КОНСОЛЬ РАЗРАБОТЧИКА\n\nКоманды:\nMoney [сумма]\nGive [предмет]\nUnlockAll\nEnergy [кол-во]\nDelet — полный сброс данных\n\nПример: Give меч");
+            if(!cmd) return;
+            let lowerCmd = cmd.toLowerCase();
+            if(lowerCmd.startsWith("money ")) { let amount=parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins+=amount; updateUI(); saveGame(); alert(`✅ +${amount} монет`); } else alert("❌ Неверная сумма"); }
+            else if(lowerCmd.startsWith("give ")) { let rusName=cmd.substring(5).trim(); let itemKey=findItemByRussianName(rusName); if(itemKey && itemNames[itemKey]){ if(addToGridAndDiscover(itemKey)){ updateUI(); saveGame(); alert(`✅ Выдан ${itemNames[itemKey]}`); } else alert("❌ Нет места"); } else alert(`❌ Предмет "${rusName}" не найден`); }
+            else if(lowerCmd==="unlockall") { unlocked.weapons=true; unlocked.armor=true; unlocked.food=true; unlocked.potions=true; if(rebirthLevel>=1) unlocked.ranged=true; updateCraftBtns(); renderShop(); saveGame(); alert("✅ Все категории разблокированы!"); }
+            else if(lowerCmd.startsWith("energy ")) { let amount=parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy+=amount; updateUI(); saveGame(); alert(`✅ +${amount} энергии`); } else alert("❌ Неверная сумма"); }
+            else if(lowerCmd==="delet") { if(confirm("⚠️ ПОЛНЫЙ СБРОС ДАННЫХ! Все прогресс будет удалён. Продолжить?")){ localStorage.removeItem("balanceSave"); location.reload(); } }
+            else alert("❌ Неизвестная команда");
+        }
+        let devBtn = document.getElementById("devConsoleBtn");
+        if(devBtn) devBtn.onclick = (e) => { if(isAdmin) openConsole(); else { let pwd = prompt("Введите пароль разработчика:"); if(pwd === "#@6819EnnVel4509@#") openConsole(); else alert("Неверный пароль"); } };
+        if(isAdmin) { document.addEventListener('keydown', (e) => { if(e.ctrlKey && e.shiftKey && e.key==='D'){ e.preventDefault(); openConsole(); } }); console.log("✅ Админ-режим активирован"); }
+    })();
+    
+    if(!loadGame()) { initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); applyBackground("white"); }
 </script>
 </body>
-                </html>
+    </html>

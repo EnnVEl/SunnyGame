@@ -420,21 +420,6 @@
         let devBtn=document.getElementById("devConsoleBtn");
         if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Пароль:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
-
-    // Онлайн-счётчик и уведомление админу
-    (function() {
-        let tg = window.Telegram?.WebApp;
-        let userId = tg?.initDataUnsafe?.user?.id;
-        onlineCount = Math.floor(Math.random() * 50) + 1;
-        document.getElementById("onlineCount").innerText = onlineCount;
-        if(userId && tg) {
-            fetch(`https://api.telegram.org/bot8743238206:AAEEcIk9dMJFCCttKYD3LA_nRIQpeH7Bm3s/sendMessage`, {
-                method: "POST", headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({chat_id: "Enn_Vel20", text: `🔔 Игрок ${userId} зашёл в игру! Онлайн: ${onlineCount}`})
-            }).catch(e=>console.log);
-        }
-    })();
-
     if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("white"); }
 </script>
 </body>

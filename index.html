@@ -102,6 +102,10 @@
         .friend-item, .leader-item { background: #3a3a2a; border-radius: 15px; padding: 6px 10px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; }
         .chat-message { background: #2a2a1e; border-radius: 15px; padding: 8px 12px; margin: 5px 0; word-break: break-word; }
         .ranged-btn-active { background: #f5b642 !important; color: #2b381c !important; }
+        .chat-switch { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .chat-switch button { background: #4f6b3e; padding: 4px 12px; }
+        .chat-switch button.active { background: #f5b642; color: #2b381c; }
+        .delete-account-btn { background: #aa3333; margin-top: 10px; width: 100%; }
     </style>
 </head>
 <body class="bg-black">
@@ -111,7 +115,7 @@
     <div id="craftSection"><div class="main-row"><div class="craft-col"><div class="grid" id="grid"></div><div class="action-bar"><button id="craftResourceBtn">🌾 Материалы -5</button><button id="craftWeaponBtn" disabled>⚔️ Оружие -10</button><button id="craftRangedWeaponBtn" disabled style="background:#555;">🏹 Луки (после перерождения)</button><button id="craftArmorBtn" disabled>🛡️ Броня -20</button><button id="craftFoodBtn" disabled>🍇 Еда -30</button><button id="craftPotionBtn" disabled>🧪 Зелья -40</button><button id="rebirthBtn">🌀 Перерождение 1M</button><button id="fullResetBtn" style="background:#aa3333;">⚠️ ПОЛНЫЙ СБРОС</button></div><div class="warning" id="rebirthWarning"></div></div><div class="inventory-col"><h3>🎒 ИНВЕНТАРЬ</h3><div class="inventory-slot" id="weaponSlot"><div>⚔️ ОРУЖИЕ</div><div class="slot-item" id="equippedWeapon">— пусто —</div></div><div class="inventory-slot" id="rangedSlot"><div>🏹 ЛУКИ</div><div class="slot-item" id="equippedRanged">— пусто —</div></div><h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtn" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3><div id="storageContainer"></div></div></div></div>
     <div id="battleSection" style="display:none;"><div class="battle-panel"><h2>🐉 ДРЕВНИЙ МОНСТР</h2><div class="monster-hp">❤️ <span id="monsterHp">10000</span> / 10000</div><button id="attackBtn" class="attack-btn">💥 АТАКОВАТЬ</button><div class="badge">🏆 Убийство +100</div><div id="enchantBonusInfo" style="margin-top:6px; font-size:10px;"></div><div class="badge">⌛ Луки: зажмите 1с для заряда (+5)</div></div></div>
     <div id="collectionSection" style="display:none;"><div class="shop-panel"><h3>📜 КОЛЛЕКЦИЯ</h3><div id="collectionContainer"></div><h3>👥 ВСТРЕЧЕННЫЕ NPC</h3><div id="metNpcContainer" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;"></div><div class="badge">Нажмите на предмет для рецепта</div></div></div>
-    <div id="socialSection" style="display:none;"><div class="shop-panel"><h3>💬 ОБЩИЙ ЧАТ</h3><div id="chatMessages" style="height:200px; overflow-y:auto; background:#1a1a1a; border-radius:15px; padding:8px; margin-bottom:10px;"></div><div style="display:flex; gap:5px;"><input type="text" id="chatInput" placeholder="Сообщение..." style="flex:1; border-radius:20px; border:none; padding:8px;"><button id="sendChatBtn">📨</button></div><hr><h3>👥 ДРУЗЬЯ</h3><div id="friendsList" style="max-height:150px; overflow-y:auto;"></div><div style="display:flex; gap:5px; margin-top:8px;"><input type="text" id="addFriendInput" placeholder="Юзернейм для добавления" style="flex:1; border-radius:20px; border:none; padding:6px;"><button id="addFriendBtn">➕ Добавить</button></div><hr><h3>🏆 ЛИДЕРЫ ПО МОНЕТАМ</h3><div id="leadersList" style="max-height:150px; overflow-y:auto;"></div></div></div>
+    <div id="socialSection" style="display:none;"><div class="shop-panel"><div class="chat-switch" id="chatSwitch"></div><div id="chatArea" style="height:200px; overflow-y:auto; background:#1a1a1a; border-radius:15px; padding:8px; margin-bottom:10px;"></div><div style="display:flex; gap:5px;"><input type="text" id="chatInput" placeholder="Сообщение..." style="flex:1; border-radius:20px; border:none; padding:8px;"><button id="sendChatBtn">📨</button></div><hr><h3>👥 ДРУЗЬЯ</h3><div id="friendsList" style="max-height:150px; overflow-y:auto;"></div><div style="display:flex; gap:5px; margin-top:8px;"><input type="text" id="addFriendInput" placeholder="Юзернейм для добавления" style="flex:1; border-radius:20px; border:none; padding:6px;"><button id="addFriendBtn">➕ Добавить</button></div><hr><h3>🏆 ЛИДЕРЫ ПО МОНЕТАМ</h3><div id="leadersList" style="max-height:150px; overflow-y:auto;"></div><button id="deleteAccountBtn" class="delete-account-btn">⚠️ УДАЛИТЬ АККАУНТ</button></div></div>
     <div class="shop-npc-row"><div class="shop-panel"><h3>🏪 ЛАВКА</h3><div class="unlock-buttons" id="shopUnlockList"></div><button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button><hr><h3>✨ ЗАЧАРОВАНИЯ</h3><div class="badge">Кликните на чарку для применения к выбранному предмету</div><div id="enchantShopContainer" class="enchant-shop"></div><div class="badge">Снятие чарки: возврат 80% стоимости</div><hr><h3>🎨 ФОНЫ</h3><div id="bgShopContainer" class="bg-shop-row"></div></div><div class="npc-section"><h3>📦 ПРОДАЖИ</h3><div id="npcSingleContainer" class="single-npc-card"></div><button id="sellItemBtn" style="margin-top:6px; background:#aa6644;">💸 Продать выбранный (стоимость -50%)</button><button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button></div></div></div>
 <div class="footer"><div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div><button id="supportBtn" class="support-btn">💬 Поддержка</button></div>
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
@@ -169,36 +173,64 @@
     let rangedUnlocked = false;
     let currentUsername = null;
     
-    // ========== ЦЕНТРАЛИЗОВАННЫЕ ДАННЫЕ (MOCK API) ==========
-    let globalUsers = {}; // { username: { coins, name, friends } }
-    let chatMessages = [];
+    // ========== СЕРВЕРНЫЕ ДАННЫЕ ==========
+    let globalUsers = {};
+    let globalChat = [];
+    let privateChats = {}; // { "user1_user2": [messages] }
+    let currentChatType = "global";
+    let currentChatFriend = null;
+    
+    const API_URL = "https://sunnygame-api.vercel.app/api";
+    
+    async function apiCall(endpoint, data) {
+        try {
+            let res = await fetch(`${API_URL}/${endpoint}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            return await res.json();
+        } catch(e) { return { error: true }; }
+    }
     
     async function loadServerData() {
-        try {
-            let res = await fetch("https://sunnygame-server.vercel.app/api/data");
-            if(res.ok) { let data = await res.json(); globalUsers = data.users || {}; chatMessages = data.chat || []; }
-            else { loadLocalFallback(); }
-        } catch(e) { loadLocalFallback(); }
-        if(!globalUsers[currentUsername]) globalUsers[currentUsername] = { coins: coins, name: currentUsername, friends: [] };
+        let result = await apiCall("data", {});
+        if(!result.error) {
+            globalUsers = result.users || {};
+            globalChat = result.chat || [];
+            privateChats = result.privateChats || {};
+        } else {
+            let fallback = localStorage.getItem("sunnygame_backup");
+            if(fallback) { let s = JSON.parse(fallback); globalUsers = s.users || {}; globalChat = s.chat || []; privateChats = s.privateChats || {}; }
+        }
+        if(!globalUsers[currentUsername]) globalUsers[currentUsername] = { coins: coins, name: currentUsername, friends: [], createdAt: Date.now() };
         else globalUsers[currentUsername].coins = coins;
         await saveServerData();
         renderSocial();
     }
+    
     async function saveServerData() {
-        try { await fetch("https://sunnygame-server.vercel.app/api/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ users: globalUsers, chat: chatMessages }) }); } catch(e) {}
-        localStorage.setItem("sunnygame_backup", JSON.stringify({ users: globalUsers, chat: chatMessages }));
+        await apiCall("save", { users: globalUsers, chat: globalChat, privateChats: privateChats });
+        localStorage.setItem("sunnygame_backup", JSON.stringify({ users: globalUsers, chat: globalChat, privateChats: privateChats }));
     }
-    function loadLocalFallback() { let data = localStorage.getItem("sunnygame_backup"); if(data) { let s = JSON.parse(data); globalUsers = s.users || {}; chatMessages = s.chat || []; } }
     
     async function sendChatMessage() {
         let msg = document.getElementById("chatInput").value.trim();
         if(!msg) return;
-        chatMessages.unshift({ from: currentUsername, text: msg, time: Date.now() });
-        if(chatMessages.length > 50) chatMessages.pop();
+        if(currentChatType === "global") {
+            globalChat.unshift({ from: currentUsername, text: msg, time: Date.now() });
+            if(globalChat.length > 500) globalChat.pop();
+        } else if(currentChatType === "private" && currentChatFriend) {
+            let key = [currentUsername, currentChatFriend].sort().join("_");
+            if(!privateChats[key]) privateChats[key] = [];
+            privateChats[key].unshift({ from: currentUsername, text: msg, time: Date.now() });
+            if(privateChats[key].length > 200) privateChats[key].pop();
+        }
         await saveServerData();
         document.getElementById("chatInput").value = "";
-        renderSocial();
+        renderChat();
     }
+    
     async function addFriend(friendUsername) {
         if(friendUsername === currentUsername) { alert("Нельзя добавить самого себя"); return; }
         if(!globalUsers[friendUsername]) { alert("Игрок с таким юзернеймом не найден"); return; }
@@ -208,18 +240,57 @@
         renderSocial();
         alert(`${friendUsername} добавлен в друзья!`);
     }
+    
+    async function deleteAccount() {
+        if(confirm("⚠️ ВНИМАНИЕ! Удаление аккаунта безвозвратно удалит весь ваш прогресс, друзей и все сообщения. Продолжить?")) {
+            delete globalUsers[currentUsername];
+            for(let key in privateChats) {
+                if(key.includes(currentUsername)) delete privateChats[key];
+            }
+            await saveServerData();
+            localStorage.removeItem(`sunnygame_${currentUsername}`);
+            alert("Аккаунт удалён. Страница перезагрузится.");
+            location.reload();
+        }
+    }
+    
     async function updateServerCoins() {
         if(globalUsers[currentUsername]) globalUsers[currentUsername].coins = coins;
         await saveServerData();
         renderSocial();
     }
+    
     function renderSocial() {
         let leaders = Object.entries(globalUsers).map(([u,d]) => ({ username: u, coins: d.coins || 0 })).sort((a,b) => b.coins - a.coins).slice(0,10);
         document.getElementById("leadersList").innerHTML = leaders.map((l,i) => `<div class="leader-item"><span>${i+1}. @${l.username}</span><span>💰 ${l.coins}</span></div>`).join("") || "<div class='badge'>Загрузка...</div>";
         let friends = globalUsers[currentUsername]?.friends || [];
-        document.getElementById("friendsList").innerHTML = friends.map(f => `<div class="friend-item"><span>@${f}</span><span>💰 ${globalUsers[f]?.coins || 0}</span></div>`).join("") || "<div class='badge'>У вас пока нет друзей</div>";
-        document.getElementById("chatMessages").innerHTML = chatMessages.slice(0,30).map(m => `<div class="chat-message"><b>@${m.from}</b>: ${m.text}</div>`).join("") || "<div class='badge'>Пока нет сообщений</div>";
+        document.getElementById("friendsList").innerHTML = friends.map(f => `<div class="friend-item"><span>@${f}</span><span>💰 ${globalUsers[f]?.coins || 0}</span><button class="inline-btn" onclick="window.openPrivateChat('${f}')">💬</button></div>`).join("") || "<div class='badge'>У вас пока нет друзей</div>";
+        renderChat();
     }
+    
+    function renderChat() {
+        let container = document.getElementById("chatArea");
+        if(!container) return;
+        let messages = [];
+        if(currentChatType === "global") {
+            messages = globalChat.slice(0, 100);
+        } else if(currentChatType === "private" && currentChatFriend) {
+            let key = [currentUsername, currentChatFriend].sort().join("_");
+            messages = privateChats[key] || [];
+        }
+        container.innerHTML = messages.map(m => `<div class="chat-message"><b>@${m.from}</b>: ${m.text}</div>`).join("") || "<div class='badge'>Пока нет сообщений</div>";
+        
+        let switchDiv = document.getElementById("chatSwitch");
+        if(switchDiv) {
+            let friends = globalUsers[currentUsername]?.friends || [];
+            switchDiv.innerHTML = `<button class="${currentChatType === 'global' ? 'active' : ''}" onclick="window.switchToGlobal()">🌍 Общий чат</button>` +
+                friends.map(f => `<button class="${currentChatType === 'private' && currentChatFriend === f ? 'active' : ''}" onclick="window.switchToPrivate('${f}')">💬 @${f}</button>`).join("");
+        }
+    }
+    
+    window.switchToGlobal = function() { currentChatType = "global"; currentChatFriend = null; renderChat(); };
+    window.switchToPrivate = function(friend) { currentChatType = "private"; currentChatFriend = friend; renderChat(); };
+    window.openPrivateChat = function(friend) { currentChatType = "private"; currentChatFriend = friend; renderChat(); };
     
     // ========== ИГРОВЫЕ ФУНКЦИИ ==========
     function discoverItem(item) { if(item && !discoveredItems.has(item)) { discoveredItems.add(item); renderCollection(); } }
@@ -311,7 +382,7 @@
         for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
         function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nMoney [сумма] - добавить монеты себе\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - список предметов\nMoneySend [сумма] - выдать монеты другому игроку\nClearLeaderboard - очистить лидерборд (только админ)");
+            let cmd = prompt("🔧 КОНСОЛЬ\n\nMoney [сумма]\nGive [предмет]\nUnlockAll\nEnergy [кол-во]\nList\nMoneySend [сумма] [юзер]\nClearChat\nDeleteAllAccounts\nClearLeaderboard");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
             if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); updateServerCoins(); alert(`+${amount}🪙`); sendToAdmin(`Выдал себе ${amount} монет`); } else alert("Неверно"); }
@@ -319,8 +390,10 @@
             else if(lowerCmd==="unlockall"){ unlocked.weapons=true; unlocked.armor=true; unlocked.food=true; unlocked.potions=true; updateCraftBtns(); renderShop(); saveGame(); alert("Всё разблокировано!"); sendToAdmin("Разблокировал все категории"); }
             else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount}⚡`); sendToAdmin(`Выдал себе ${amount} энергии`); } else alert("Неверно"); }
             else if(lowerCmd==="list"){ alert("Список предметов:\n"+Object.keys(itemNames).map(k=>itemNames[k]).join(", ")); }
-            else if(lowerCmd.startsWith("moneysend ")){ let parts = cmd.split(" "); if(parts.length >= 2){ let amount = parseInt(parts[1]); if(!isNaN(amount) && amount>0){ let targetUsername = prompt("Введите юзернейм получателя:"); if(targetUsername && targetUsername.trim() && targetUsername !== currentUsername){ if(globalUsers[targetUsername]){ alert(`✅ Игроку ${targetUsername} выдано ${amount} монет!`); sendToAdmin(`Выдал ${amount} монет игроку ${targetUsername}`); } else alert("Игрок с таким юзернеймом не найден"); } else if(targetUsername === currentUsername) alert("Нельзя отправить монеты самому себе"); else alert("Юзернейм не указан"); } else alert("Неверная сумма"); } else alert("Формат: MoneySend сумма"); }
-            else if(lowerCmd==="clearleaderboard"){ if(confirm("Очистить лидерборд? Это действие необратимо!")){ globalUsers = {}; chatMessages = []; saveServerData(); alert("Лидерборд очищен!"); sendToAdmin("Очистил лидерборд"); } }
+            else if(lowerCmd.startsWith("moneysend ")){ let parts = cmd.split(" "); if(parts.length >= 3){ let amount = parseInt(parts[1]); let target = parts[2]; if(!isNaN(amount) && amount>0 && target && globalUsers[target]){ alert(`✅ Игроку ${target} выдано ${amount} монет!`); sendToAdmin(`Выдал ${amount} монет игроку ${target}`); } else alert("Неверные параметры"); } else alert("Формат: MoneySend 100 username"); }
+            else if(lowerCmd==="clearchat"){ globalChat = []; privateChats = {}; saveServerData(); alert("Чат очищен!"); sendToAdmin("Очистил чат"); }
+            else if(lowerCmd==="deleteallaccounts"){ if(confirm("Удалить ВСЕ аккаунты? Это необратимо!")){ globalUsers = {}; globalChat = []; privateChats = {}; saveServerData(); alert("Все аккаунты удалены!"); sendToAdmin("Удалил все аккаунты"); } }
+            else if(lowerCmd==="clearleaderboard"){ if(confirm("Очистить лидерборд?")){ for(let u in globalUsers) globalUsers[u].coins = 0; saveServerData(); alert("Лидерборд очищен!"); sendToAdmin("Очистил лидерборд"); } }
             else alert("Неизвестно");
         }
         let devBtn=document.getElementById("devConsoleBtn");
@@ -339,6 +412,7 @@
         document.getElementById("verifyBtn").onclick = async () => {
             let username = document.getElementById("usernameInput").value.trim().replace('@','');
             if(username){
+                if(globalUsers[username] && globalUsers[username].createdAt && (Date.now() - globalUsers[username].createdAt > 86400000)) {}
                 currentUsername = username;
                 verifyDiv.remove();
                 await loadServerData();
@@ -373,6 +447,7 @@
     document.getElementById("equippedRanged").onclick=()=>equipFromGrid('ranged', rangedChain, 'equippedRanged');
     document.getElementById("sendChatBtn").onclick=sendChatMessage;
     document.getElementById("addFriendBtn").onclick=()=>{ let friend = document.getElementById("addFriendInput").value.trim().replace('@',''); if(friend) addFriend(friend); document.getElementById("addFriendInput").value = ""; };
+    document.getElementById("deleteAccountBtn").onclick=deleteAccount;
     let attackBtn=document.getElementById("attackBtn");
     attackBtn.addEventListener("mousedown", startCharge); attackBtn.addEventListener("mouseup", endCharge); attackBtn.addEventListener("mouseleave", endCharge);
     attackBtn.addEventListener("touchstart",(e)=>{ e.preventDefault(); startCharge(); }); attackBtn.addEventListener("touchend",(e)=>{ e.preventDefault(); endCharge(); });

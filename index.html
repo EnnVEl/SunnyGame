@@ -106,6 +106,7 @@
         .chat-switch button { background: #4f6b3e; padding: 4px 12px; }
         .chat-switch button.active { background: #f5b642; color: #2b381c; }
         .delete-account-btn { background: #aa3333; margin-top: 10px; width: 100%; }
+        .welcome-message { margin-bottom: 10px; padding: 8px; background: #4f6b3e; border-radius: 20px; text-align: center; font-size: 12px; }
     </style>
 </head>
 <body class="bg-black">
@@ -176,7 +177,7 @@
     // ========== СЕРВЕРНЫЕ ДАННЫЕ ==========
     let globalUsers = {};
     let globalChat = [];
-    let privateChats = {}; // { "user1_user2": [messages] }
+    let privateChats = {};
     let currentChatType = "global";
     let currentChatFriend = null;
     
@@ -249,6 +250,7 @@
             }
             await saveServerData();
             localStorage.removeItem(`sunnygame_${currentUsername}`);
+            localStorage.removeItem("sunnygame_username");
             alert("Аккаунт удалён. Страница перезагрузится.");
             location.reload();
         }
@@ -400,21 +402,34 @@
         if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Пароль:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
     
-    // ========== ВЕРИФИКАЦИЯ ==========
-    function showVerification() {
-        let verifyDiv = document.createElement("div");
-        verifyDiv.className = "verify-overlay";
+    // ========== ПРИВЕТСТВИЕ И ВЕРИФИКАЦИЯ ==========
+    function showWelcomeAndVerification() {
+        let overlay = document.createElement("div");
+        overlay.className = "verify-overlay";
         let suggestedUsername = "";
         let tg = window.Telegram?.WebApp;
         if(tg && tg.initDataUnsafe?.user?.username) suggestedUsername = tg.initDataUnsafe.user.username;
-        verifyDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>🔐 ПРИВЯЗКА АККАУНТА</h2><p>Ваш Telegram юзернейм будет использоваться для сохранения прогресса и в лидерборде.</p><input type="text" id="usernameInput" placeholder="@username" value="@${suggestedUsername}" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px;"><button id="verifyBtn" style="margin-top:15px;">✅ Подтвердить</button><p style="font-size:12px; margin-top:15px;">⚠️ Прогресс привязан к юзернейму и синхронизируется с сервером.</p></div>`;
-        document.body.appendChild(verifyDiv);
+        overlay.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
+            <h2>⚖️ ДОБРО ПОЖАЛОВАТЬ В SUNNYGAME</h2>
+            <p>Создавайте предметы, объединяйте их, сражайтесь с монстром и перерождайтесь!</p>
+            <p>⚔️ Оружие и 🏹 Луки дают +1 урона за уровень</p>
+            <p>✨ Зачарования (до 10 на каждый предмет) дают +1 урона за чарку</p>
+            <p>💰 Продавайте предметы NPC и в магазине (-50% стоимости)</p>
+            <p>📦 Хранилище можно расширять за 1000🪙</p>
+            <hr>
+            <h3>🔐 ПРИВЯЗКА АККАУНТА</h3>
+            <p>Введите ваш Telegram юзернейм (без @) для сохранения прогресса:</p>
+            <input type="text" id="usernameInput" placeholder="username" value="${suggestedUsername}" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px; width:80%;">
+            <button id="verifyBtn" style="margin-top:15px;">✅ Начать игру</button>
+            <p style="font-size:12px; margin-top:15px;">⚠️ Прогресс привязан к юзернейму и синхронизируется с сервером. При смене аккаунта откроется новое сохранение.</p>
+        </div>`;
+        document.body.appendChild(overlay);
         document.getElementById("verifyBtn").onclick = async () => {
             let username = document.getElementById("usernameInput").value.trim().replace('@','');
             if(username){
-                if(globalUsers[username] && globalUsers[username].createdAt && (Date.now() - globalUsers[username].createdAt > 86400000)) {}
                 currentUsername = username;
-                verifyDiv.remove();
+                localStorage.setItem("sunnygame_username", currentUsername);
+                overlay.remove();
                 await loadServerData();
                 if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
                 await updateServerCoins();
@@ -454,15 +469,15 @@
     
     let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); updateServerCoins(); },60000);
     
-    let tgUsername = window.Telegram?.WebApp?.initDataUnsafe?.user?.username;
-    if(tgUsername) {
-        currentUsername = tgUsername;
+    let savedUsername = localStorage.getItem("sunnygame_username");
+    if(savedUsername) {
+        currentUsername = savedUsername;
         loadServerData().then(() => {
             if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
             updateServerCoins();
         });
     } else {
-        showVerification();
+        showWelcomeAndVerification();
     }
 </script>
 </body>

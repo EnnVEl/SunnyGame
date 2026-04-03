@@ -12,7 +12,7 @@
         body {
             font-family: 'Segoe UI', 'Arial', system-ui;
             margin: 0;
-            padding: 15px;
+            padding: 12px;
             color: #f9efc0;
             min-height: 100vh;
             transition: background 0.4s ease;
@@ -72,46 +72,46 @@
         body.bg-desert { background: #c9a03d; background-image: radial-gradient(circle at 10% 90%, #e0b05a 2px, transparent 2px); background-size: 40px 40px; }
         body.bg-desert::before { content: "🏜️🐪🌵"; position: absolute; bottom: 10px; right: 10px; font-size: 55px; opacity: 0.35; }
         
-        .game-container { max-width: 1400px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); border-radius: 48px; padding: 15px 18px 25px; backdrop-filter: blur(3px); }
-        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px; background: #2c2b1fe0; padding: 8px 20px; border-radius: 50px; gap: 10px; }
-        .resources { display: flex; gap: 15px; background: #1e2a1c; padding: 4px 16px; border-radius: 35px; }
-        .res-item { font-weight: bold; font-size: 20px; display: flex; align-items: center; gap: 6px; }
-        .title { font-size: 24px; letter-spacing: 2px; text-shadow: 2px 2px 0 #2c4b1e; }
-        .main-row { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 8px; }
-        .craft-col { flex: 2; min-width: 280px; }
-        .inventory-col { flex: 1; min-width: 200px; background: #261f16cc; backdrop-filter: blur(12px); border-radius: 40px; padding: 14px; border: 1px solid #efcd8a; }
-        /* Сетка 4x5 (20 клеток) */
-        .grid { display: grid; grid-template-columns: repeat(4, minmax(65px, 80px)); gap: 10px; justify-content: center; margin: 15px auto; background: #1f2c18cc; padding: 15px; border-radius: 40px; max-width: 100%; }
-        .cell { background: #5e3a2b; background-image: radial-gradient(circle at 25% 30%, #7e5a45, #3f2a1d); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 0 #2c1a10; border: 2px solid #c7a15e; width: 100%; aspect-ratio: 1 / 1; transition: none; transform: none; }
-        .cell.selected { border: 3px solid #ffd966; transform: none; box-shadow: 0 4px 0 #2c1a10; }
-        .cell.empty { color: #aa9f7b; font-size: 26px; }
-        .action-bar { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
-        .tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 12px; }
-        button { background: #ecd67a; border: none; font-size: 13px; font-weight: bold; padding: 8px 14px; border-radius: 50px; cursor: pointer; color: #2b381c; box-shadow: 0 4px 0 #8b6946; transition: 0.05s linear; }
-        button:active { transform: translateY(2px); box-shadow: 0 2px 0 #8b6946; }
+        .game-container { max-width: 1300px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); border-radius: 48px; padding: 12px 15px 20px; backdrop-filter: blur(3px); }
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; background: #2c2b1fe0; padding: 6px 16px; border-radius: 50px; gap: 8px; }
+        .resources { display: flex; gap: 12px; background: #1e2a1c; padding: 3px 14px; border-radius: 35px; }
+        .res-item { font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 5px; }
+        .title { font-size: 22px; letter-spacing: 2px; text-shadow: 2px 2px 0 #2c4b1e; }
+        .main-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+        .craft-col { flex: 2; min-width: 260px; }
+        .inventory-col { flex: 1; min-width: 190px; background: #261f16cc; backdrop-filter: blur(12px); border-radius: 35px; padding: 12px; border: 1px solid #efcd8a; }
+        /* Сетка 4x5 (4 столбца, 5 рядов = 20 клеток) */
+        .grid { display: grid; grid-template-columns: repeat(4, minmax(60px, 70px)); gap: 8px; justify-content: center; margin: 12px auto; background: #1f2c18cc; padding: 12px; border-radius: 35px; max-width: 100%; }
+        .cell { background: #5e3a2b; background-image: radial-gradient(circle at 25% 30%, #7e5a45, #3f2a1d); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 3px 0 #2c1a10; border: 2px solid #c7a15e; width: 100%; aspect-ratio: 1 / 1; transition: none; transform: none; }
+        .cell.selected { border: 3px solid #ffd966; transform: none; box-shadow: 0 3px 0 #2c1a10; }
+        .cell.empty { color: #aa9f7b; font-size: 22px; }
+        .action-bar { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        button { background: #ecd67a; border: none; font-size: 12px; font-weight: bold; padding: 6px 12px; border-radius: 45px; cursor: pointer; color: #2b381c; box-shadow: 0 3px 0 #8b6946; transition: 0.05s linear; }
+        button:active { transform: translateY(2px); box-shadow: 0 1px 0 #8b6946; }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .shop-npc-row { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
-        .shop-panel { flex: 1.2; min-width: 250px; background: #261f16cc; backdrop-filter: blur(12px); border-radius: 40px; padding: 14px; border: 1px solid #efcd8a; }
-        .unlock-buttons, .enchant-shop { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 220px; overflow-y: auto; }
-        .unlock-btn, .enchant-btn { background: #4f6b3e; color: #ffefb9; box-shadow: 0 3px 0 #2b3a1f; display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 5px 10px; border-radius: 35px; }
-        .exchange-btn { background: #c9a03d; margin-top: 12px; width: 100%; }
-        .npc-section { flex: 2; background: #2f2a1ed9; backdrop-filter: blur(8px); border-radius: 40px; padding: 14px; text-align: center; }
-        .single-npc-card { background: #e5d5b0; color: #2a2418; border-radius: 40px; padding: 15px; max-width: 350px; margin: 0 auto; box-shadow: 0 8px 0 #aa8b60; }
-        .npc-name { font-weight: bold; font-size: 1.4rem; }
-        .npc-wishlist { font-size: 0.9rem; background: #fff0cf; padding: 10px; border-radius: 35px; margin: 10px 0; }
-        .sell-to-npc { background: #ca9622; color: white; padding: 6px 16px; width: 70%; font-size: 13px; }
-        .bg-shop-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; max-height: 90px; overflow-y: auto; justify-content: center; }
-        .bg-option { background: #2c2b1f; border-radius: 25px; padding: 4px 8px; font-size: 10px; cursor: pointer; border: 1px solid gold; text-align: center; min-width: 75px; }
-        .battle-panel { background: #1e1a2ecc; border-radius: 40px; padding: 15px; margin-top: 15px; text-align: center; }
-        .monster-hp { font-size: 26px; font-weight: bold; background: black; display: inline-block; padding: 6px 20px; border-radius: 50px; margin: 8px; }
-        .attack-btn { background: #d64531; color: white; font-size: 20px; padding: 8px 30px; }
-        hr { border-color: #7faa5a; margin: 10px 0; }
-        .badge { background: black; padding: 3px 10px; border-radius: 25px; font-size: 11px; display: inline-block; margin-top: 6px; }
-        .dev-console { position: fixed; bottom: 8px; right: 8px; background: #1a1a1a; border-radius: 8px; padding: 3px 6px; font-size: 9px; opacity: 0.6; cursor: pointer; z-index: 999; }
-        .inventory-slot { background: #3a2a1a; border-radius: 20px; padding: 10px; margin: 8px 0; text-align: center; border: 2px solid #c7a15e; }
-        .slot-item { font-size: 20px; font-weight: bold; }
-        .warning { color: #ffaa66; font-size: 11px; margin-top: 4px; }
-        h3 { font-size: 18px; margin: 0 0 8px 0; }
+        .shop-npc-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+        .shop-panel { flex: 1.2; min-width: 240px; background: #261f16cc; backdrop-filter: blur(12px); border-radius: 35px; padding: 12px; border: 1px solid #efcd8a; }
+        .unlock-buttons, .enchant-shop { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; max-height: 200px; overflow-y: auto; }
+        .unlock-btn, .enchant-btn { background: #4f6b3e; color: #ffefb9; box-shadow: 0 2px 0 #2b3a1f; display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 4px 8px; border-radius: 30px; }
+        .exchange-btn { background: #c9a03d; margin-top: 10px; width: 100%; }
+        .npc-section { flex: 2; background: #2f2a1ed9; backdrop-filter: blur(8px); border-radius: 35px; padding: 12px; text-align: center; }
+        .single-npc-card { background: #e5d5b0; color: #2a2418; border-radius: 35px; padding: 12px; max-width: 320px; margin: 0 auto; box-shadow: 0 6px 0 #aa8b60; }
+        .npc-name { font-weight: bold; font-size: 1.3rem; }
+        .npc-wishlist { font-size: 0.85rem; background: #fff0cf; padding: 8px; border-radius: 30px; margin: 8px 0; }
+        .sell-to-npc { background: #ca9622; color: white; padding: 5px 14px; width: 70%; font-size: 12px; }
+        .bg-shop-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; max-height: 80px; overflow-y: auto; justify-content: center; }
+        .bg-option { background: #2c2b1f; border-radius: 25px; padding: 3px 7px; font-size: 9px; cursor: pointer; border: 1px solid gold; text-align: center; min-width: 70px; }
+        .battle-panel { background: #1e1a2ecc; border-radius: 35px; padding: 12px; margin-top: 12px; text-align: center; }
+        .monster-hp { font-size: 22px; font-weight: bold; background: black; display: inline-block; padding: 4px 16px; border-radius: 45px; margin: 6px; }
+        .attack-btn { background: #d64531; color: white; font-size: 18px; padding: 6px 25px; }
+        hr { border-color: #7faa5a; margin: 8px 0; }
+        .badge { background: black; padding: 2px 8px; border-radius: 25px; font-size: 10px; display: inline-block; margin-top: 5px; }
+        .dev-console { position: fixed; bottom: 6px; right: 6px; background: #1a1a1a; border-radius: 8px; padding: 2px 5px; font-size: 8px; opacity: 0.6; cursor: pointer; z-index: 999; }
+        .inventory-slot { background: #3a2a1a; border-radius: 18px; padding: 8px; margin: 6px 0; text-align: center; border: 2px solid #c7a15e; }
+        .slot-item { font-size: 18px; font-weight: bold; }
+        .warning { color: #ffaa66; font-size: 10px; margin-top: 3px; }
+        h3 { font-size: 16px; margin: 0 0 6px 0; }
     </style>
 </head>
 <body class="bg-white">
@@ -142,19 +142,19 @@
                     <button id="craftRangedBtn" disabled>🔒 Заблокировано (перерождение)</button>
                     <button id="rebirthBtn">🌀 Перерождение (1.000.000 🪙)</button>
                 </div>
-                <div class="warning" id="rebirthWarning" style="text-align:center; margin-top:5px;"></div>
+                <div class="warning" id="rebirthWarning" style="text-align:center; margin-top:4px;"></div>
             </div>
             <div class="inventory-col">
                 <h3>🎒 ИНВЕНТАРЬ</h3>
                 <div class="inventory-slot">
                     <div>⚔️ Экипированное оружие</div>
                     <div class="slot-item" id="equippedWeapon">— пусто —</div>
-                    <button id="equipWeaponBtn" style="font-size:11px; padding:4px 8px; margin-top:6px;">Снарядить из крафта</button>
+                    <button id="equipWeaponBtn" style="font-size:10px; padding:3px 6px; margin-top:5px;">Снарядить из крафта</button>
                 </div>
                 <div class="inventory-slot">
                     <div>🏹 Экипированный лук/метательное</div>
                     <div class="slot-item" id="equippedRanged">— пусто —</div>
-                    <button id="equipRangedBtn" style="font-size:11px; padding:4px 8px; margin-top:6px;">Снарядить из крафта</button>
+                    <button id="equipRangedBtn" style="font-size:10px; padding:3px 6px; margin-top:5px;">Снарядить из крафта</button>
                 </div>
                 <div class="badge">Снаряжённое оружие даёт +5 урона за тир</div>
             </div>
@@ -166,8 +166,8 @@
             <h2>🐉 ДРЕВНИЙ МОНСТР</h2>
             <div class="monster-hp">❤️ <span id="monsterHp">10000</span> / 10000</div>
             <button id="attackBtn" class="attack-btn">💥 АТАКОВАТЬ (урон <span id="damageValue">10</span>)</button>
-            <div class="badge" style="margin-top:12px;">🏆 За убийство +100 монет</div>
-            <div id="enchantBonusInfo" style="margin-top:8px; font-size:12px;"></div>
+            <div class="badge" style="margin-top:10px;">🏆 За убийство +100 монет</div>
+            <div id="enchantBonusInfo" style="margin-top:6px; font-size:11px;"></div>
         </div>
     </div>
 
@@ -186,7 +186,7 @@
             <div id="npcSingleContainer" class="single-npc-card"></div>
         </div>
     </div>
-    <div class="bg-shop-row" id="bgShopContainer" style="margin-top:12px;"></div>
+    <div class="bg-shop-row" id="bgShopContainer" style="margin-top:10px;"></div>
 </div>
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
 
@@ -378,9 +378,9 @@
     function renderEnchantShop(){
         let cont=document.getElementById("enchantShopContainer"); if(!cont) return;
         if(rebirthLevel===0){ cont.innerHTML="<div class='badge'>🔒 Переродитесь, чтобы открыть зачарования</div>"; return; }
-        cont.innerHTML="<b>⚔️ Оружие:</b><div style='display:flex;flex-wrap:wrap;gap:4px;'>"+enchantWeapons.map((b,i)=>`<button class='enchant-btn' ${b?'disabled style=opacity:0.6':''} onclick='window.buyEnchant(\"weapon\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
-        cont.innerHTML+="<b>🛡️ Броня:</b><div style='display:flex;flex-wrap:wrap;gap:4px;'>"+enchantArmors.map((b,i)=>`<button class='enchant-btn' ${b?'disabled':''} onclick='window.buyEnchant(\"armor\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
-        cont.innerHTML+="<b>🏹 Дальнее:</b><div style='display:flex;flex-wrap:wrap;gap:4px;'>"+enchantRanged.map((b,i)=>`<button class='enchant-btn' ${b?'disabled':''} onclick='window.buyEnchant(\"ranged\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
+        cont.innerHTML="<b>⚔️ Оружие:</b><div style='display:flex;flex-wrap:wrap;gap:3px;'>"+enchantWeapons.map((b,i)=>`<button class='enchant-btn' ${b?'disabled style=opacity:0.6':''} onclick='window.buyEnchant(\"weapon\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
+        cont.innerHTML+="<b>🛡️ Броня:</b><div style='display:flex;flex-wrap:wrap;gap:3px;'>"+enchantArmors.map((b,i)=>`<button class='enchant-btn' ${b?'disabled':''} onclick='window.buyEnchant(\"armor\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
+        cont.innerHTML+="<b>🏹 Дальнее:</b><div style='display:flex;flex-wrap:wrap;gap:3px;'>"+enchantRanged.map((b,i)=>`<button class='enchant-btn' ${b?'disabled':''} onclick='window.buyEnchant(\"ranged\",${i})'>Чарка ${i+1}${b?"✅":" 100🪙"}</button>`).join('')+"</div>";
     }
     window.buyEnchant = buyEnchant;
     

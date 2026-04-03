@@ -99,6 +99,7 @@
         .support-btn { background: #25d366; color: white; margin-top: 8px; width: 100%; }
         .inline-btn { background: #c9a03d; font-size: 10px; padding: 3px 8px; margin-left: 5px; }
         .verify-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 20px; }
+        .confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
     </style>
 </head>
 <body class="bg-black">
@@ -140,7 +141,6 @@
         "vial":"🧴 Бутылёк","weak_potion":"🧪 Малое","medium_potion":"🧪 Среднее","strong_potion":"⚡ Сильное","elixir":"✨ Эликсир","poison":"☠️ Яд","stamina":"💪 Бодрящее","invisibility":"👻 Невидимость","healing":"💚 Лечение","immortality":"🌟 Бессмертие"
     };
     
-    // Получить категорию и цену НП для предмета
     function getItemCategory(item) {
         if(materialChain.includes(item)) return { chain: materialChain, basePrice: baseNpPrice.materials, type: 'materials' };
         if(weaponChain.includes(item)) return { chain: weaponChain, basePrice: baseNpPrice.weapons, type: 'weapons' };
@@ -151,7 +151,6 @@
         return null;
     }
     
-    // Стоимость крафта: цена НП * количество НП (2^тир)
     function getItemRealPrice(item) {
         let cat = getItemCategory(item);
         if(!cat) return 5;
@@ -177,7 +176,6 @@
     function getEnchantCost(level) { return 500 + (level * 500); }
     function getRefundCost(level) { return Math.floor(getEnchantCost(level) * 0.8); }
     
-    // Глобальные переменные
     let unlocked = { weapons:false, armor:false, food:false, potions:false };
     let unlocksCount = { weapons:0, armor:0, food:0, potions:0 };
     let coins = 200, energy = 0;
@@ -194,7 +192,7 @@
     let chargeTimeout = null, isCharging = false, chargedAttackReady = false;
     let selectedEquipmentSlot = null;
     let rangedUnlocked = false;
-    let currentUserId = null;
+    let currentUsername = null;
     
     function discoverItem(item) { if(item && !discoveredItems.has(item)) { discoveredItems.add(item); renderCollection(); } }
     function addToGridAndDiscover(itemId) { discoverItem(itemId); let empty = grid.findIndex(c => c === null); if(empty === -1) return false; grid[empty] = itemId; renderGrid(); return true; }
@@ -235,7 +233,34 @@
     function initNPC() { npcList = npcNames.map((name,idx)=>({ id:idx, name:name, wishlist:generateWishlist() })); currentNpc = npcList[0]; renderNPC(); }
     function nextNPC() { let idx = npcList.findIndex(n=>n===currentNpc); let next = (idx+1)%npcList.length; currentNpc = npcList[next]; metNpcs.add(currentNpc.name); renderCollection(); renderNPC(); }
     function refreshNPC() { if(coins>=10){ coins-=10; nextNPC(); updateUI(); saveGame(); alert("Продавец обновлён!"); } else alert("Нужно 10 монет"); }
-    function sellToNPC() { if(!currentNpc) return; let sellIdx=-1, sellItem=null; for(let i=0;i<grid.length;i++){ if(grid[i] && currentNpc.wishlist.includes(grid[i])){ sellItem=grid[i]; sellIdx=i; break; } } if(!sellItem){ alert("Нет нужного предмета!"); return; } let price = getItemSellPrice(sellItem); grid[sellIdx]=null; coins+=price; selectedIndex=null; renderGrid(); updateUI(); nextNPC(); saveGame(); alert(`Продано за ${price}🪙`); }
+    function sellToNPC() { 
+        if(!currentNpc) return; 
+        let wishlist = currentNpc.wishlist;
+        let foundItems = [];
+        let foundIndexes = [];
+        for(let i=0;i<grid.length;i++){ 
+            if(grid[i] && wishlist.includes(grid[i]) && !foundItems.includes(grid[i])){ 
+                foundItems.push(grid[i]); 
+                foundIndexes.push(i);
+            }
+        }
+        if(foundItems.length < wishlist.length){ 
+            alert(`Для продажи нужны все 3 предмета из списка желаний NPC!\nНужно: ${wishlist.map(w=>itemNames[w]).join(", ")}`); 
+            return; 
+        }
+        let totalPrice = 0;
+        for(let idx of foundIndexes){
+            totalPrice += getItemSellPrice(grid[idx]);
+            grid[idx] = null;
+        }
+        coins += totalPrice;
+        selectedIndex = null;
+        renderGrid(); 
+        updateUI(); 
+        nextNPC(); 
+        saveGame(); 
+        alert(`Продано! Получено ${totalPrice}🪙`);
+    }
     function sellSelectedItem() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let item = grid[selectedIndex]; let price = getItemSellPrice(item); if(confirm(`Продать ${itemNames[item]} за ${price} монет?`)) { coins += price; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); updateUI(); saveGame(); alert(`Продано за ${price}🪙`); } } else alert("Выберите предмет в сетке"); }
     function addToStorage() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let emptyIdx = storage.findIndex(s => s === null); if(emptyIdx === -1) alert("Хранилище заполнено"); else { storage[emptyIdx] = grid[selectedIndex]; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); renderStorage(); saveGame(); } } else alert("Выберите предмет в сетке"); }
     function removeFromStorage(idx) { if(storage[idx] !== null) { if(addToGridAndDiscover(storage[idx])) { storage[idx] = null; renderStorage(); saveGame(); } else alert("Нет места в сетке"); } }
@@ -389,7 +414,6 @@
         let cont=document.getElementById("shopUnlockList"); cont.innerHTML=""; 
         let cats=[{id:"weapons",name:"⚔️ ОРУЖИЕ"},{id:"armor",name:"🛡️ БРОНЯ"},{id:"food",name:"🍇 ЕДА"},{id:"potions",name:"🧪 ЗЕЛЬЯ"}]; 
         for(let c of cats){ let isUnlock=unlocked[c.id]; let cost=500+(unlocksCount[c.id]*150); let btn=document.createElement("button"); btn.className="unlock-btn"+(isUnlock?" unlocked":""); btn.innerHTML=`<span>${c.name}</span><span>${isUnlock?"✅":cost+"🪙"}</span>`; if(!isUnlock) btn.onclick=()=>unlockCategory(c.id,c.name); else btn.disabled=true; cont.appendChild(btn); } 
-        // Кнопка луков в магазине (отдельно)
         let rangedBtn = document.createElement("button"); 
         if(rangedUnlocked) { rangedBtn.className="unlock-btn unlocked"; rangedBtn.innerHTML=`<span>🏹 ЛУКИ</span><span>✅</span>`; rangedBtn.disabled=true; }
         else if(rebirthLevel===0) { rangedBtn.className="unlock-btn"; rangedBtn.innerHTML=`<span>🏹 ЛУКИ</span><span>🔒 переродитесь</span>`; rangedBtn.disabled=true; }
@@ -398,7 +422,7 @@
     }
     function renderGrid(){ let cont=document.getElementById("grid"); cont.innerHTML=""; for(let i=0;i<grid.length;i++){ let key=grid[i]; let div=document.createElement("div"); div.className="cell"; if(selectedIndex===i) div.classList.add("selected"); div.textContent=key?itemNames[key]:"⬚"; if(!key) div.classList.add("empty"); div.onclick=(idx=>()=>clickCell(idx))(i); cont.appendChild(div); } }
     function renderStorage(){ let cont=document.getElementById("storageContainer"); cont.innerHTML="<div style='display:flex; flex-wrap:wrap; gap:6px;'>"; for(let i=0;i<storage.length;i++){ let item=storage[i]; cont.innerHTML+=`<div class="storage-slot" style="flex:1; min-width:80px;"><div class="storage-item">${item?itemNames[item]:"⬚ пусто"}</div>${item?`<button class="storage-remove" onclick="window.removeFromStorage(${i})">✖</button>`:""}</div>`; } cont.innerHTML+="</div><button onclick='window.addToStorage()' style='margin-top:4px;'>📦 В хранилище</button>"; } window.addToStorage=addToStorage; window.removeFromStorage=removeFromStorage;
-    function renderNPC(){ let cont=document.getElementById("npcSingleContainer"); if(!currentNpc) return; let wishText=currentNpc.wishlist.map(w=>itemNames[w]||w).join(", "); cont.innerHTML=`<div class="npc-name">🧙 ${currentNpc.name}</div><div class="npc-wishlist">📋 ХОЧЕТ КУПИТЬ:<br> ${wishText}</div><button class="sell-to-npc" id="sellToNpcBtn">💰 ПРОДАТЬ</button>`; document.getElementById("sellToNpcBtn")?.addEventListener("click",sellToNPC); }
+    function renderNPC(){ let cont=document.getElementById("npcSingleContainer"); if(!currentNpc) return; let wishText=currentNpc.wishlist.map(w=>itemNames[w]||w).join(", "); cont.innerHTML=`<div class="npc-name">🧙 ${currentNpc.name}</div><div class="npc-wishlist">📋 ХОЧЕТ КУПИТЬ:<br> ${wishText}</div><button class="sell-to-npc" id="sellToNpcBtn">💰 ПРОДАТЬ ВСЕ</button>`; document.getElementById("sellToNpcBtn")?.addEventListener("click",sellToNPC); }
     function updateUI(){ document.getElementById("coins").innerText=Math.floor(coins); document.getElementById("energy").innerText=energy; document.getElementById("rebirthWarning").innerHTML=rebirthLevel===0?"⚠️ Перерождение сбросит прогресс (фоны останутся)":""; document.getElementById("enchantBonusInfo").innerHTML=`✨ Чарки: +${enchantWeapons+enchantRanged} урона (всего ${recalcDamage()})`; }
     function exchangeEnergy(){ if(energy>=10){ energy-=10; coins+=10; updateUI(); saveGame(); } else alert(`Не хватает 10⚡`); }
     function support() { window.open("https://t.me/SunnySide20_bot", "_blank"); }
@@ -415,11 +439,25 @@
         let metContainer=document.getElementById("metNpcContainer"); metContainer.innerHTML=""; for(let name of metNpcs){ metContainer.innerHTML+=`<span class="badge">${name}</span>`; } if(metNpcs.size===0) metContainer.innerHTML="<span class='badge'>Пока никого</span>";
     }
     
-    function fullReset() { 
-        if(confirm("⚠️ ПОЛНЫЙ СБРОС ВСЕХ ДАННЫХ!\nФоны, прогресс, монеты, энергия, покупки — всё будет удалено.\nЭто действие необратимо. Продолжить?")){
-            localStorage.removeItem(`sunnygame_${currentUserId}`);
+    function showFullResetConfirm() {
+        let confirmDiv = document.createElement("div");
+        confirmDiv.className = "confirm-overlay";
+        confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
+            <h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2>
+            <p>Вы уверены, что хотите полностью сбросить игру?</p>
+            <p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p>
+            <p style="color:#ff6666;">Фоны останутся. Это действие необратимо!</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
+                <button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button>
+                <button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button>
+            </div>
+        </div>`;
+        document.body.appendChild(confirmDiv);
+        document.getElementById("confirmResetBtn").onclick = () => {
+            localStorage.removeItem(`sunnygame_${currentUsername}`);
             location.reload();
-        }
+        };
+        document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove();
     }
     
     function rebirth() { 
@@ -449,7 +487,6 @@
         } else alert("Нужно 1.000.000 монет"); 
     }
 
-    // Привязка событий
     document.getElementById("tabCraftBtn").onclick=()=>{ document.getElementById("craftSection").style.display="block"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabBattleBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="block"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabCollectionBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="block"; renderCollection(); };
@@ -460,7 +497,7 @@
     document.getElementById("craftFoodBtn").onclick=()=>craftBase(30,"berry",unlocked.food);
     document.getElementById("craftPotionBtn").onclick=()=>craftBase(40,"vial",unlocked.potions);
     document.getElementById("rebirthBtn").onclick=rebirth;
-    document.getElementById("fullResetBtn").onclick=fullReset;
+    document.getElementById("fullResetBtn").onclick=showFullResetConfirm;
     document.getElementById("exchangeEnergyBtn").onclick=exchangeEnergy;
     document.getElementById("sellItemBtn").onclick=sellSelectedItem;
     document.getElementById("supportBtn").onclick=support;
@@ -476,15 +513,15 @@
 
     let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); },60000);
     
-    function getSaveKey() { return `sunnygame_${currentUserId}`; }
+    function getSaveKey() { return `sunnygame_${currentUsername}`; }
     
     function saveGame() { 
-        if(!currentUserId) return;
+        if(!currentUsername) return;
         let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked }; 
         localStorage.setItem(getSaveKey(), JSON.stringify(save)); 
     }
     function loadGame() { 
-        if(!currentUserId) return false;
+        if(!currentUsername) return false;
         let data = localStorage.getItem(getSaveKey()); 
         if(!data) return false; 
         try{ 
@@ -505,11 +542,10 @@
         } catch(e){ return false; } 
     }
 
-    // Функция отправки уведомления админу
     function sendToAdmin(message) {
         fetch(`https://api.telegram.org/bot8743238206:AAEEcIk9dMJFCCttKYD3LA_nRIQpeH7Bm3s/sendMessage`, {
             method: "POST", headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({chat_id: "1577899640", text: `🔔 АДМИН-КОНСОЛЬ: ${message}\nОт игрока: ${currentUserId || "неизвестно"}`})
+            body: JSON.stringify({chat_id: "1577899640", text: `🔔 АДМИН-КОНСОЛЬ: ${message}\nОт игрока: ${currentUsername || "неизвестно"}`})
         }).catch(e=>console.log);
     }
 
@@ -523,7 +559,7 @@
         function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
         
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nMoney [сумма] - добавить монеты себе\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - список предметов\nMoneySend @username [сумма] - выдать монеты другому игроку (из ниоткуда)");
+            let cmd = prompt("🔧 КОНСОЛЬ\n\nMoney [сумма] - добавить монеты себе\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - список предметов\nMoneySend [сумма] - выдать монеты другому игроку (по юзернейму из верификации)");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
             
@@ -568,14 +604,16 @@
             }
             else if(lowerCmd.startsWith("moneysend ")){ 
                 let parts = cmd.split(" ");
-                if(parts.length >= 3){
-                    let username = parts[1].replace('@','');
-                    let amount = parseInt(parts[2]);
+                if(parts.length >= 2){
+                    let amount = parseInt(parts[1]);
                     if(!isNaN(amount) && amount>0){
-                        alert(`✅ Игроку ${username} выдано ${amount} монет!`);
-                        sendToAdmin(`Выдал ${amount} монет игроку ${username}`);
+                        let targetUsername = prompt("Введите юзернейм получателя (тот, который использовался при верификации):");
+                        if(targetUsername && targetUsername.trim()){
+                            alert(`✅ Игроку ${targetUsername} выдано ${amount} монет!`);
+                            sendToAdmin(`Выдал ${amount} монет игроку ${targetUsername}`);
+                        } else alert("Юзернейм не указан");
                     } else alert("Неверная сумма");
-                } else alert("Формат: MoneySend @username сумма");
+                } else alert("Формат: MoneySend сумма");
             }
             else alert("Неизвестно");
         }
@@ -584,39 +622,32 @@
         if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Пароль:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
     
-    // ========== ВЕРИФИКАЦИЯ ПРОФИЛЯ ==========
+    // ========== ВЕРИФИКАЦИЯ ПО ЮЗЕРНЕЙМУ ==========
     function showVerification() {
         let verifyDiv = document.createElement("div");
         verifyDiv.className = "verify-overlay";
         verifyDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
             <h2>🔐 ПРИВЯЗКА АККАУНТА</h2>
-            <p>Для сохранения прогресса необходимо привязать ваш Telegram аккаунт.</p>
-            <p>Ваш ID будет использоваться для сохранения.</p>
-            <button id="verifyBtn">✅ Привязать аккаунт</button>
-            <p style="font-size:12px; margin-top:15px;">⚠️ Прогресс сохраняется на устройстве и привязан к вашему Telegram ID. При смене аккаунта откроется новое сохранение.</p>
+            <p>Введите ваш Telegram юзернейм (без @) для сохранения прогресса:</p>
+            <input type="text" id="usernameInput" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px;" placeholder="ваш_юзернейм">
+            <button id="verifyBtn" style="margin-top:15px;">✅ Привязать</button>
+            <p style="font-size:12px; margin-top:15px;">⚠️ Прогресс сохраняется на устройстве и привязан к вашему юзернейму. При смене аккаунта откроется новое сохранение.</p>
         </div>`;
         document.body.appendChild(verifyDiv);
         document.getElementById("verifyBtn").onclick = () => {
-            verifyDiv.remove();
-            let tg = window.Telegram?.WebApp;
-            if(tg && tg.initDataUnsafe?.user?.id) {
-                currentUserId = tg.initDataUnsafe.user.id;
+            let username = document.getElementById("usernameInput").value.trim();
+            if(username){
+                currentUsername = username;
+                verifyDiv.remove();
                 if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
-                alert(`✅ Аккаунт привязан! Ваш ID: ${currentUserId}`);
-            } else {
-                let manualId = prompt("Не удалось получить ID автоматически. Введите ваш Telegram ID вручную (можно узнать у @userinfobot):");
-                if(manualId && !isNaN(manualId)) {
-                    currentUserId = manualId;
-                    if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
-                    alert(`✅ Аккаунт привязан! ID: ${currentUserId}`);
-                } else { location.reload(); }
-            }
+                alert(`✅ Аккаунт привязан! Ваш юзернейм: ${currentUsername}`);
+            } else { alert("Введите юзернейм"); }
         };
     }
     
     let tg = window.Telegram?.WebApp;
-    if(tg && tg.initDataUnsafe?.user?.id) {
-        currentUserId = tg.initDataUnsafe.user.id;
+    if(tg && tg.initDataUnsafe?.user?.username) {
+        currentUsername = tg.initDataUnsafe.user.username;
         if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
     } else {
         showVerification();

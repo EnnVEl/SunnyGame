@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SunnyGame · Баланс и сообщество</title>
+    <title>SunnyGame · Баланс и перерождение</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -94,16 +94,12 @@
         .storage-slot { background: #4a3a2a; border-radius: 14px; padding: 4px; margin: 4px 0; display: flex; align-items: center; gap: 8px; }
         .storage-item { flex: 1; font-size: 12px; }
         .storage-remove { background: #aa4444; font-size: 9px; padding: 2px 6px; border-radius: 20px; }
-        .profile-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
-        .profile-card { background: #1a1a1a; border-radius: 30px; padding: 20px; max-width: 300px; width: 100%; }
-        .avatar { width: 80px; height: 80px; border-radius: 50%; background: #4f6b3e; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 10px; }
-        .friend-item { background: #3a3a2a; border-radius: 15px; padding: 6px 10px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .chat-message { background: #2a2a1e; border-radius: 15px; padding: 8px 12px; margin: 5px 0; word-break: break-word; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .msg-avatar { width: 30px; height: 30px; border-radius: 50%; background: #4f6b3e; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-        .chat-switch { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-        .chat-switch button { background: #4f6b3e; padding: 4px 12px; }
-        .chat-switch button.active { background: #f5b642; color: #2b381c; }
-        .delete-account-btn { background: #aa3333; margin-top: 10px; width: 100%; }
+        .info-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; color: white; text-align: center; flex-direction: column; }
+        .confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
+        .footer { text-align: center; margin-top: 20px; padding: 10px; }
+        .footer-text { font-size: 10px; color: #aa66ff; text-shadow: 1px 1px 0 #000; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .support-btn { background: #25d366; color: white; margin-top: 8px; width: 100%; }
+        .inline-btn { background: #c9a03d; font-size: 10px; padding: 3px 8px; margin-left: 5px; }
         .rebirth-container { margin-bottom: 10px; text-align: center; }
         .fullreset-container { margin-top: 10px; }
     </style>
@@ -121,11 +117,10 @@
             </div>
         </div>
     </div>
-    <div class="tabs"><button id="tabCraftBtn" style="background:#f5b642;">🏭 Крафт</button><button id="tabBattleBtn">⚔️ Битва</button><button id="tabCollectionBtn">📜 Коллекция</button><button id="tabSocialBtn">👥 Сообщество</button></div>
+    <div class="tabs"><button id="tabCraftBtn" style="background:#f5b642;">🏭 Крафт</button><button id="tabBattleBtn">⚔️ Битва</button><button id="tabCollectionBtn">📜 Коллекция</button></div>
     <div id="craftSection"><div class="main-row"><div class="craft-col"><div class="grid" id="grid"></div><div class="action-bar"><button id="craftResourceBtn">🌾 Материалы -5</button><button id="craftWeaponBtn" disabled>⚔️ Оружие -10</button><button id="craftRangedWeaponBtn" disabled style="background:#555;">🏹 Луки (после перерождения)</button><button id="craftArmorBtn" disabled>🛡️ Броня -20</button><button id="craftFoodBtn" disabled>🍇 Еда -30</button><button id="craftPotionBtn" disabled>🧪 Зелья -40</button></div><div class="warning" id="rebirthWarning"></div></div><div class="inventory-col"><h3>🎒 ИНВЕНТАРЬ</h3><div class="inventory-slot" id="weaponSlot"><div>⚔️ ОРУЖИЕ</div><div class="slot-item" id="equippedWeapon">— пусто —</div></div><div class="inventory-slot" id="rangedSlot"><div>🏹 ЛУКИ</div><div class="slot-item" id="equippedRanged">— пусто —</div></div><h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtn" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3><div id="storageContainer"></div></div></div></div>
     <div id="battleSection" style="display:none;"><div class="battle-panel"><h2>🐉 ДРЕВНИЙ МОНСТР</h2><div class="monster-hp">❤️ <span id="monsterHp">10000</span> / 10000</div><button id="attackBtn" class="attack-btn">💥 АТАКОВАТЬ</button><div class="badge">🏆 Убийство +100</div><div id="enchantBonusInfo" style="margin-top:6px; font-size:10px;"></div><div class="badge">⌛ Луки: зажмите 1с для заряда (+5)</div></div></div>
     <div id="collectionSection" style="display:none;"><div class="shop-panel"><h3>📜 КОЛЛЕКЦИЯ</h3><div id="collectionContainer"></div><h3>👥 ВСТРЕЧЕННЫЕ NPC</h3><div id="metNpcContainer" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;"></div><div class="badge">Нажмите на предмет для рецепта</div></div></div>
-    <div id="socialSection" style="display:none;"><div class="shop-panel"><div class="chat-switch" id="chatSwitch"></div><div id="chatArea" style="height:200px; overflow-y:auto; background:#1a1a1a; border-radius:15px; padding:8px; margin-bottom:10px;"></div><div style="display:flex; gap:5px;"><input type="text" id="chatInput" placeholder="Сообщение..." style="flex:1; border-radius:20px; border:none; padding:8px;"><button id="sendChatBtn">📨</button></div><hr><h3>👥 ДРУЗЬЯ</h3><div id="friendsList" style="max-height:150px; overflow-y:auto;"></div><div style="display:flex; gap:5px; margin-top:8px;"><input type="text" id="addFriendInput" placeholder="Никнейм для добавления" style="flex:1; border-radius:20px; border:none; padding:6px;"><button id="addFriendBtn">➕ Добавить</button></div><hr><h3>🏆 ЛИДЕРЫ ПО МОНЕТАМ</h3><div id="leadersList" style="max-height:150px; overflow-y:auto;"></div><button id="deleteAccountBtn" class="delete-account-btn">⚠️ УДАЛИТЬ АККАУНТ</button></div></div>
     <div class="rebirth-container"><button id="rebirthBtn">🌀 Перерождение 1M</button></div>
     <div class="shop-npc-row"><div class="shop-panel"><h3>🏪 ЛАВКА</h3><div class="unlock-buttons" id="shopUnlockList"></div><button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button><hr><h3>✨ ЗАЧАРОВАНИЯ</h3><div class="badge">Кликните на чарку для применения к выбранному предмету</div><div id="enchantShopContainer" class="enchant-shop"></div><div class="badge">Снятие чарки: возврат 80% стоимости</div><hr><h3>🎨 ФОНЫ</h3><div id="bgShopContainer" class="bg-shop-row"></div></div><div class="npc-section"><h3>📦 ПРОДАЖИ</h3><div id="npcSingleContainer" class="single-npc-card"></div><button id="sellItemBtn" style="margin-top:6px; background:#aa6644;">💸 Продать выбранный (стоимость -50%)</button><button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button></div></div></div>
 <div class="footer"><div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div><button id="supportBtn" class="support-btn">💬 Поддержка</button><div class="fullreset-container"><button id="fullResetBtn" style="background:#aa3333;">⚠️ ПОЛНЫЙ СБРОС</button></div></div>
@@ -182,203 +177,18 @@
     let chargeTimeout = null, isCharging = false, chargedAttackReady = false;
     let selectedEquipmentSlot = null;
     let rangedUnlocked = false;
-    let currentUser = null; // { id, firstName, lastName, username, avatarColor }
     
-    // ========== СЕРВЕРНЫЕ ДАННЫЕ ==========
-    let globalUsers = {}; // key: userId, value: { firstName, lastName, username, avatarColor, coins, friends, gameData }
-    let globalChat = [];
-    let privateChats = {};
-    let currentChatType = "global";
-    let currentChatFriend = null;
-    
-    const API_URL = "https://sunnygame-api.vercel.app/api";
-    const BOT_TOKEN = "8743238206:AAEEcIk9dMJFCCttKYD3LA_nRIQpeH7Bm3s";
-    const ADMIN_ID = "1577899640";
-    
-    async function apiCall(endpoint, data) {
-        try {
-            let res = await fetch(`${API_URL}/${endpoint}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            });
-            return await res.json();
-        } catch(e) { return { error: true }; }
-    }
-    
-    async function loadServerData() {
-        let result = await apiCall("data", {});
-        if(!result.error) {
-            globalUsers = result.users || {};
-            globalChat = result.chat || [];
-            privateChats = result.privateChats || {};
-        } else {
-            let fallback = localStorage.getItem("sunnygame_backup");
-            if(fallback) { let s = JSON.parse(fallback); globalUsers = s.users || {}; globalChat = s.chat || []; privateChats = s.privateChats || {}; }
-        }
-        if(currentUser && !globalUsers[currentUser.id]) {
-            globalUsers[currentUser.id] = {
-                firstName: currentUser.firstName,
-                lastName: currentUser.lastName,
-                username: currentUser.username,
-                avatarColor: currentUser.avatarColor,
-                coins: coins,
-                friends: [],
-                gameData: null
-            };
-        } else if(currentUser) {
-            globalUsers[currentUser.id].coins = coins;
-        }
-        await saveServerData();
-        renderSocial();
-    }
-    
-    async function saveServerData() {
-        await apiCall("save", { users: globalUsers, chat: globalChat, privateChats: privateChats });
-        localStorage.setItem("sunnygame_backup", JSON.stringify({ users: globalUsers, chat: globalChat, privateChats: privateChats }));
-    }
-    
-    async function sendChatMessage() {
-        let msg = document.getElementById("chatInput").value.trim();
-        if(!msg || !currentUser) return;
-        let messageData = {
-            fromId: currentUser.id,
-            fromName: currentUser.firstName,
-            avatarColor: currentUser.avatarColor,
-            text: msg,
-            time: Date.now()
-        };
-        if(currentChatType === "global") {
-            globalChat.unshift(messageData);
-            if(globalChat.length > 500) globalChat.pop();
-        } else if(currentChatType === "private" && currentChatFriend) {
-            let key = [currentUser.id, currentChatFriend].sort().join("_");
-            if(!privateChats[key]) privateChats[key] = [];
-            privateChats[key].unshift(messageData);
-            if(privateChats[key].length > 200) privateChats[key].pop();
-        }
-        await saveServerData();
-        document.getElementById("chatInput").value = "";
-        renderChat();
-    }
-    
-    async function addFriend(friendUsername) {
-        if(!currentUser) return;
-        let friendId = null;
-        for(let [id, data] of Object.entries(globalUsers)) {
-            if(data.username === friendUsername || data.firstName === friendUsername) {
-                friendId = id; break;
-            }
-        }
-        if(!friendId) { alert("Игрок с таким ником не найден"); return; }
-        if(friendId === currentUser.id) { alert("Нельзя добавить самого себя"); return; }
-        if(globalUsers[currentUser.id].friends.includes(friendId)) { alert("Этот игрок уже в друзьях"); return; }
-        globalUsers[currentUser.id].friends.push(friendId);
-        await saveServerData();
-        renderSocial();
-        alert(`${globalUsers[friendId].firstName} добавлен в друзья!`);
-    }
-    
-    async function sendMoneyToUser(targetUsername, amount) {
-        if(!currentUser) return false;
-        let targetId = null;
-        for(let [id, data] of Object.entries(globalUsers)) {
-            if(data.username === targetUsername || data.firstName === targetUsername) {
-                targetId = id; break;
-            }
-        }
-        if(!targetId) { alert("Игрок не найден"); return false; }
-        if(coins < amount) { alert("Недостаточно монет"); return false; }
-        coins -= amount;
-        globalUsers[targetId].coins += amount;
-        await saveServerData();
-        updateUI();
-        alert(`✅ Отправлено ${amount} монет игроку ${globalUsers[targetId].firstName}`);
-        return true;
-    }
-    
-    async function deleteAccount() {
-        if(confirm("⚠️ ВНИМАНИЕ! Удаление аккаунта безвозвратно удалит весь ваш прогресс. Продолжить?")) {
-            delete globalUsers[currentUser.id];
-            for(let key in privateChats) {
-                if(key.includes(currentUser.id)) delete privateChats[key];
-            }
-            await saveServerData();
-            localStorage.removeItem(`sunnygame_${currentUser.id}`);
-            alert("Аккаунт удалён. Страница перезагрузится.");
-            location.reload();
-        }
-    }
-    
-    async function updateServerCoins() {
-        if(currentUser && globalUsers[currentUser.id]) globalUsers[currentUser.id].coins = coins;
-        await saveServerData();
-        renderSocial();
-    }
-    
-    function showUserProfile(userId) {
-        let user = globalUsers[userId];
-        if(!user) return;
-        let modal = document.createElement("div");
-        modal.className = "profile-modal";
-        modal.innerHTML = `<div class="profile-card">
-            <div class="avatar" style="background:${user.avatarColor};">${user.firstName.charAt(0)}</div>
-            <h3>${user.firstName} ${user.lastName || ''}</h3>
-            <p>@${user.username || 'нет'}</p>
-            <p>💰 ${user.coins} монет</p>
-            <button onclick="this.parentElement.parentElement.remove()">Закрыть</button>
-        </div>`;
-        document.body.appendChild(modal);
-    }
-    
-    function renderSocial() {
-        let leaders = Object.entries(globalUsers).map(([id, d]) => ({ id, firstName: d.firstName, coins: d.coins || 0 })).sort((a,b) => b.coins - a.coins).slice(0,10);
-        document.getElementById("leadersList").innerHTML = leaders.map((l,i) => `<div class="leader-item" onclick="showUserProfile('${l.id}')"><span>${i+1}. ${l.firstName}</span><span>💰 ${l.coins}</span></div>`).join("") || "<div class='badge'>Загрузка...</div>";
-        let friends = globalUsers[currentUser?.id]?.friends || [];
-        document.getElementById("friendsList").innerHTML = friends.map(f => `<div class="friend-item" onclick="showUserProfile('${f}')"><span>${globalUsers[f]?.firstName || f}</span><span>💰 ${globalUsers[f]?.coins || 0}</span><button class="inline-btn" onclick="event.stopPropagation(); window.openPrivateChat('${f}')">💬</button></div>`).join("") || "<div class='badge'>У вас пока нет друзей</div>";
-        renderChat();
-    }
-    
-    function renderChat() {
-        let container = document.getElementById("chatArea");
-        if(!container) return;
-        let messages = [];
-        if(currentChatType === "global") {
-            messages = globalChat.slice(0, 100);
-        } else if(currentChatType === "private" && currentChatFriend) {
-            let key = [currentUser?.id, currentChatFriend].sort().join("_");
-            messages = privateChats[key] || [];
-        }
-        container.innerHTML = messages.map(m => `<div class="chat-message" onclick="showUserProfile('${m.fromId}')">
-            <div class="msg-avatar" style="background:${m.avatarColor || '#4f6b3e'};">${(m.fromName || '?').charAt(0)}</div>
-            <div><b>${m.fromName}</b>: ${m.text}</div>
-        </div>`).join("") || "<div class='badge'>Пока нет сообщений</div>";
-        
-        let switchDiv = document.getElementById("chatSwitch");
-        if(switchDiv && currentUser) {
-            let friends = globalUsers[currentUser.id]?.friends || [];
-            switchDiv.innerHTML = `<button class="${currentChatType === 'global' ? 'active' : ''}" onclick="window.switchToGlobal()">🌍 Общий чат</button>` +
-                friends.map(f => `<button class="${currentChatType === 'private' && currentChatFriend === f ? 'active' : ''}" onclick="window.switchToPrivate('${f}')">💬 ${globalUsers[f]?.firstName || f}</button>`).join("");
-        }
-    }
-    
-    window.switchToGlobal = function() { currentChatType = "global"; currentChatFriend = null; renderChat(); };
-    window.switchToPrivate = function(friendId) { currentChatType = "private"; currentChatFriend = friendId; renderChat(); };
-    window.openPrivateChat = function(friendId) { currentChatType = "private"; currentChatFriend = friendId; renderChat(); };
-    window.showUserProfile = showUserProfile;
-    
-    // ========== ИГРОВЫЕ ФУНКЦИИ ==========
     function discoverItem(item) { if(item && !discoveredItems.has(item)) { discoveredItems.add(item); renderCollection(); } }
     function addToGridAndDiscover(itemId) { discoverItem(itemId); let empty = grid.findIndex(c => c === null); if(empty === -1) return false; grid[empty] = itemId; renderGrid(); return true; }
     function recalcDamage() { return 1 + (enchantWeapons + enchantRanged) + (equippedWeapon ? getItemTier(equippedWeapon, weaponChain) : 0) + (equippedRanged ? getItemTier(equippedRanged, rangedChain) : 0); }
     
-    async function attackMonster(normal=true) { 
+    function attackMonster(normal=true) { 
         let dmg = recalcDamage(); 
         if(!normal && chargedAttackReady && equippedRanged) { dmg += 5; chargedAttackReady = false; } 
         monsterHp = Math.max(0, monsterHp - dmg); 
         document.getElementById("monsterHp").innerText = monsterHp; 
-        if(monsterHp === 0){ coins += 100; updateUI(); monsterHp = 10000; document.getElementById("monsterHp").innerText = 10000; alert("Вы убили монстра! +100 монет"); await updateServerCoins(); } 
-        updateUI(); saveGame();
+        if(monsterHp === 0){ coins += 100; updateUI(); monsterHp = 10000; document.getElementById("monsterHp").innerText = 10000; alert("Вы убили монстра! +100 монет"); } 
+        updateUI(); saveGame(); 
     }
     function startCharge() { if(!equippedRanged) { attackMonster(true); return; } isCharging = true; const btn = document.getElementById("attackBtn"); btn.classList.remove("charging"); if(chargeTimeout) clearTimeout(chargeTimeout); chargeTimeout = setTimeout(() => { chargedAttackReady = true; btn.classList.add("charging"); }, 1000); }
     function endCharge() { if(chargeTimeout) clearTimeout(chargeTimeout); const btn = document.getElementById("attackBtn"); btn.classList.remove("charging"); if(isCharging) { if(chargedAttackReady) attackMonster(false); else attackMonster(true); } isCharging = false; chargedAttackReady = false; }
@@ -390,21 +200,8 @@
     function initNPC() { npcList = npcNames.map((name,idx)=>({ id:idx, name:name, wishlist:generateWishlist() })); currentNpc = npcList[0]; renderNPC(); }
     function nextNPC() { let idx = npcList.findIndex(n=>n===currentNpc); let next = (idx+1)%npcList.length; currentNpc = npcList[next]; metNpcs.add(currentNpc.name); renderCollection(); renderNPC(); }
     function refreshNPC() { if(coins>=10){ coins-=10; nextNPC(); updateUI(); saveGame(); alert("Продавец обновлён!"); } else alert("Нужно 10 монет"); }
-    async function sellToNPC() { 
-        if(!currentNpc) return; 
-        let wishlist = currentNpc.wishlist;
-        let foundItems = [];
-        let foundIndexes = [];
-        for(let i=0;i<grid.length;i++){ if(grid[i] && wishlist.includes(grid[i]) && !foundItems.includes(grid[i])){ foundItems.push(grid[i]); foundIndexes.push(i); } }
-        if(foundItems.length < wishlist.length){ alert(`Для продажи нужны все 3 предмета!\nНужно: ${wishlist.map(w=>itemNames[w]).join(", ")}`); return; }
-        let totalPrice = 0;
-        for(let idx of foundIndexes){ totalPrice += getItemSellPrice(grid[idx]); grid[idx] = null; }
-        coins += totalPrice;
-        selectedIndex = null;
-        renderGrid(); updateUI(); nextNPC(); saveGame(); await updateServerCoins();
-        alert(`Продано! Получено ${totalPrice}🪙`);
-    }
-    function sellSelectedItem() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let item = grid[selectedIndex]; let price = getItemSellPrice(item); if(confirm(`Продать ${itemNames[item]} за ${price} монет?`)) { coins += price; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); updateUI(); saveGame(); updateServerCoins(); alert(`Продано за ${price}🪙`); } } else alert("Выберите предмет в сетке"); }
+    function sellToNPC() { if(!currentNpc) return; let wishlist = currentNpc.wishlist; let foundItems = []; let foundIndexes = []; for(let i=0;i<grid.length;i++){ if(grid[i] && wishlist.includes(grid[i]) && !foundItems.includes(grid[i])){ foundItems.push(grid[i]); foundIndexes.push(i); } } if(foundItems.length < wishlist.length){ alert(`Для продажи нужны все 3 предмета!\nНужно: ${wishlist.map(w=>itemNames[w]).join(", ")}`); return; } let totalPrice = 0; for(let idx of foundIndexes){ totalPrice += getItemSellPrice(grid[idx]); grid[idx] = null; } coins += totalPrice; selectedIndex = null; renderGrid(); updateUI(); nextNPC(); saveGame(); alert(`Продано! Получено ${totalPrice}🪙`); }
+    function sellSelectedItem() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let item = grid[selectedIndex]; let price = getItemSellPrice(item); if(confirm(`Продать ${itemNames[item]} за ${price} монет?`)) { coins += price; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); updateUI(); saveGame(); alert(`Продано за ${price}🪙`); } } else alert("Выберите предмет в сетке"); }
     function addToStorage() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let emptyIdx = storage.findIndex(s => s === null); if(emptyIdx === -1) alert("Хранилище заполнено"); else { storage[emptyIdx] = grid[selectedIndex]; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); renderStorage(); saveGame(); } } else alert("Выберите предмет в сетке"); }
     function removeFromStorage(idx) { if(storage[idx] !== null) { if(addToGridAndDiscover(storage[idx])) { storage[idx] = null; renderStorage(); saveGame(); } else alert("Нет места в сетке"); } }
     function expandStorage() { if(coins>=1000 && storage.length < 10){ coins-=1000; storage.push(null); renderStorage(); updateUI(); saveGame(); alert("Ячейка хранилища добавлена!"); } else if(storage.length>=10) alert("Максимум 10 ячеек"); else alert("Нужно 1000 монет"); }
@@ -412,7 +209,7 @@
     function craftBase(cost, item, unlockedFlag, needRebirth=false){ 
         if(needRebirth && !rangedUnlocked){ alert("Луки доступны только после перерождения!"); return; } 
         if(!unlockedFlag){ alert("Категория не разблокирована"); return; } 
-        if(coins>=cost){ coins-=cost; if(addToGridAndDiscover(item)) { updateUI(); saveGame(); updateServerCoins(); } } else alert(`Нужно ${cost} монет`); 
+        if(coins>=cost){ coins-=cost; if(addToGridAndDiscover(item)) { updateUI(); saveGame(); } } else alert(`Нужно ${cost} монет`); 
     }
     function moveItem(from, to) { if(grid[from] === null) return false; if(grid[to] === null) { grid[to] = grid[from]; grid[from] = null; renderGrid(); saveGame(); return true; } return false; }
     function clickCell(idx){ if(grid[idx] === null) return; if(selectedIndex === null){ selectedIndex = idx; renderGrid(); return; } let first = selectedIndex, second = idx; selectedIndex = null; if(first === second){ renderGrid(); return; } let item1 = grid[first], item2 = grid[second]; if(item1 && item2 && item1 === item2 && getMergeResult(item1)) { let next = getMergeResult(item1); grid[second] = next; grid[first] = null; discoverItem(next); coins += 3; updateUI(); saveGame(); renderGrid(); } else { moveItem(first, second); } }
@@ -432,9 +229,9 @@
     function renderStorage(){ let cont=document.getElementById("storageContainer"); cont.innerHTML="<div style='display:flex; flex-wrap:wrap; gap:6px;'>"; for(let i=0;i<storage.length;i++){ let item=storage[i]; cont.innerHTML+=`<div class="storage-slot" style="flex:1; min-width:80px;"><div class="storage-item">${item?itemNames[item]:"⬚ пусто"}</div>${item?`<button class="storage-remove" onclick="window.removeFromStorage(${i})">✖</button>`:""}</div>`; } cont.innerHTML+="</div><button onclick='window.addToStorage()' style='margin-top:4px;'>📦 В хранилище</button>"; } window.addToStorage=addToStorage; window.removeFromStorage=removeFromStorage;
     function renderNPC(){ let cont=document.getElementById("npcSingleContainer"); if(!currentNpc) return; let wishText=currentNpc.wishlist.map(w=>itemNames[w]||w).join(", "); cont.innerHTML=`<div class="npc-name">🧙 ${currentNpc.name}</div><div class="npc-wishlist">📋 ХОЧЕТ КУПИТЬ:<br> ${wishText}</div><button class="sell-to-npc" id="sellToNpcBtn">💰 ПРОДАТЬ ВСЕ</button>`; document.getElementById("sellToNpcBtn")?.addEventListener("click",sellToNPC); }
     function updateUI(){ document.getElementById("coins").innerText=Math.floor(coins); document.getElementById("energy").innerText=energy; document.getElementById("rebirthWarning").innerHTML=rebirthLevel===0?"⚠️ Перерождение сбросит прогресс (фоны останутся)":""; document.getElementById("enchantBonusInfo").innerHTML=`✨ Чарки: +${enchantWeapons+enchantRanged} урона (всего ${recalcDamage()})`; }
-    function exchangeEnergy(){ if(energy>=10){ energy-=10; coins+=10; updateUI(); saveGame(); updateServerCoins(); } else alert(`Не хватает 10⚡`); }
+    function exchangeEnergy(){ if(energy>=10){ energy-=10; coins+=10; updateUI(); saveGame(); } else alert(`Не хватает 10⚡`); }
     function support() { window.open("https://t.me/SunnySide20_bot", "_blank"); }
-    function applyPromo() { let code = document.getElementById("promoCode").value.trim(); if(code === "SunnyGame") { coins += 1000; updateUI(); saveGame(); updateServerCoins(); alert("Промокод активирован! +1000 монет"); document.getElementById("promoCode").value = ""; } else { alert("Неверный промокод"); } }
+    function applyPromo() { let code = document.getElementById("promoCode").value.trim(); if(code === "SunnyGame") { coins += 1000; updateUI(); saveGame(); alert("Промокод активирован! +1000 монет"); document.getElementById("promoCode").value = ""; } else { alert("Неверный промокод"); } }
 
     const backgrounds=[{id:"black",name:"⬛ Чёрный",price:0},{id:"white",name:"⬜ Белый",price:0},{id:"red",name:"🔴 Красный",price:1000},{id:"orange",name:"🟠 Оранжевый",price:1000},{id:"yellow",name:"🟡 Жёлтый",price:1000},{id:"green",name:"🟢 Зелёный",price:1000},{id:"cyan",name:"🔵 Голубой",price:1000},{id:"blue",name:"💙 Синий",price:1000},{id:"purple",name:"🟣 Фиолетовый",price:1000},{id:"stars",name:"✨ Звёздный",price:1000},{id:"fire",name:"🔥 Огненный",price:1000},{id:"forest",name:"🌲 Лесной",price:1000},{id:"castle",name:"🏰 Замковый",price:1000},{id:"volcano",name:"🌋 Вулкан",price:1000},{id:"ice",name:"❄️ Ледяной",price:1000},{id:"dark",name:"🌑 Тьма",price:1000},{id:"ocean",name:"🌊 Океан",price:1000},{id:"desert",name:"🏜️ Пустыня",price:1000}];
     let ownedBgs=["black","white"]; let currentBg="black";
@@ -442,20 +239,11 @@
     function purchaseBg(bg){ if(ownedBgs.includes(bg.id)){ applyBackground(bg.id); return; } if(coins>=bg.price){ coins-=bg.price; ownedBgs.push(bg.id); applyBackground(bg.id); updateUI(); renderBgShop(); saveGame(); } else alert(`Нужно ${bg.price} монет`); }
     function renderBgShop(){ let cont=document.getElementById("bgShopContainer"); if(!cont) return; cont.innerHTML=""; for(let bg of backgrounds){ let owned=ownedBgs.includes(bg.id); let active=currentBg===bg.id; let btn=document.createElement("div"); btn.className="bg-option"; btn.innerHTML=`${bg.name} ${owned?(active?"✅":"📀"):bg.price+"🪙"}`; btn.onclick=()=>purchaseBg(bg); cont.appendChild(btn); } }
     function renderCollection() { let container=document.getElementById("collectionContainer"); if(!container) return; let categories=[{name:"🌾 Материалы", items:materialChain, basePrice:baseNpPrice.materials},{name:"⚔️ Оружие", items:weaponChain, basePrice:baseNpPrice.weapons},{name:"🏹 Луки", items:rangedChain, basePrice:baseNpPrice.ranged},{name:"🛡️ Броня", items:armorChain, basePrice:baseNpPrice.armor},{name:"🍇 Еда", items:foodChain, basePrice:baseNpPrice.food},{name:"🧪 Зелья", items:potionChain, basePrice:baseNpPrice.potions}]; container.innerHTML=""; for(let cat of categories){ let catDiv=document.createElement("div"); catDiv.className="collection-category"; catDiv.innerHTML=`<h4>${cat.name}</h4><div class="collection-grid"></div>`; let gridDiv=catDiv.querySelector(".collection-grid"); for(let item of cat.items){ let unlocked=discoveredItems.has(item); let realPrice = cat.basePrice * Math.pow(2, cat.items.indexOf(item)); let div=document.createElement("div"); div.className=`collection-item ${unlocked?"unlocked":"locked"}`; div.innerHTML=`<div style="font-size:14px;">${itemNames[item]?.split(" ")[0]||"?"}</div><div style="font-size:8px;">${realPrice}🪙</div>`; div.onclick=(e)=>{ alert(`${itemNames[item]}\nКрафтится из: ${getCraftFrom(item)}\nСтоимость крафта: ${realPrice}🪙\nЦена продажи: ${Math.floor(realPrice/2)}🪙`); }; gridDiv.appendChild(div); } container.appendChild(catDiv); } let metContainer=document.getElementById("metNpcContainer"); metContainer.innerHTML=""; for(let name of metNpcs){ metContainer.innerHTML+=`<span class="badge">${name}</span>`; } if(metNpcs.size===0) metContainer.innerHTML="<span class='badge'>Пока никого</span>"; }
-    function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.removeItem(`sunnygame_${currentUser?.id}`); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
+    function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.clear(); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
     function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(20).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 500 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlist(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
-    function getSaveKey() { return `sunnygame_${currentUser?.id}`; }
-    function saveGame() { if(!currentUser) return; let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked }; localStorage.setItem(getSaveKey(), JSON.stringify(save)); }
-    function loadGame() { if(!currentUser) return false; let data = localStorage.getItem(getSaveKey()); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
-    function sendToAdmin(message) { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({chat_id: ADMIN_ID, text: `🔔 АДМИН-КОНСОЛЬ: ${message}\nОт игрока: ${currentUser?.firstName || "неизвестно"}`}) }).catch(e=>console.log); }
-    
-    function logout() {
-        if(confirm("Выйти из аккаунта? Весь локальный прогресс будет удалён, но данные на сервере сохранятся.")) {
-            localStorage.removeItem("sunnygame_user");
-            localStorage.removeItem(`sunnygame_${currentUser?.id}`);
-            location.reload();
-        }
-    }
+    function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
+    function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
+    function sendToAdmin(message) { fetch(`https://api.telegram.org/bot8743238206:AAEEcIk9dMJFCCttKYD3LA_nRIQpeH7Bm3s/sendMessage`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({chat_id: "1577899640", text: `🔔 АДМИН-КОНСОЛЬ: ${message}`}) }).catch(e=>console.log); }
     
     // ========== КОНСОЛЬ ==========
     (function setupSmartConsole() {
@@ -466,56 +254,43 @@
         for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
         function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ РАЗРАБОТЧИКА\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать все категории\nEnergy [кол-во] - добавить энергию\nList - список всех предметов\nMoneySend [сумма] [ник] - выдать монеты другому игроку\nClearChat - очистить общий чат\nDeleteAllAccounts - удалить все аккаунты\nClearLeaderboard - обнулить монеты в лидерборде\nLogout - выйти из аккаунта");
+            let cmd = prompt("🔧 КОНСОЛЬ\n\nMoney [сумма]\nGive [предмет]\nUnlockAll\nEnergy [кол-во]\nList\nDelet — полный сброс");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
-            if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); updateServerCoins(); alert(`+${amount}🪙`); sendToAdmin(`Выдал себе ${amount} монет`); } else alert("Неверно"); }
+            if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); alert(`+${amount}🪙`); sendToAdmin(`Выдал себе ${amount} монет`); } else alert("Неверно"); }
             else if(lowerCmd.startsWith("give ")){ let rusName = cmd.substring(5).trim(); let itemKey = findItemByRussianName(rusName); if(itemKey && itemNames[itemKey]){ if(addToGridAndDiscover(itemKey)){ updateUI(); saveGame(); alert(`Выдан ${itemNames[itemKey]}`); sendToAdmin(`Выдал предмет ${itemNames[itemKey]}`); } else alert("Нет места"); } else alert(`Не найден: ${rusName}`); }
             else if(lowerCmd==="unlockall"){ unlocked.weapons=true; unlocked.armor=true; unlocked.food=true; unlocked.potions=true; updateCraftBtns(); renderShop(); saveGame(); alert("Всё разблокировано!"); sendToAdmin("Разблокировал все категории"); }
             else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount}⚡`); sendToAdmin(`Выдал себе ${amount} энергии`); } else alert("Неверно"); }
             else if(lowerCmd==="list"){ alert("Список предметов:\n"+Object.keys(itemNames).map(k=>itemNames[k]).join(", ")); }
-            else if(lowerCmd.startsWith("moneysend ")){ let parts = cmd.split(" "); if(parts.length >= 3){ let amount = parseInt(parts[1]); let target = parts[2]; sendMoneyToUser(target, amount); } else alert("Формат: MoneySend 100 никнейм"); }
-            else if(lowerCmd==="clearchat"){ globalChat = []; privateChats = {}; saveServerData(); alert("Чат очищен!"); sendToAdmin("Очистил чат"); }
-            else if(lowerCmd==="deleteallaccounts"){ if(confirm("Удалить ВСЕ аккаунты? Это необратимо!")){ globalUsers = {}; globalChat = []; privateChats = {}; saveServerData(); alert("Все аккаунты удалены!"); sendToAdmin("Удалил все аккаунты"); } }
-            else if(lowerCmd==="clearleaderboard"){ if(confirm("Очистить лидерборд?")){ for(let u in globalUsers) globalUsers[u].coins = 0; saveServerData(); alert("Лидерборд очищен!"); sendToAdmin("Очистил лидерборд"); } }
-            else if(lowerCmd==="logout"){ logout(); }
-            else alert("Неизвестная команда");
+            else if(lowerCmd==="delet"){ if(confirm("СБРОС ВСЕХ ДАННЫХ?")){ localStorage.removeItem("balanceSave"); location.reload(); } }
+            else alert("Неизвестно");
         }
         let devBtn=document.getElementById("devConsoleBtn");
         if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Пароль:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
     
-    // ========== АВТОМАТИЧЕСКАЯ ВЕРИФИКАЦИЯ ЧЕРЕЗ TELEGRAM WEBAPP ==========
-    function initTelegramUser() {
-        let tg = window.Telegram?.WebApp;
-        if(tg && tg.initDataUnsafe?.user) {
-            let user = tg.initDataUnsafe.user;
-            let avatarColors = ["#4f6b3e", "#c9a03d", "#aa6644", "#6b3e4f", "#3e6b6b", "#6b3e3e", "#3e4f6b"];
-            let avatarColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
-            currentUser = {
-                id: user.id.toString(),
-                firstName: user.first_name || "Игрок",
-                lastName: user.last_name || "",
-                username: user.username || "",
-                avatarColor: avatarColor
-            };
-            localStorage.setItem("sunnygame_user", JSON.stringify({ id: currentUser.id, name: currentUser.firstName }));
-            document.getElementById("supportBtn").innerHTML = `💬 Поддержка | ${currentUser.firstName}`;
-            loadServerData().then(() => {
-                if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
-                updateServerCoins();
-            });
-        } else {
-            document.getElementById("supportBtn").innerHTML = "💬 Поддержка | Вход через Telegram";
-            alert("Запустите игру через Telegram-бота для автоматического входа");
-        }
+    // Информационное окно при первом запуске
+    if(!localStorage.getItem("balanceSave")) {
+        let infoDiv = document.createElement("div");
+        infoDiv.className = "info-overlay";
+        infoDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
+            <h2>⚖️ ДОБРО ПОЖАЛОВАТЬ В SUNNYGAME</h2>
+            <p>Создавайте предметы, объединяйте их, сражайтесь с монстром и перерождайтесь!</p>
+            <p>⚔️ Оружие и 🏹 Луки дают +1 урона за уровень</p>
+            <p>✨ Зачарования (до 10 на каждый предмет) дают +1 урона за чарку</p>
+            <p>💰 Продавайте предметы NPC и в магазине (-50% стоимости)</p>
+            <p>📦 Хранилище можно расширять за 1000🪙</p>
+            <p style="font-size:12px; color:#aaa;">⚠️ Прогресс сохраняется на устройстве.</p>
+            <button id="closeInfo">Начать игру</button>
+        </div>`;
+        document.body.appendChild(infoDiv);
+        document.getElementById("closeInfo").onclick = () => infoDiv.remove();
     }
     
     // Инициализация
-    document.getElementById("tabCraftBtn").onclick=()=>{ document.getElementById("craftSection").style.display="block"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; document.getElementById("socialSection").style.display="none"; };
-    document.getElementById("tabBattleBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="block"; document.getElementById("collectionSection").style.display="none"; document.getElementById("socialSection").style.display="none"; };
-    document.getElementById("tabCollectionBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="block"; document.getElementById("socialSection").style.display="none"; };
-    document.getElementById("tabSocialBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; document.getElementById("socialSection").style.display="block"; renderSocial(); };
+    document.getElementById("tabCraftBtn").onclick=()=>{ document.getElementById("craftSection").style.display="block"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; };
+    document.getElementById("tabBattleBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="block"; document.getElementById("collectionSection").style.display="none"; };
+    document.getElementById("tabCollectionBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="block"; renderCollection(); };
     document.getElementById("craftResourceBtn").onclick=()=>craftBase(5,"grass",true);
     document.getElementById("craftWeaponBtn").onclick=()=>craftBase(10,"sword",unlocked.weapons);
     document.getElementById("craftRangedWeaponBtn").onclick=()=>craftBase(50,"shortbow",rangedUnlocked, true);
@@ -534,16 +309,13 @@
     document.getElementById("rangedSlot").onclick=()=>selectEquipmentSlot('ranged');
     document.getElementById("equippedWeapon").onclick=()=>equipFromGrid('weapon', weaponChain, 'equippedWeapon');
     document.getElementById("equippedRanged").onclick=()=>equipFromGrid('ranged', rangedChain, 'equippedRanged');
-    document.getElementById("sendChatBtn").onclick=sendChatMessage;
-    document.getElementById("addFriendBtn").onclick=()=>{ let friend = document.getElementById("addFriendInput").value.trim(); if(friend) addFriend(friend); document.getElementById("addFriendInput").value = ""; };
-    document.getElementById("deleteAccountBtn").onclick=deleteAccount;
     let attackBtn=document.getElementById("attackBtn");
     attackBtn.addEventListener("mousedown", startCharge); attackBtn.addEventListener("mouseup", endCharge); attackBtn.addEventListener("mouseleave", endCharge);
     attackBtn.addEventListener("touchstart",(e)=>{ e.preventDefault(); startCharge(); }); attackBtn.addEventListener("touchend",(e)=>{ e.preventDefault(); endCharge(); });
     
-    let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); updateServerCoins(); },60000);
+    let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); },60000);
     
-    initTelegramUser();
+    if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
 </script>
 </body>
 </html>

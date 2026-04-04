@@ -102,6 +102,8 @@
         .inline-btn { background: #c9a03d; font-size: 10px; padding: 3px 8px; margin-left: 5px; }
         .rebirth-container { margin-bottom: 10px; text-align: center; }
         .fullreset-container { margin-top: 10px; }
+        .info-text { font-size: 13px; margin: 8px 0; line-height: 1.4; }
+        .info-highlight { color: #ffaa66; }
     </style>
 </head>
 <body class="bg-black">
@@ -202,7 +204,7 @@
     function refreshNPC() { if(coins>=10){ coins-=10; nextNPC(); updateUI(); saveGame(); alert("Продавец обновлён!"); } else alert("Нужно 10 монет"); }
     function sellToNPC() { if(!currentNpc) return; let wishlist = currentNpc.wishlist; let foundItems = []; let foundIndexes = []; for(let i=0;i<grid.length;i++){ if(grid[i] && wishlist.includes(grid[i]) && !foundItems.includes(grid[i])){ foundItems.push(grid[i]); foundIndexes.push(i); } } if(foundItems.length < wishlist.length){ alert(`Для продажи нужны все 3 предмета!\nНужно: ${wishlist.map(w=>itemNames[w]).join(", ")}`); return; } let totalPrice = 0; for(let idx of foundIndexes){ totalPrice += getItemSellPrice(grid[idx]); grid[idx] = null; } coins += totalPrice; selectedIndex = null; renderGrid(); updateUI(); nextNPC(); saveGame(); alert(`Продано! Получено ${totalPrice}🪙`); }
     function sellSelectedItem() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let item = grid[selectedIndex]; let price = getItemSellPrice(item); if(confirm(`Продать ${itemNames[item]} за ${price} монет?`)) { coins += price; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); updateUI(); saveGame(); alert(`Продано за ${price}🪙`); } } else alert("Выберите предмет в сетке"); }
-    function addToStorage() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let emptyIdx = storage.findIndex(s => s === null); if(emptyIdx === -1) alert("Хранилище заполнено"); else { storage[emptyIdx] = grid[selectedIndex]; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); renderStorage(); saveGame(); } } else alert("Выберите предмет в сетке"); }
+    function addToStorage() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let emptyIdx = storage.findIndex(s => s === null); if(emptyIdx === -1) alert("Хранилище заполнено (3/3)"); else { storage[emptyIdx] = grid[selectedIndex]; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); renderStorage(); saveGame(); } } else alert("Выберите предмет в сетке"); }
     function removeFromStorage(idx) { if(storage[idx] !== null) { if(addToGridAndDiscover(storage[idx])) { storage[idx] = null; renderStorage(); saveGame(); } else alert("Нет места в сетке"); } }
     function expandStorage() { if(coins>=1000 && storage.length < 10){ coins-=1000; storage.push(null); renderStorage(); updateUI(); saveGame(); alert("Ячейка хранилища добавлена!"); } else if(storage.length>=10) alert("Максимум 10 ячеек"); else alert("Нужно 1000 монет"); }
 
@@ -269,25 +271,26 @@
         if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Пароль:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
     
-    // Информационное окно при первом запуске
+    // ========== ИНФОРМАЦИОННОЕ ОКНО ПРИ СТАРТЕ ==========
     if(!localStorage.getItem("balanceSave")) {
         let infoDiv = document.createElement("div");
         infoDiv.className = "info-overlay";
         infoDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
-            <h2>⚖️ ДОБРО ПОЖАЛОВАТЬ В SUNNYGAME</h2>
-            <p>Создавайте предметы, объединяйте их, сражайтесь с монстром и перерождайтесь!</p>
-            <p>⚔️ Оружие и 🏹 Луки дают +1 урона за уровень</p>
-            <p>✨ Зачарования (до 10 на каждый предмет) дают +1 урона за чарку</p>
-            <p>💰 Продавайте предметы NPC и в магазине (-50% стоимости)</p>
-            <p>📦 Хранилище можно расширять за 1000🪙</p>
-            <p style="font-size:12px; color:#aaa;">⚠️ Прогресс сохраняется на устройстве.</p>
-            <button id="closeInfo">Начать игру</button>
+            <h2>⚖️ SUNNYGAME</h2>
+            <div class="info-text">🔨 <span class="info-highlight">КРАФТ</span> — объединяй 2 одинаковых предмета, чтобы создать более сильный</div>
+            <div class="info-text">⚔️ <span class="info-highlight">БИТВА</span> — атакуй монстра, получай монеты за убийство</div>
+            <div class="info-text">🏹 <span class="info-highlight">ЛУКИ</span> — зажми кнопку атаки на 1 секунду для заряженного удара (+5 урона)</div>
+            <div class="info-text">✨ <span class="info-highlight">ЗАЧАРОВАНИЯ</span> — покупай чарки для оружия и луков (+1 урон каждая, до 10)</div>
+            <div class="info-text">🌀 <span class="info-highlight">ПЕРЕРОЖДЕНИЕ</span> — за 1 млн монет сбрасывает прогресс, открывает луки и зачарования</div>
+            <hr>
+            <div class="info-text">💾 Прогресс сохраняется <span class="info-highlight">на устройстве</span>. При смене Telegram-аккаунта на том же устройстве сохранение останется прежним.</div>
+            <button id="closeInfo" style="margin-top:15px;">▶ НАЧАТЬ ИГРУ</button>
         </div>`;
         document.body.appendChild(infoDiv);
         document.getElementById("closeInfo").onclick = () => infoDiv.remove();
     }
     
-    // Инициализация
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
     document.getElementById("tabCraftBtn").onclick=()=>{ document.getElementById("craftSection").style.display="block"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabBattleBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="block"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabCollectionBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="block"; renderCollection(); };

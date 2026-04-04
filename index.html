@@ -94,23 +94,18 @@
         .storage-slot { background: #4a3a2a; border-radius: 14px; padding: 4px; margin: 4px 0; display: flex; align-items: center; gap: 8px; }
         .storage-item { flex: 1; font-size: 12px; }
         .storage-remove { background: #aa4444; font-size: 9px; padding: 2px 6px; border-radius: 20px; }
-        .verify-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 20px; }
-        .confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
-        .footer { text-align: center; margin-top: 20px; padding: 10px; }
-        .footer-text { font-size: 10px; color: #aa66ff; text-shadow: 1px 1px 0 #000; display: flex; align-items: center; justify-content: center; gap: 4px; }
-        .support-btn { background: #25d366; color: white; margin-top: 8px; width: 100%; }
-        .inline-btn { background: #c9a03d; font-size: 10px; padding: 3px 8px; margin-left: 5px; }
-        .social-tab { background: #2a2a1e; border-radius: 20px; padding: 10px; margin-top: 10px; }
-        .friend-item, .leader-item { background: #3a3a2a; border-radius: 15px; padding: 6px 10px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; }
-        .chat-message { background: #2a2a1e; border-radius: 15px; padding: 8px 12px; margin: 5px 0; word-break: break-word; }
-        .ranged-btn-active { background: #f5b642 !important; color: #2b381c !important; }
+        .profile-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
+        .profile-card { background: #1a1a1a; border-radius: 30px; padding: 20px; max-width: 300px; width: 100%; }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; background: #4f6b3e; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 10px; }
+        .friend-item { background: #3a3a2a; border-radius: 15px; padding: 6px 10px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .chat-message { background: #2a2a1e; border-radius: 15px; padding: 8px 12px; margin: 5px 0; word-break: break-word; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .msg-avatar { width: 30px; height: 30px; border-radius: 50%; background: #4f6b3e; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
         .chat-switch { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
         .chat-switch button { background: #4f6b3e; padding: 4px 12px; }
         .chat-switch button.active { background: #f5b642; color: #2b381c; }
         .delete-account-btn { background: #aa3333; margin-top: 10px; width: 100%; }
         .rebirth-container { margin-bottom: 10px; text-align: center; }
         .fullreset-container { margin-top: 10px; }
-        .step2-box { background: #2a2a1e; border-radius: 20px; padding: 15px; margin-top: 10px; }
     </style>
 </head>
 <body class="bg-black">
@@ -187,14 +182,10 @@
     let chargeTimeout = null, isCharging = false, chargedAttackReady = false;
     let selectedEquipmentSlot = null;
     let rangedUnlocked = false;
-    let currentUserId = null;
-    let currentNickname = null;
-    let verificationCode = null;
-    let pendingUserId = null;
-    let pendingNickname = null;
+    let currentUser = null; // { id, firstName, lastName, username, avatarColor }
     
     // ========== СЕРВЕРНЫЕ ДАННЫЕ ==========
-    let globalUsers = {}; // key: userId, value: { nickname, coins, friends }
+    let globalUsers = {}; // key: userId, value: { firstName, lastName, username, avatarColor, coins, friends, gameData }
     let globalChat = [];
     let privateChats = {};
     let currentChatType = "global";
@@ -215,21 +206,6 @@
         } catch(e) { return { error: true }; }
     }
     
-    async function sendVerificationCode(userId, nickname) {
-        let code = Math.floor(100000 + Math.random() * 900000);
-        verificationCode = code.toString();
-        pendingUserId = userId;
-        pendingNickname = nickname;
-        try {
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ chat_id: userId, text: `🔐 Ваш код подтверждения для SunnyGame: ${code}\nВведите этот код в игре для входа под ником "${nickname}".` })
-            });
-            return true;
-        } catch(e) { return false; }
-    }
-    
     async function loadServerData() {
         let result = await apiCall("data", {});
         if(!result.error) {
@@ -240,8 +216,19 @@
             let fallback = localStorage.getItem("sunnygame_backup");
             if(fallback) { let s = JSON.parse(fallback); globalUsers = s.users || {}; globalChat = s.chat || []; privateChats = s.privateChats || {}; }
         }
-        if(currentUserId && !globalUsers[currentUserId]) globalUsers[currentUserId] = { nickname: currentNickname, coins: coins, friends: [], createdAt: Date.now() };
-        else if(currentUserId) globalUsers[currentUserId].coins = coins;
+        if(currentUser && !globalUsers[currentUser.id]) {
+            globalUsers[currentUser.id] = {
+                firstName: currentUser.firstName,
+                lastName: currentUser.lastName,
+                username: currentUser.username,
+                avatarColor: currentUser.avatarColor,
+                coins: coins,
+                friends: [],
+                gameData: null
+            };
+        } else if(currentUser) {
+            globalUsers[currentUser.id].coins = coins;
+        }
         await saveServerData();
         renderSocial();
     }
@@ -253,14 +240,21 @@
     
     async function sendChatMessage() {
         let msg = document.getElementById("chatInput").value.trim();
-        if(!msg) return;
+        if(!msg || !currentUser) return;
+        let messageData = {
+            fromId: currentUser.id,
+            fromName: currentUser.firstName,
+            avatarColor: currentUser.avatarColor,
+            text: msg,
+            time: Date.now()
+        };
         if(currentChatType === "global") {
-            globalChat.unshift({ from: currentNickname, userId: currentUserId, text: msg, time: Date.now() });
+            globalChat.unshift(messageData);
             if(globalChat.length > 500) globalChat.pop();
         } else if(currentChatType === "private" && currentChatFriend) {
-            let key = [currentUserId, currentChatFriend].sort().join("_");
+            let key = [currentUser.id, currentChatFriend].sort().join("_");
             if(!privateChats[key]) privateChats[key] = [];
-            privateChats[key].unshift({ from: currentNickname, userId: currentUserId, text: msg, time: Date.now() });
+            privateChats[key].unshift(messageData);
             if(privateChats[key].length > 200) privateChats[key].pop();
         }
         await saveServerData();
@@ -268,45 +262,80 @@
         renderChat();
     }
     
-    async function addFriend(friendNickname) {
-        if(friendNickname === currentNickname) { alert("Нельзя добавить самого себя"); return; }
+    async function addFriend(friendUsername) {
+        if(!currentUser) return;
         let friendId = null;
         for(let [id, data] of Object.entries(globalUsers)) {
-            if(data.nickname === friendNickname) { friendId = id; break; }
+            if(data.username === friendUsername || data.firstName === friendUsername) {
+                friendId = id; break;
+            }
         }
         if(!friendId) { alert("Игрок с таким ником не найден"); return; }
-        if(globalUsers[currentUserId].friends.includes(friendId)) { alert("Этот игрок уже в друзьях"); return; }
-        globalUsers[currentUserId].friends.push(friendId);
+        if(friendId === currentUser.id) { alert("Нельзя добавить самого себя"); return; }
+        if(globalUsers[currentUser.id].friends.includes(friendId)) { alert("Этот игрок уже в друзьях"); return; }
+        globalUsers[currentUser.id].friends.push(friendId);
         await saveServerData();
         renderSocial();
-        alert(`${friendNickname} добавлен в друзья!`);
+        alert(`${globalUsers[friendId].firstName} добавлен в друзья!`);
+    }
+    
+    async function sendMoneyToUser(targetUsername, amount) {
+        if(!currentUser) return false;
+        let targetId = null;
+        for(let [id, data] of Object.entries(globalUsers)) {
+            if(data.username === targetUsername || data.firstName === targetUsername) {
+                targetId = id; break;
+            }
+        }
+        if(!targetId) { alert("Игрок не найден"); return false; }
+        if(coins < amount) { alert("Недостаточно монет"); return false; }
+        coins -= amount;
+        globalUsers[targetId].coins += amount;
+        await saveServerData();
+        updateUI();
+        alert(`✅ Отправлено ${amount} монет игроку ${globalUsers[targetId].firstName}`);
+        return true;
     }
     
     async function deleteAccount() {
-        if(confirm("⚠️ ВНИМАНИЕ! Удаление аккаунта безвозвратно удалит весь ваш прогресс, друзей и все сообщения. Продолжить?")) {
-            delete globalUsers[currentUserId];
+        if(confirm("⚠️ ВНИМАНИЕ! Удаление аккаунта безвозвратно удалит весь ваш прогресс. Продолжить?")) {
+            delete globalUsers[currentUser.id];
             for(let key in privateChats) {
-                if(key.includes(currentUserId)) delete privateChats[key];
+                if(key.includes(currentUser.id)) delete privateChats[key];
             }
             await saveServerData();
-            localStorage.removeItem(`sunnygame_${currentUserId}`);
-            localStorage.removeItem("sunnygame_user");
+            localStorage.removeItem(`sunnygame_${currentUser.id}`);
             alert("Аккаунт удалён. Страница перезагрузится.");
             location.reload();
         }
     }
     
     async function updateServerCoins() {
-        if(currentUserId && globalUsers[currentUserId]) globalUsers[currentUserId].coins = coins;
+        if(currentUser && globalUsers[currentUser.id]) globalUsers[currentUser.id].coins = coins;
         await saveServerData();
         renderSocial();
     }
     
+    function showUserProfile(userId) {
+        let user = globalUsers[userId];
+        if(!user) return;
+        let modal = document.createElement("div");
+        modal.className = "profile-modal";
+        modal.innerHTML = `<div class="profile-card">
+            <div class="avatar" style="background:${user.avatarColor};">${user.firstName.charAt(0)}</div>
+            <h3>${user.firstName} ${user.lastName || ''}</h3>
+            <p>@${user.username || 'нет'}</p>
+            <p>💰 ${user.coins} монет</p>
+            <button onclick="this.parentElement.parentElement.remove()">Закрыть</button>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+    
     function renderSocial() {
-        let leaders = Object.entries(globalUsers).map(([u,d]) => ({ nickname: d.nickname, coins: d.coins || 0 })).sort((a,b) => b.coins - a.coins).slice(0,10);
-        document.getElementById("leadersList").innerHTML = leaders.map((l,i) => `<div class="leader-item"><span>${i+1}. ${l.nickname}</span><span>💰 ${l.coins}</span></div>`).join("") || "<div class='badge'>Загрузка...</div>";
-        let friends = globalUsers[currentUserId]?.friends || [];
-        document.getElementById("friendsList").innerHTML = friends.map(f => `<div class="friend-item"><span>${globalUsers[f]?.nickname || f}</span><span>💰 ${globalUsers[f]?.coins || 0}</span><button class="inline-btn" onclick="window.openPrivateChat('${f}')">💬</button></div>`).join("") || "<div class='badge'>У вас пока нет друзей</div>";
+        let leaders = Object.entries(globalUsers).map(([id, d]) => ({ id, firstName: d.firstName, coins: d.coins || 0 })).sort((a,b) => b.coins - a.coins).slice(0,10);
+        document.getElementById("leadersList").innerHTML = leaders.map((l,i) => `<div class="leader-item" onclick="showUserProfile('${l.id}')"><span>${i+1}. ${l.firstName}</span><span>💰 ${l.coins}</span></div>`).join("") || "<div class='badge'>Загрузка...</div>";
+        let friends = globalUsers[currentUser?.id]?.friends || [];
+        document.getElementById("friendsList").innerHTML = friends.map(f => `<div class="friend-item" onclick="showUserProfile('${f}')"><span>${globalUsers[f]?.firstName || f}</span><span>💰 ${globalUsers[f]?.coins || 0}</span><button class="inline-btn" onclick="event.stopPropagation(); window.openPrivateChat('${f}')">💬</button></div>`).join("") || "<div class='badge'>У вас пока нет друзей</div>";
         renderChat();
     }
     
@@ -317,22 +346,26 @@
         if(currentChatType === "global") {
             messages = globalChat.slice(0, 100);
         } else if(currentChatType === "private" && currentChatFriend) {
-            let key = [currentUserId, currentChatFriend].sort().join("_");
+            let key = [currentUser?.id, currentChatFriend].sort().join("_");
             messages = privateChats[key] || [];
         }
-        container.innerHTML = messages.map(m => `<div class="chat-message"><b>${m.from}</b>: ${m.text}</div>`).join("") || "<div class='badge'>Пока нет сообщений</div>";
+        container.innerHTML = messages.map(m => `<div class="chat-message" onclick="showUserProfile('${m.fromId}')">
+            <div class="msg-avatar" style="background:${m.avatarColor || '#4f6b3e'};">${(m.fromName || '?').charAt(0)}</div>
+            <div><b>${m.fromName}</b>: ${m.text}</div>
+        </div>`).join("") || "<div class='badge'>Пока нет сообщений</div>";
         
         let switchDiv = document.getElementById("chatSwitch");
-        if(switchDiv) {
-            let friends = globalUsers[currentUserId]?.friends || [];
+        if(switchDiv && currentUser) {
+            let friends = globalUsers[currentUser.id]?.friends || [];
             switchDiv.innerHTML = `<button class="${currentChatType === 'global' ? 'active' : ''}" onclick="window.switchToGlobal()">🌍 Общий чат</button>` +
-                friends.map(f => `<button class="${currentChatType === 'private' && currentChatFriend === f ? 'active' : ''}" onclick="window.switchToPrivate('${f}')">💬 ${globalUsers[f]?.nickname || f}</button>`).join("");
+                friends.map(f => `<button class="${currentChatType === 'private' && currentChatFriend === f ? 'active' : ''}" onclick="window.switchToPrivate('${f}')">💬 ${globalUsers[f]?.firstName || f}</button>`).join("");
         }
     }
     
     window.switchToGlobal = function() { currentChatType = "global"; currentChatFriend = null; renderChat(); };
     window.switchToPrivate = function(friendId) { currentChatType = "private"; currentChatFriend = friendId; renderChat(); };
     window.openPrivateChat = function(friendId) { currentChatType = "private"; currentChatFriend = friendId; renderChat(); };
+    window.showUserProfile = showUserProfile;
     
     // ========== ИГРОВЫЕ ФУНКЦИИ ==========
     function discoverItem(item) { if(item && !discoveredItems.has(item)) { discoveredItems.add(item); renderCollection(); } }
@@ -409,17 +442,17 @@
     function purchaseBg(bg){ if(ownedBgs.includes(bg.id)){ applyBackground(bg.id); return; } if(coins>=bg.price){ coins-=bg.price; ownedBgs.push(bg.id); applyBackground(bg.id); updateUI(); renderBgShop(); saveGame(); } else alert(`Нужно ${bg.price} монет`); }
     function renderBgShop(){ let cont=document.getElementById("bgShopContainer"); if(!cont) return; cont.innerHTML=""; for(let bg of backgrounds){ let owned=ownedBgs.includes(bg.id); let active=currentBg===bg.id; let btn=document.createElement("div"); btn.className="bg-option"; btn.innerHTML=`${bg.name} ${owned?(active?"✅":"📀"):bg.price+"🪙"}`; btn.onclick=()=>purchaseBg(bg); cont.appendChild(btn); } }
     function renderCollection() { let container=document.getElementById("collectionContainer"); if(!container) return; let categories=[{name:"🌾 Материалы", items:materialChain, basePrice:baseNpPrice.materials},{name:"⚔️ Оружие", items:weaponChain, basePrice:baseNpPrice.weapons},{name:"🏹 Луки", items:rangedChain, basePrice:baseNpPrice.ranged},{name:"🛡️ Броня", items:armorChain, basePrice:baseNpPrice.armor},{name:"🍇 Еда", items:foodChain, basePrice:baseNpPrice.food},{name:"🧪 Зелья", items:potionChain, basePrice:baseNpPrice.potions}]; container.innerHTML=""; for(let cat of categories){ let catDiv=document.createElement("div"); catDiv.className="collection-category"; catDiv.innerHTML=`<h4>${cat.name}</h4><div class="collection-grid"></div>`; let gridDiv=catDiv.querySelector(".collection-grid"); for(let item of cat.items){ let unlocked=discoveredItems.has(item); let realPrice = cat.basePrice * Math.pow(2, cat.items.indexOf(item)); let div=document.createElement("div"); div.className=`collection-item ${unlocked?"unlocked":"locked"}`; div.innerHTML=`<div style="font-size:14px;">${itemNames[item]?.split(" ")[0]||"?"}</div><div style="font-size:8px;">${realPrice}🪙</div>`; div.onclick=(e)=>{ alert(`${itemNames[item]}\nКрафтится из: ${getCraftFrom(item)}\nСтоимость крафта: ${realPrice}🪙\nЦена продажи: ${Math.floor(realPrice/2)}🪙`); }; gridDiv.appendChild(div); } container.appendChild(catDiv); } let metContainer=document.getElementById("metNpcContainer"); metContainer.innerHTML=""; for(let name of metNpcs){ metContainer.innerHTML+=`<span class="badge">${name}</span>`; } if(metNpcs.size===0) metContainer.innerHTML="<span class='badge'>Пока никого</span>"; }
-    function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.removeItem(`sunnygame_${currentUserId}`); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
+    function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.removeItem(`sunnygame_${currentUser?.id}`); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
     function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(20).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 500 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlist(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
-    function getSaveKey() { return `sunnygame_${currentUserId}`; }
-    function saveGame() { if(!currentUserId) return; let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked }; localStorage.setItem(getSaveKey(), JSON.stringify(save)); }
-    function loadGame() { if(!currentUserId) return false; let data = localStorage.getItem(getSaveKey()); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
-    function sendToAdmin(message) { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({chat_id: ADMIN_ID, text: `🔔 АДМИН-КОНСОЛЬ: ${message}\nОт игрока: ${currentNickname || currentUserId || "неизвестно"}`}) }).catch(e=>console.log); }
+    function getSaveKey() { return `sunnygame_${currentUser?.id}`; }
+    function saveGame() { if(!currentUser) return; let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked }; localStorage.setItem(getSaveKey(), JSON.stringify(save)); }
+    function loadGame() { if(!currentUser) return false; let data = localStorage.getItem(getSaveKey()); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
+    function sendToAdmin(message) { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({chat_id: ADMIN_ID, text: `🔔 АДМИН-КОНСОЛЬ: ${message}\nОт игрока: ${currentUser?.firstName || "неизвестно"}`}) }).catch(e=>console.log); }
     
     function logout() {
         if(confirm("Выйти из аккаунта? Весь локальный прогресс будет удалён, но данные на сервере сохранятся.")) {
             localStorage.removeItem("sunnygame_user");
-            localStorage.removeItem(`sunnygame_${currentUserId}`);
+            localStorage.removeItem(`sunnygame_${currentUser?.id}`);
             location.reload();
         }
     }
@@ -441,7 +474,7 @@
             else if(lowerCmd==="unlockall"){ unlocked.weapons=true; unlocked.armor=true; unlocked.food=true; unlocked.potions=true; updateCraftBtns(); renderShop(); saveGame(); alert("Всё разблокировано!"); sendToAdmin("Разблокировал все категории"); }
             else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount}⚡`); sendToAdmin(`Выдал себе ${amount} энергии`); } else alert("Неверно"); }
             else if(lowerCmd==="list"){ alert("Список предметов:\n"+Object.keys(itemNames).map(k=>itemNames[k]).join(", ")); }
-            else if(lowerCmd.startsWith("moneysend ")){ let parts = cmd.split(" "); if(parts.length >= 3){ let amount = parseInt(parts[1]); let targetNick = parts[2]; let targetId = null; for(let [id, data] of Object.entries(globalUsers)){ if(data.nickname === targetNick){ targetId = id; break; } } if(!isNaN(amount) && amount>0 && targetId){ globalUsers[targetId].coins += amount; saveServerData(); alert(`✅ Игроку ${targetNick} выдано ${amount} монет!`); sendToAdmin(`Выдал ${amount} монет игроку ${targetNick}`); } else alert("Неверные параметры или игрок не найден"); } else alert("Формат: MoneySend 100 никнейм"); }
+            else if(lowerCmd.startsWith("moneysend ")){ let parts = cmd.split(" "); if(parts.length >= 3){ let amount = parseInt(parts[1]); let target = parts[2]; sendMoneyToUser(target, amount); } else alert("Формат: MoneySend 100 никнейм"); }
             else if(lowerCmd==="clearchat"){ globalChat = []; privateChats = {}; saveServerData(); alert("Чат очищен!"); sendToAdmin("Очистил чат"); }
             else if(lowerCmd==="deleteallaccounts"){ if(confirm("Удалить ВСЕ аккаунты? Это необратимо!")){ globalUsers = {}; globalChat = []; privateChats = {}; saveServerData(); alert("Все аккаунты удалены!"); sendToAdmin("Удалил все аккаунты"); } }
             else if(lowerCmd==="clearleaderboard"){ if(confirm("Очистить лидерборд?")){ for(let u in globalUsers) globalUsers[u].coins = 0; saveServerData(); alert("Лидерборд очищен!"); sendToAdmin("Очистил лидерборд"); } }
@@ -452,59 +485,30 @@
         if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Пароль:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
     
-    // ========== ВЕРИФИКАЦИЯ ЧЕРЕЗ ID И КОД ==========
-    function showVerification() {
-        let overlay = document.createElement("div");
-        overlay.className = "verify-overlay";
-        overlay.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
-            <h2>⚖️ ДОБРО ПОЖАЛОВАТЬ В SUNNYGAME</h2>
-            <p>Создавайте предметы, объединяйте их, сражайтесь с монстром и перерождайтесь!</p>
-            <p>⚔️ Оружие и 🏹 Луки дают +1 урона за уровень</p>
-            <p>✨ Зачарования (до 10 на каждый предмет) дают +1 урона за чарку</p>
-            <p>💰 Продавайте предметы NPC и в магазине (-50% стоимости)</p>
-            <p>📦 Хранилище можно расширять за 1000🪙</p>
-            <hr>
-            <div class="step2-box">
-                <h3>🔐 ВХОД ПО КОДУ</h3>
-                <p>Введите ваш Telegram ID и выберите никнейм:</p>
-                <input type="text" id="verifyUserId" placeholder="Telegram ID" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px; width:80%; margin-bottom:10px;">
-                <input type="text" id="verifyNickname" placeholder="Ваш никнейм в игре" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px; width:80%; margin-bottom:10px;">
-                <button id="sendCodeBtn" style="margin-top:5px;">📨 Отправить код</button>
-                <div id="codeInputDiv" style="display:none; margin-top:15px;">
-                    <p>Введите код из Telegram:</p>
-                    <input type="text" id="verifyCode" placeholder="123456" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px; width:80%;">
-                    <button id="confirmCodeBtn" style="margin-top:10px;">✅ Подтвердить</button>
-                </div>
-            </div>
-            <p style="font-size:12px; margin-top:15px;">⚠️ Прогресс привязан к вашему Telegram ID. Код придёт от бота @SunnySide20_bot.</p>
-            <p style="font-size:10px;">💡 Как узнать свой Telegram ID: напишите @userinfobot</p>
-        </div>`;
-        document.body.appendChild(overlay);
-        
-        document.getElementById("sendCodeBtn").onclick = async () => {
-            let userId = document.getElementById("verifyUserId").value.trim();
-            let nickname = document.getElementById("verifyNickname").value.trim();
-            if(userId && nickname){
-                let sent = await sendVerificationCode(userId, nickname);
-                if(sent) {
-                    alert(`Код отправлен в Telegram на ID ${userId}`);
-                    document.getElementById("codeInputDiv").style.display = "block";
-                } else { alert("Не удалось отправить код. Проверьте ID."); }
-            } else { alert("Введите ID и никнейм"); }
-        };
-        document.getElementById("confirmCodeBtn").onclick = async () => {
-            let code = document.getElementById("verifyCode").value.trim();
-            if(code === verificationCode && pendingUserId) {
-                currentUserId = pendingUserId;
-                currentNickname = pendingNickname;
-                localStorage.setItem("sunnygame_user", JSON.stringify({ id: currentUserId, nickname: currentNickname }));
-                overlay.remove();
-                await loadServerData();
+    // ========== АВТОМАТИЧЕСКАЯ ВЕРИФИКАЦИЯ ЧЕРЕЗ TELEGRAM WEBAPP ==========
+    function initTelegramUser() {
+        let tg = window.Telegram?.WebApp;
+        if(tg && tg.initDataUnsafe?.user) {
+            let user = tg.initDataUnsafe.user;
+            let avatarColors = ["#4f6b3e", "#c9a03d", "#aa6644", "#6b3e4f", "#3e6b6b", "#6b3e3e", "#3e4f6b"];
+            let avatarColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+            currentUser = {
+                id: user.id.toString(),
+                firstName: user.first_name || "Игрок",
+                lastName: user.last_name || "",
+                username: user.username || "",
+                avatarColor: avatarColor
+            };
+            localStorage.setItem("sunnygame_user", JSON.stringify({ id: currentUser.id, name: currentUser.firstName }));
+            document.getElementById("supportBtn").innerHTML = `💬 Поддержка | ${currentUser.firstName}`;
+            loadServerData().then(() => {
                 if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
-                await updateServerCoins();
-                alert(`✅ Добро пожаловать, ${currentNickname}!`);
-            } else { alert("Неверный код подтверждения"); }
-        };
+                updateServerCoins();
+            });
+        } else {
+            document.getElementById("supportBtn").innerHTML = "💬 Поддержка | Вход через Telegram";
+            alert("Запустите игру через Telegram-бота для автоматического входа");
+        }
     }
     
     // Инициализация
@@ -539,20 +543,7 @@
     
     let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); updateServerCoins(); },60000);
     
-    let savedUser = localStorage.getItem("sunnygame_user");
-    if(savedUser) {
-        try {
-            let user = JSON.parse(savedUser);
-            currentUserId = user.id;
-            currentNickname = user.nickname;
-            loadServerData().then(() => {
-                if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
-                updateServerCoins();
-            });
-        } catch(e) { showVerification(); }
-    } else {
-        showVerification();
-    }
+    initTelegramUser();
 </script>
 </body>
 </html>

@@ -44,9 +44,12 @@
         body.bg-desert { background: #ccaa44; background-image: radial-gradient(circle at 10% 90%, #eedd88 2px, transparent 2px); background-size: 40px 40px; }
         
         .game-container { max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); border-radius: 28px; padding: 10px 12px 16px; }
-        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; background: #2c2b1fe0; padding: 6px 12px; border-radius: 40px; }
-        .resources { display: flex; gap: 12px; background: #1e2a1c; padding: 4px 12px; border-radius: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; background: #2c2b1fe0; padding: 6px 12px; border-radius: 40px; gap: 8px; }
+        .resources { display: flex; gap: 12px; background: #1e2a1c; padding: 4px 12px; border-radius: 30px; align-items: center; }
         .res-item { font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 4px; }
+        .promo-input { display: flex; gap: 4px; align-items: center; }
+        .promo-input input { width: 90px; padding: 4px 6px; border-radius: 20px; border: none; font-size: 10px; }
+        .promo-input button { padding: 4px 8px; font-size: 10px; }
         .title { font-size: 20px; letter-spacing: 1px; }
         .main-row { display: flex; flex-direction: column; gap: 12px; }
         .craft-col, .inventory-col { width: 100%; background: #261f16cc; backdrop-filter: blur(8px); border-radius: 28px; padding: 10px; }
@@ -91,7 +94,6 @@
         .storage-slot { background: #4a3a2a; border-radius: 14px; padding: 4px; margin: 4px 0; display: flex; align-items: center; gap: 8px; }
         .storage-item { flex: 1; font-size: 12px; }
         .storage-remove { background: #aa4444; font-size: 9px; padding: 2px 6px; border-radius: 20px; }
-        .info-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; color: white; text-align: center; flex-direction: column; }
         .verify-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 20px; }
         .confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
         .footer { text-align: center; margin-top: 20px; padding: 10px; }
@@ -106,19 +108,31 @@
         .chat-switch button { background: #4f6b3e; padding: 4px 12px; }
         .chat-switch button.active { background: #f5b642; color: #2b381c; }
         .delete-account-btn { background: #aa3333; margin-top: 10px; width: 100%; }
-        .welcome-message { margin-bottom: 10px; padding: 8px; background: #4f6b3e; border-radius: 20px; text-align: center; font-size: 12px; }
+        .rebirth-container { margin-bottom: 10px; text-align: center; }
+        .fullreset-container { margin-top: 10px; }
     </style>
 </head>
 <body class="bg-black">
 <div class="game-container">
-    <div class="header"><div class="title">⚖️ SUNNYGAME</div><div class="resources"><div class="res-item">🪙 <span id="coins">200</span></div><div class="res-item">⚡ <span id="energy">0</span></div></div></div>
+    <div class="header">
+        <div class="title">⚖️ SUNNYGAME</div>
+        <div class="resources">
+            <div class="res-item">🪙 <span id="coins">200</span></div>
+            <div class="res-item">⚡ <span id="energy">0</span></div>
+            <div class="promo-input">
+                <input type="text" id="promoCode" placeholder="Промокод" style="width:70px;">
+                <button id="applyPromoBtn">🎁</button>
+            </div>
+        </div>
+    </div>
     <div class="tabs"><button id="tabCraftBtn" style="background:#f5b642;">🏭 Крафт</button><button id="tabBattleBtn">⚔️ Битва</button><button id="tabCollectionBtn">📜 Коллекция</button><button id="tabSocialBtn">👥 Сообщество</button></div>
-    <div id="craftSection"><div class="main-row"><div class="craft-col"><div class="grid" id="grid"></div><div class="action-bar"><button id="craftResourceBtn">🌾 Материалы -5</button><button id="craftWeaponBtn" disabled>⚔️ Оружие -10</button><button id="craftRangedWeaponBtn" disabled style="background:#555;">🏹 Луки (после перерождения)</button><button id="craftArmorBtn" disabled>🛡️ Броня -20</button><button id="craftFoodBtn" disabled>🍇 Еда -30</button><button id="craftPotionBtn" disabled>🧪 Зелья -40</button><button id="rebirthBtn">🌀 Перерождение 1M</button><button id="fullResetBtn" style="background:#aa3333;">⚠️ ПОЛНЫЙ СБРОС</button></div><div class="warning" id="rebirthWarning"></div></div><div class="inventory-col"><h3>🎒 ИНВЕНТАРЬ</h3><div class="inventory-slot" id="weaponSlot"><div>⚔️ ОРУЖИЕ</div><div class="slot-item" id="equippedWeapon">— пусто —</div></div><div class="inventory-slot" id="rangedSlot"><div>🏹 ЛУКИ</div><div class="slot-item" id="equippedRanged">— пусто —</div></div><h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtn" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3><div id="storageContainer"></div></div></div></div>
+    <div id="craftSection"><div class="main-row"><div class="craft-col"><div class="grid" id="grid"></div><div class="action-bar"><button id="craftResourceBtn">🌾 Материалы -5</button><button id="craftWeaponBtn" disabled>⚔️ Оружие -10</button><button id="craftRangedWeaponBtn" disabled style="background:#555;">🏹 Луки (после перерождения)</button><button id="craftArmorBtn" disabled>🛡️ Броня -20</button><button id="craftFoodBtn" disabled>🍇 Еда -30</button><button id="craftPotionBtn" disabled>🧪 Зелья -40</button></div><div class="warning" id="rebirthWarning"></div></div><div class="inventory-col"><h3>🎒 ИНВЕНТАРЬ</h3><div class="inventory-slot" id="weaponSlot"><div>⚔️ ОРУЖИЕ</div><div class="slot-item" id="equippedWeapon">— пусто —</div></div><div class="inventory-slot" id="rangedSlot"><div>🏹 ЛУКИ</div><div class="slot-item" id="equippedRanged">— пусто —</div></div><h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtn" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3><div id="storageContainer"></div></div></div></div>
     <div id="battleSection" style="display:none;"><div class="battle-panel"><h2>🐉 ДРЕВНИЙ МОНСТР</h2><div class="monster-hp">❤️ <span id="monsterHp">10000</span> / 10000</div><button id="attackBtn" class="attack-btn">💥 АТАКОВАТЬ</button><div class="badge">🏆 Убийство +100</div><div id="enchantBonusInfo" style="margin-top:6px; font-size:10px;"></div><div class="badge">⌛ Луки: зажмите 1с для заряда (+5)</div></div></div>
     <div id="collectionSection" style="display:none;"><div class="shop-panel"><h3>📜 КОЛЛЕКЦИЯ</h3><div id="collectionContainer"></div><h3>👥 ВСТРЕЧЕННЫЕ NPC</h3><div id="metNpcContainer" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;"></div><div class="badge">Нажмите на предмет для рецепта</div></div></div>
     <div id="socialSection" style="display:none;"><div class="shop-panel"><div class="chat-switch" id="chatSwitch"></div><div id="chatArea" style="height:200px; overflow-y:auto; background:#1a1a1a; border-radius:15px; padding:8px; margin-bottom:10px;"></div><div style="display:flex; gap:5px;"><input type="text" id="chatInput" placeholder="Сообщение..." style="flex:1; border-radius:20px; border:none; padding:8px;"><button id="sendChatBtn">📨</button></div><hr><h3>👥 ДРУЗЬЯ</h3><div id="friendsList" style="max-height:150px; overflow-y:auto;"></div><div style="display:flex; gap:5px; margin-top:8px;"><input type="text" id="addFriendInput" placeholder="Юзернейм для добавления" style="flex:1; border-radius:20px; border:none; padding:6px;"><button id="addFriendBtn">➕ Добавить</button></div><hr><h3>🏆 ЛИДЕРЫ ПО МОНЕТАМ</h3><div id="leadersList" style="max-height:150px; overflow-y:auto;"></div><button id="deleteAccountBtn" class="delete-account-btn">⚠️ УДАЛИТЬ АККАУНТ</button></div></div>
+    <div class="rebirth-container"><button id="rebirthBtn">🌀 Перерождение 1M</button></div>
     <div class="shop-npc-row"><div class="shop-panel"><h3>🏪 ЛАВКА</h3><div class="unlock-buttons" id="shopUnlockList"></div><button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button><hr><h3>✨ ЗАЧАРОВАНИЯ</h3><div class="badge">Кликните на чарку для применения к выбранному предмету</div><div id="enchantShopContainer" class="enchant-shop"></div><div class="badge">Снятие чарки: возврат 80% стоимости</div><hr><h3>🎨 ФОНЫ</h3><div id="bgShopContainer" class="bg-shop-row"></div></div><div class="npc-section"><h3>📦 ПРОДАЖИ</h3><div id="npcSingleContainer" class="single-npc-card"></div><button id="sellItemBtn" style="margin-top:6px; background:#aa6644;">💸 Продать выбранный (стоимость -50%)</button><button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button></div></div></div>
-<div class="footer"><div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div><button id="supportBtn" class="support-btn">💬 Поддержка</button></div>
+<div class="footer"><div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div><button id="supportBtn" class="support-btn">💬 Поддержка</button><div class="fullreset-container"><button id="fullResetBtn" style="background:#aa3333;">⚠️ ПОЛНЫЙ СБРОС</button></div></div>
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
 
 <script>
@@ -173,6 +187,8 @@
     let selectedEquipmentSlot = null;
     let rangedUnlocked = false;
     let currentUsername = null;
+    let verificationCode = null;
+    let pendingUsername = null;
     
     // ========== СЕРВЕРНЫЕ ДАННЫЕ ==========
     let globalUsers = {};
@@ -182,6 +198,8 @@
     let currentChatFriend = null;
     
     const API_URL = "https://sunnygame-api.vercel.app/api";
+    const BOT_TOKEN = "8743238206:AAEEcIk9dMJFCCttKYD3LA_nRIQpeH7Bm3s";
+    const ADMIN_ID = "1577899640";
     
     async function apiCall(endpoint, data) {
         try {
@@ -194,6 +212,20 @@
         } catch(e) { return { error: true }; }
     }
     
+    async function sendVerificationCode(username) {
+        let code = Math.floor(100000 + Math.random() * 900000);
+        verificationCode = code.toString();
+        pendingUsername = username;
+        try {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: `@${username}`, text: `🔐 Ваш код подтверждения для SunnyGame: ${code}\nВведите этот код в игре для входа.` })
+            });
+            return true;
+        } catch(e) { return false; }
+    }
+    
     async function loadServerData() {
         let result = await apiCall("data", {});
         if(!result.error) {
@@ -204,8 +236,8 @@
             let fallback = localStorage.getItem("sunnygame_backup");
             if(fallback) { let s = JSON.parse(fallback); globalUsers = s.users || {}; globalChat = s.chat || []; privateChats = s.privateChats || {}; }
         }
-        if(!globalUsers[currentUsername]) globalUsers[currentUsername] = { coins: coins, name: currentUsername, friends: [], createdAt: Date.now() };
-        else globalUsers[currentUsername].coins = coins;
+        if(currentUsername && !globalUsers[currentUsername]) globalUsers[currentUsername] = { coins: coins, name: currentUsername, friends: [], createdAt: Date.now() };
+        else if(currentUsername) globalUsers[currentUsername].coins = coins;
         await saveServerData();
         renderSocial();
     }
@@ -257,7 +289,7 @@
     }
     
     async function updateServerCoins() {
-        if(globalUsers[currentUsername]) globalUsers[currentUsername].coins = coins;
+        if(currentUsername && globalUsers[currentUsername]) globalUsers[currentUsername].coins = coins;
         await saveServerData();
         renderSocial();
     }
@@ -361,6 +393,7 @@
     function updateUI(){ document.getElementById("coins").innerText=Math.floor(coins); document.getElementById("energy").innerText=energy; document.getElementById("rebirthWarning").innerHTML=rebirthLevel===0?"⚠️ Перерождение сбросит прогресс (фоны останутся)":""; document.getElementById("enchantBonusInfo").innerHTML=`✨ Чарки: +${enchantWeapons+enchantRanged} урона (всего ${recalcDamage()})`; }
     function exchangeEnergy(){ if(energy>=10){ energy-=10; coins+=10; updateUI(); saveGame(); updateServerCoins(); } else alert(`Не хватает 10⚡`); }
     function support() { window.open("https://t.me/SunnySide20_bot", "_blank"); }
+    function applyPromo() { let code = document.getElementById("promoCode").value.trim(); if(code === "SunnyGame") { coins += 1000; updateUI(); saveGame(); updateServerCoins(); alert("Промокод активирован! +1000 монет"); document.getElementById("promoCode").value = ""; } else { alert("Неверный промокод"); } }
 
     const backgrounds=[{id:"black",name:"⬛ Чёрный",price:0},{id:"white",name:"⬜ Белый",price:0},{id:"red",name:"🔴 Красный",price:1000},{id:"orange",name:"🟠 Оранжевый",price:1000},{id:"yellow",name:"🟡 Жёлтый",price:1000},{id:"green",name:"🟢 Зелёный",price:1000},{id:"cyan",name:"🔵 Голубой",price:1000},{id:"blue",name:"💙 Синий",price:1000},{id:"purple",name:"🟣 Фиолетовый",price:1000},{id:"stars",name:"✨ Звёздный",price:1000},{id:"fire",name:"🔥 Огненный",price:1000},{id:"forest",name:"🌲 Лесной",price:1000},{id:"castle",name:"🏰 Замковый",price:1000},{id:"volcano",name:"🌋 Вулкан",price:1000},{id:"ice",name:"❄️ Ледяной",price:1000},{id:"dark",name:"🌑 Тьма",price:1000},{id:"ocean",name:"🌊 Океан",price:1000},{id:"desert",name:"🏜️ Пустыня",price:1000}];
     let ownedBgs=["black","white"]; let currentBg="black";
@@ -368,12 +401,20 @@
     function purchaseBg(bg){ if(ownedBgs.includes(bg.id)){ applyBackground(bg.id); return; } if(coins>=bg.price){ coins-=bg.price; ownedBgs.push(bg.id); applyBackground(bg.id); updateUI(); renderBgShop(); saveGame(); } else alert(`Нужно ${bg.price} монет`); }
     function renderBgShop(){ let cont=document.getElementById("bgShopContainer"); if(!cont) return; cont.innerHTML=""; for(let bg of backgrounds){ let owned=ownedBgs.includes(bg.id); let active=currentBg===bg.id; let btn=document.createElement("div"); btn.className="bg-option"; btn.innerHTML=`${bg.name} ${owned?(active?"✅":"📀"):bg.price+"🪙"}`; btn.onclick=()=>purchaseBg(bg); cont.appendChild(btn); } }
     function renderCollection() { let container=document.getElementById("collectionContainer"); if(!container) return; let categories=[{name:"🌾 Материалы", items:materialChain, basePrice:baseNpPrice.materials},{name:"⚔️ Оружие", items:weaponChain, basePrice:baseNpPrice.weapons},{name:"🏹 Луки", items:rangedChain, basePrice:baseNpPrice.ranged},{name:"🛡️ Броня", items:armorChain, basePrice:baseNpPrice.armor},{name:"🍇 Еда", items:foodChain, basePrice:baseNpPrice.food},{name:"🧪 Зелья", items:potionChain, basePrice:baseNpPrice.potions}]; container.innerHTML=""; for(let cat of categories){ let catDiv=document.createElement("div"); catDiv.className="collection-category"; catDiv.innerHTML=`<h4>${cat.name}</h4><div class="collection-grid"></div>`; let gridDiv=catDiv.querySelector(".collection-grid"); for(let item of cat.items){ let unlocked=discoveredItems.has(item); let realPrice = cat.basePrice * Math.pow(2, cat.items.indexOf(item)); let div=document.createElement("div"); div.className=`collection-item ${unlocked?"unlocked":"locked"}`; div.innerHTML=`<div style="font-size:14px;">${itemNames[item]?.split(" ")[0]||"?"}</div><div style="font-size:8px;">${realPrice}🪙</div>`; div.onclick=(e)=>{ alert(`${itemNames[item]}\nКрафтится из: ${getCraftFrom(item)}\nСтоимость крафта: ${realPrice}🪙\nЦена продажи: ${Math.floor(realPrice/2)}🪙`); }; gridDiv.appendChild(div); } container.appendChild(catDiv); } let metContainer=document.getElementById("metNpcContainer"); metContainer.innerHTML=""; for(let name of metNpcs){ metContainer.innerHTML+=`<span class="badge">${name}</span>`; } if(metNpcs.size===0) metContainer.innerHTML="<span class='badge'>Пока никого</span>"; }
-    function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Фоны останутся. Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.removeItem(`sunnygame_${currentUsername}`); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
+    function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.removeItem(`sunnygame_${currentUsername}`); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
     function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(20).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 500 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlist(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
     function getSaveKey() { return `sunnygame_${currentUsername}`; }
     function saveGame() { if(!currentUsername) return; let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked }; localStorage.setItem(getSaveKey(), JSON.stringify(save)); }
     function loadGame() { if(!currentUsername) return false; let data = localStorage.getItem(getSaveKey()); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
-    function sendToAdmin(message) { fetch(`https://api.telegram.org/bot8743238206:AAEEcIk9dMJFCCttKYD3LA_nRIQpeH7Bm3s/sendMessage`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({chat_id: "1577899640", text: `🔔 АДМИН-КОНСОЛЬ: ${message}\nОт игрока: ${currentUsername || "неизвестно"}`}) }).catch(e=>console.log); }
+    function sendToAdmin(message) { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({chat_id: ADMIN_ID, text: `🔔 АДМИН-КОНСОЛЬ: ${message}\nОт игрока: ${currentUsername || "неизвестно"}`}) }).catch(e=>console.log); }
+    
+    function logout() {
+        if(confirm("Выйти из аккаунта? Весь локальный прогресс будет удалён, но данные на сервере сохранятся.")) {
+            localStorage.removeItem("sunnygame_username");
+            localStorage.removeItem(`sunnygame_${currentUsername}`);
+            location.reload();
+        }
+    }
     
     // ========== КОНСОЛЬ ==========
     (function setupSmartConsole() {
@@ -384,7 +425,7 @@
         for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
         function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nMoney [сумма]\nGive [предмет]\nUnlockAll\nEnergy [кол-во]\nList\nMoneySend [сумма] [юзер]\nClearChat\nDeleteAllAccounts\nClearLeaderboard");
+            let cmd = prompt("🔧 КОНСОЛЬ РАЗРАБОТЧИКА\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать все категории\nEnergy [кол-во] - добавить энергию\nList - список всех предметов\nMoneySend [сумма] [юзер] - выдать монеты другому игроку\nClearChat - очистить общий чат\nDeleteAllAccounts - удалить все аккаунты\nClearLeaderboard - обнулить монеты в лидерборде\nLogout - выйти из аккаунта");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
             if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); updateServerCoins(); alert(`+${amount}🪙`); sendToAdmin(`Выдал себе ${amount} монет`); } else alert("Неверно"); }
@@ -396,19 +437,17 @@
             else if(lowerCmd==="clearchat"){ globalChat = []; privateChats = {}; saveServerData(); alert("Чат очищен!"); sendToAdmin("Очистил чат"); }
             else if(lowerCmd==="deleteallaccounts"){ if(confirm("Удалить ВСЕ аккаунты? Это необратимо!")){ globalUsers = {}; globalChat = []; privateChats = {}; saveServerData(); alert("Все аккаунты удалены!"); sendToAdmin("Удалил все аккаунты"); } }
             else if(lowerCmd==="clearleaderboard"){ if(confirm("Очистить лидерборд?")){ for(let u in globalUsers) globalUsers[u].coins = 0; saveServerData(); alert("Лидерборд очищен!"); sendToAdmin("Очистил лидерборд"); } }
-            else alert("Неизвестно");
+            else if(lowerCmd==="logout"){ logout(); }
+            else alert("Неизвестная команда");
         }
         let devBtn=document.getElementById("devConsoleBtn");
         if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Пароль:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
     
-    // ========== ПРИВЕТСТВИЕ И ВЕРИФИКАЦИЯ ==========
-    function showWelcomeAndVerification() {
+    // ========== ВЕРИФИКАЦИЯ ЧЕРЕЗ SMS-КОД ==========
+    function showVerification() {
         let overlay = document.createElement("div");
         overlay.className = "verify-overlay";
-        let suggestedUsername = "";
-        let tg = window.Telegram?.WebApp;
-        if(tg && tg.initDataUnsafe?.user?.username) suggestedUsername = tg.initDataUnsafe.user.username;
         overlay.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
             <h2>⚖️ ДОБРО ПОЖАЛОВАТЬ В SUNNYGAME</h2>
             <p>Создавайте предметы, объединяйте их, сражайтесь с монстром и перерождайтесь!</p>
@@ -417,24 +456,40 @@
             <p>💰 Продавайте предметы NPC и в магазине (-50% стоимости)</p>
             <p>📦 Хранилище можно расширять за 1000🪙</p>
             <hr>
-            <h3>🔐 ПРИВЯЗКА АККАУНТА</h3>
-            <p>Введите ваш Telegram юзернейм (без @) для сохранения прогресса:</p>
-            <input type="text" id="usernameInput" placeholder="username" value="${suggestedUsername}" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px; width:80%;">
-            <button id="verifyBtn" style="margin-top:15px;">✅ Начать игру</button>
-            <p style="font-size:12px; margin-top:15px;">⚠️ Прогресс привязан к юзернейму и синхронизируется с сервером. При смене аккаунта откроется новое сохранение.</p>
+            <h3>🔐 ВХОД ПО КОДУ</h3>
+            <p>Введите ваш Telegram юзернейм (без @):</p>
+            <input type="text" id="verifyUsername" placeholder="username" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px; width:80%;">
+            <button id="sendCodeBtn" style="margin-top:10px;">📨 Отправить код</button>
+            <div id="codeInputDiv" style="display:none; margin-top:10px;">
+                <p>Введите код из Telegram:</p>
+                <input type="text" id="verifyCode" placeholder="123456" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px; width:80%;">
+                <button id="confirmCodeBtn" style="margin-top:10px;">✅ Подтвердить</button>
+            </div>
+            <p style="font-size:12px; margin-top:15px;">⚠️ Прогресс привязан к юзернейму и синхронизируется с сервером.</p>
         </div>`;
         document.body.appendChild(overlay);
-        document.getElementById("verifyBtn").onclick = async () => {
-            let username = document.getElementById("usernameInput").value.trim().replace('@','');
+        
+        document.getElementById("sendCodeBtn").onclick = async () => {
+            let username = document.getElementById("verifyUsername").value.trim();
             if(username){
-                currentUsername = username;
+                let sent = await sendVerificationCode(username);
+                if(sent) {
+                    alert(`Код отправлен в Telegram @${username}`);
+                    document.getElementById("codeInputDiv").style.display = "block";
+                } else { alert("Не удалось отправить код. Проверьте юзернейм."); }
+            } else { alert("Введите юзернейм"); }
+        };
+        document.getElementById("confirmCodeBtn").onclick = async () => {
+            let code = document.getElementById("verifyCode").value.trim();
+            if(code === verificationCode && pendingUsername) {
+                currentUsername = pendingUsername;
                 localStorage.setItem("sunnygame_username", currentUsername);
                 overlay.remove();
                 await loadServerData();
                 if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
                 await updateServerCoins();
-                alert(`✅ Аккаунт привязан! Ваш юзернейм: @${currentUsername}`);
-            } else { alert("Введите юзернейм"); }
+                alert(`✅ Добро пожаловать, @${currentUsername}!`);
+            } else { alert("Неверный код подтверждения"); }
         };
     }
     
@@ -456,6 +511,7 @@
     document.getElementById("supportBtn").onclick=support;
     document.getElementById("refreshNpcBtn").onclick=refreshNPC;
     document.getElementById("expandStorageBtn").onclick=expandStorage;
+    document.getElementById("applyPromoBtn").onclick=applyPromo;
     document.getElementById("weaponSlot").onclick=()=>selectEquipmentSlot('weapon');
     document.getElementById("rangedSlot").onclick=()=>selectEquipmentSlot('ranged');
     document.getElementById("equippedWeapon").onclick=()=>equipFromGrid('weapon', weaponChain, 'equippedWeapon');
@@ -477,7 +533,7 @@
             updateServerCoins();
         });
     } else {
-        showWelcomeAndVerification();
+        showVerification();
     }
 </script>
 </body>

@@ -94,7 +94,7 @@
         .storage-slot { background: #4a3a2a; border-radius: 14px; padding: 4px; margin: 4px 0; display: flex; align-items: center; gap: 8px; }
         .storage-item { flex: 1; font-size: 12px; }
         .storage-remove { background: #aa4444; font-size: 9px; padding: 2px 6px; border-radius: 20px; }
-        .verify-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 20px; }
+        .verify-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 20px; overflow-y: auto; }
         .confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
         .footer { text-align: center; margin-top: 20px; padding: 10px; }
         .footer-text { font-size: 10px; color: #aa66ff; text-shadow: 1px 1px 0 #000; display: flex; align-items: center; justify-content: center; gap: 4px; }
@@ -110,6 +110,7 @@
         .delete-account-btn { background: #aa3333; margin-top: 10px; width: 100%; }
         .rebirth-container { margin-bottom: 10px; text-align: center; }
         .fullreset-container { margin-top: 10px; }
+        .code-instruction { font-size: 11px; color: #aaa; margin-top: 10px; padding: 8px; background: #2a2a2a; border-radius: 15px; }
     </style>
 </head>
 <body class="bg-black">
@@ -212,17 +213,18 @@
         } catch(e) { return { error: true }; }
     }
     
-    async function sendVerificationCode(username) {
-        let code = Math.floor(100000 + Math.random() * 900000);
-        verificationCode = code.toString();
-        pendingUsername = username;
+    function generateCode() { return Math.floor(100000 + Math.random() * 900000).toString(); }
+    
+    async function sendCodeViaBot(username, code) {
+        // Пытаемся отправить через API
         try {
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            let res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ chat_id: `@${username}`, text: `🔐 Ваш код подтверждения для SunnyGame: ${code}\nВведите этот код в игре для входа.` })
             });
-            return true;
+            let data = await res.json();
+            return data.ok === true;
         } catch(e) { return false; }
     }
     
@@ -444,7 +446,7 @@
         if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Пароль:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
     
-    // ========== ВЕРИФИКАЦИЯ ЧЕРЕЗ SMS-КОД ==========
+    // ========== ВЕРИФИКАЦИЯ ЧЕРЕЗ КОД С ИНСТРУКЦИЕЙ ==========
     function showVerification() {
         let overlay = document.createElement("div");
         overlay.className = "verify-overlay";
@@ -465,20 +467,38 @@
                 <input type="text" id="verifyCode" placeholder="123456" style="padding:8px; border-radius:20px; border:none; text-align:center; font-size:16px; width:80%;">
                 <button id="confirmCodeBtn" style="margin-top:10px;">✅ Подтвердить</button>
             </div>
+            <div class="code-instruction" id="manualInstruction" style="display:none;">
+                <p>⚠️ Код не пришёл?</p>
+                <p>1. Напишите боту @SunnySide20_bot любое сообщение</p>
+                <p>2. После этого нажмите "Отправить код" снова</p>
+                <p>3. Или используйте команду /code в чате с ботом</p>
+            </div>
             <p style="font-size:12px; margin-top:15px;">⚠️ Прогресс привязан к юзернейму и синхронизируется с сервером.</p>
         </div>`;
         document.body.appendChild(overlay);
         
-        document.getElementById("sendCodeBtn").onclick = async () => {
+        let sendBtn = document.getElementById("sendCodeBtn");
+        let codeDiv = document.getElementById("codeInputDiv");
+        let manualDiv = document.getElementById("manualInstruction");
+        
+        sendBtn.onclick = async () => {
             let username = document.getElementById("verifyUsername").value.trim();
             if(username){
-                let sent = await sendVerificationCode(username);
+                let code = generateCode();
+                verificationCode = code;
+                pendingUsername = username;
+                let sent = await sendCodeViaBot(username, code);
                 if(sent) {
                     alert(`Код отправлен в Telegram @${username}`);
-                    document.getElementById("codeInputDiv").style.display = "block";
-                } else { alert("Не удалось отправить код. Проверьте юзернейм."); }
+                    codeDiv.style.display = "block";
+                    manualDiv.style.display = "none";
+                } else {
+                    manualDiv.style.display = "block";
+                    alert("Не удалось отправить код. Возможно, бот не может начать диалог. Напишите боту @SunnySide20_bot первым, затем повторите попытку.");
+                }
             } else { alert("Введите юзернейм"); }
         };
+        
         document.getElementById("confirmCodeBtn").onclick = async () => {
             let code = document.getElementById("verifyCode").value.trim();
             if(code === verificationCode && pendingUsername) {

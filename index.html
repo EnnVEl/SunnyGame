@@ -299,19 +299,22 @@
         for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
         function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nMoney [сумма]\nGive [предмет]\nUnlockAll\nEnergy [кол-во]\nList\nDelet — полный сброс");
+            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nDelet - полный сброс игры");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
-            if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); alert(`+${amount}🪙`); sendToAdmin(`Выдал себе ${amount} монет`); } else alert("Неверно"); }
-            else if(lowerCmd.startsWith("give ")){ let rusName = cmd.substring(5).trim(); let itemKey = findItemByRussianName(rusName); if(itemKey && itemNames[itemKey]){ if(addToGridAndDiscover(itemKey)){ updateUI(); saveGame(); alert(`Выдан ${itemNames[itemKey]}`); sendToAdmin(`Выдал предмет ${itemNames[itemKey]}`); } else alert("Нет места"); } else alert(`Не найден: ${rusName}`); }
-            else if(lowerCmd==="unlockall"){ unlocked.weapons=true; unlocked.armor=true; unlocked.food=true; unlocked.potions=true; updateCraftBtns(); renderShop(); saveGame(); alert("Всё разблокировано!"); sendToAdmin("Разблокировал все категории"); }
-            else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount}⚡`); sendToAdmin(`Выдал себе ${amount} энергии`); } else alert("Неверно"); }
-            else if(lowerCmd==="list"){ alert("Список предметов:\n"+Object.keys(itemNames).map(k=>itemNames[k]).join(", ")); }
-            else if(lowerCmd==="delet"){ if(confirm("СБРОС ВСЕХ ДАННЫХ?")){ localStorage.removeItem("balanceSave"); location.reload(); } }
-            else alert("Неизвестно");
+            if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); alert(`+${amount}🪙`); sendToAdmin(`Выдал себе ${amount} монет`); } else alert("Неверная сумма"); }
+            else if(lowerCmd.startsWith("give ")){ let rusName = cmd.substring(5).trim(); let itemKey = findItemByRussianName(rusName); if(itemKey && itemNames[itemKey]){ if(addToGridAndDiscover(itemKey)){ updateUI(); saveGame(); alert(`Выдан ${itemNames[itemKey]}`); sendToAdmin(`Выдал предмет ${itemNames[itemKey]}`); } else alert("Нет места в инвентаре"); } else alert(`Предмет "${rusName}" не найден. Используйте команду List для просмотра всех предметов`); }
+            else if(lowerCmd==="unlockall"){ unlocked.weapons=true; unlocked.armor=true; unlocked.food=true; unlocked.potions=true; updateCraftBtns(); renderShop(); saveGame(); alert("Все категории разблокированы!"); sendToAdmin("Разблокировал все категории"); }
+            else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount} энергии`); sendToAdmin(`Выдал себе ${amount} энергии`); } else alert("Неверная сумма"); }
+            else if(lowerCmd==="list"){ 
+                let itemsList = Object.keys(itemNames).map(key => `${itemNames[key]}`).join("\n");
+                alert(`📋 СПИСОК ВСЕХ ПРЕДМЕТОВ:\n\n${itemsList}\n\nВсего предметов: ${Object.keys(itemNames).length}`);
+            }
+            else if(lowerCmd==="delet"){ if(confirm("ПОЛНЫЙ СБРОС ВСЕХ ДАННЫХ? Это действие необратимо!")){ localStorage.removeItem("balanceSave"); localStorage.removeItem("promoUsed"); location.reload(); } }
+            else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, Delet");
         }
         let devBtn=document.getElementById("devConsoleBtn");
-        if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Пароль:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
+        if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Введите пароль разработчика:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
     
     // ========== ИНФОРМАЦИОННОЕ ОКНО ПРИ СТАРТЕ ==========
@@ -325,6 +328,7 @@
             <div class="info-text">🏹 <span class="info-highlight">ЛУКИ</span> — зажми кнопку атаки на 1 секунду для заряженного удара (+5 урона)</div>
             <div class="info-text">✨ <span class="info-highlight">ЗАЧАРОВАНИЯ</span> — покупай чарки для оружия и луков (+1 урон каждая, до 10)</div>
             <div class="info-text">🌀 <span class="info-highlight">ПЕРЕРОЖДЕНИЕ</span> — за 1 млн монет сбрасывает прогресс, открывает луки и зачарования</div>
+            <div class="info-text">🎁 <span class="info-highlight">ПРОМОКОД</span> — введи SunnyGame в поле справа и получи 1000 монет (1 раз)</div>
             <hr>
             <div class="info-text">💾 Прогресс сохраняется <span class="info-highlight">на устройстве</span>. При смене Telegram-аккаунта на том же устройстве сохранение останется прежним.</div>
             <button id="closeInfo" style="margin-top:15px;">▶ НАЧАТЬ ИГРУ</button>

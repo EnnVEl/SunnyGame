@@ -47,13 +47,15 @@
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; background: #2c2b1fe0; padding: 6px 12px; border-radius: 40px; gap: 8px; }
         .resources { display: flex; gap: 12px; background: #1e2a1c; padding: 4px 12px; border-radius: 30px; align-items: center; }
         .res-item { font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 4px; }
-        .daily-bonus-btn { background: #f5b642; color: #2b381c; margin-left: 5px; padding: 4px 8px; font-size: 10px; }
-        .promo-input { display: flex; gap: 4px; align-items: center; }
-        .promo-input input { width: 80px; padding: 4px 6px; border-radius: 20px; border: none; font-size: 10px; }
-        .promo-input button { padding: 4px 8px; font-size: 10px; background: #c9a03d; }
         .title { font-size: 20px; letter-spacing: 1px; }
         .main-row { display: flex; flex-direction: column; gap: 12px; }
         .craft-col, .inventory-col { width: 100%; background: #261f16cc; backdrop-filter: blur(8px); border-radius: 28px; padding: 10px; }
+        .bonus-panel { background: #2a2a1e; border-radius: 28px; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+        .bonus-btn { background: #f5b642; color: #2b381c; padding: 5px 12px; font-size: 12px; }
+        .promo-group { display: flex; gap: 6px; align-items: center; background: #3a3a2a; padding: 4px 12px; border-radius: 30px; }
+        .promo-group input { width: 90px; padding: 5px 8px; border-radius: 30px; border: none; font-size: 11px; background: #2a2a1e; color: #f9efc0; }
+        .promo-group input::placeholder { color: #aa9f7b; }
+        .promo-group button { background: #c9a03d; padding: 5px 12px; font-size: 11px; }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #1f2c18cc; padding: 10px; border-radius: 20px; margin: 0; overflow-x: auto; }
         .cell { background: #5e3a2b; background-image: radial-gradient(circle at 25% 30%, #7e5a45, #3f2a1d); aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; box-shadow: 0 2px 0 #2c1a10; border: 1px solid #c7a15e; text-align: center; word-break: break-word; padding: 2px; }
         .cell.selected { border: 3px solid #ffd966; box-shadow: 0 2px 0 #2c1a10; }
@@ -116,15 +118,10 @@
         <div class="resources">
             <div class="res-item">🪙 <span id="coins">200</span></div>
             <div class="res-item">⚡ <span id="energy">0</span></div>
-            <div class="promo-input">
-                <input type="text" id="promoCode" placeholder="Промокод" style="width:70px;">
-                <button id="applyPromoBtn">🎁</button>
-            </div>
-            <button id="dailyBonusBtn" class="daily-bonus-btn">🎁 Бонус дня</button>
         </div>
     </div>
     <div class="tabs"><button id="tabCraftBtn" class="tab-btn" style="background:#f5b642;">🏭 Крафт</button><button id="tabBattleBtn" class="tab-btn" style="background:#f5b642;">⚔️ Битва</button><button id="tabCollectionBtn" class="tab-btn" style="background:#f5b642;">📜 Коллекция</button></div>
-    <div id="craftSection"><div class="main-row"><div class="craft-col"><div class="grid" id="grid"></div><div class="action-bar"><button id="craftResourceBtn" class="craft-btn">🌾 Материалы -5</button><button id="craftWeaponBtn" class="craft-btn" disabled>⚔️ Оружие -10</button><button id="craftArmorBtn" class="craft-btn" disabled>🛡️ Броня -20</button><button id="craftFoodBtn" class="craft-btn" disabled>🍇 Еда -30</button><button id="craftPotionBtn" class="craft-btn" disabled>🧪 Зелья -40</button><button id="craftRangedWeaponBtn" class="craft-btn" disabled style="background:#555;">🏹 Луки (после перерождения)</button></div><div class="warning" id="rebirthWarning"></div></div><div class="inventory-col"><h3>🎒 ИНВЕНТАРЬ</h3><div class="inventory-slot" id="weaponSlot"><div>⚔️ ОРУЖИЕ</div><div class="slot-item" id="equippedWeapon">— пусто —</div></div><div class="inventory-slot" id="rangedSlot"><div>🏹 ЛУКИ</div><div class="slot-item" id="equippedRanged">— пусто —</div></div><h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtn" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3><div id="storageContainer"></div></div></div></div>
+    <div id="craftSection"><div class="main-row"><div class="craft-col"><div class="bonus-panel"><button id="dailyBonusBtn" class="bonus-btn">🎁 Ежедневный бонус (50 монет)</button><div class="promo-group"><input type="text" id="promoCode" placeholder="Промокод"><button id="applyPromoBtn">Активировать</button></div></div><div class="grid" id="grid"></div><div class="action-bar"><button id="craftResourceBtn" class="craft-btn">🌾 Материалы -5</button><button id="craftWeaponBtn" class="craft-btn" disabled>⚔️ Оружие -10</button><button id="craftArmorBtn" class="craft-btn" disabled>🛡️ Броня -20</button><button id="craftFoodBtn" class="craft-btn" disabled>🍇 Еда -30</button><button id="craftPotionBtn" class="craft-btn" disabled>🧪 Зелья -40</button><button id="craftRangedWeaponBtn" class="craft-btn" disabled style="background:#555;">🏹 Луки (после перерождения)</button></div><div class="warning" id="rebirthWarning"></div></div><div class="inventory-col"><h3>🎒 ИНВЕНТАРЬ</h3><div class="inventory-slot" id="weaponSlot"><div>⚔️ ОРУЖИЕ</div><div class="slot-item" id="equippedWeapon">— пусто —</div></div><div class="inventory-slot" id="rangedSlot"><div>🏹 ЛУКИ</div><div class="slot-item" id="equippedRanged">— пусто —</div></div><h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtn" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3><div id="storageContainer"></div></div></div></div>
     <div id="battleSection" style="display:none;"><div class="battle-panel"><h2>🐉 ДРЕВНИЙ МОНСТР</h2><div class="monster-hp">❤️ <span id="monsterHp">10000</span> / 10000</div><button id="attackBtn" class="attack-btn">💥 АТАКОВАТЬ</button><div class="badge">🏆 Убийство +100</div><div id="enchantBonusInfo" style="margin-top:6px; font-size:10px;"></div><div class="badge">⌛ Луки: зажмите 1с для заряда (+5)</div></div></div>
     <div id="collectionSection" style="display:none;"><div class="shop-panel"><h3>📜 КОЛЛЕКЦИЯ</h3><div id="collectionContainer"></div><h3>👥 ВСТРЕЧЕННЫЕ NPC</h3><div id="metNpcContainer" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;"></div><div class="badge">Нажмите на предмет для рецепта</div></div></div>
     <div class="rebirth-container"><button id="rebirthBtn">🌀 Перерождение 1M</button></div>

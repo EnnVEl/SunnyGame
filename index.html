@@ -48,6 +48,9 @@
         .resources { display: flex; gap: 12px; background: #1e2a1c; padding: 4px 12px; border-radius: 30px; align-items: center; }
         .res-item { font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 4px; }
         .daily-bonus-btn { background: #f5b642; color: #2b381c; margin-left: 5px; padding: 4px 8px; font-size: 10px; }
+        .promo-input { display: flex; gap: 4px; align-items: center; }
+        .promo-input input { width: 80px; padding: 4px 6px; border-radius: 20px; border: none; font-size: 10px; }
+        .promo-input button { padding: 4px 8px; font-size: 10px; background: #c9a03d; }
         .title { font-size: 20px; letter-spacing: 1px; }
         .main-row { display: flex; flex-direction: column; gap: 12px; }
         .craft-col, .inventory-col { width: 100%; background: #261f16cc; backdrop-filter: blur(8px); border-radius: 28px; padding: 10px; }
@@ -113,7 +116,11 @@
         <div class="resources">
             <div class="res-item">🪙 <span id="coins">200</span></div>
             <div class="res-item">⚡ <span id="energy">0</span></div>
-            <button id="dailyBonusBtn" class="daily-bonus-btn">🎁 Ежедневный бонус</button>
+            <div class="promo-input">
+                <input type="text" id="promoCode" placeholder="Промокод" style="width:70px;">
+                <button id="applyPromoBtn">🎁</button>
+            </div>
+            <button id="dailyBonusBtn" class="daily-bonus-btn">🎁 Бонус дня</button>
         </div>
     </div>
     <div class="tabs"><button id="tabCraftBtn" class="tab-btn" style="background:#f5b642;">🏭 Крафт</button><button id="tabBattleBtn" class="tab-btn" style="background:#f5b642;">⚔️ Битва</button><button id="tabCollectionBtn" class="tab-btn" style="background:#f5b642;">📜 Коллекция</button></div>
@@ -183,14 +190,12 @@
     let lastBonusTime = 0;
     const BONUS_COOLDOWN_MS = 24 * 60 * 60 * 1000;
     
+    function loadPromoState() { promoUsed = localStorage.getItem("promoUsed") === "true"; }
+    function savePromoState() { localStorage.setItem("promoUsed", promoUsed ? "true" : "false"); }
     function loadBonusState() { let saved = localStorage.getItem("lastBonusTime"); if(saved) lastBonusTime = parseInt(saved); }
     function saveBonusState() { localStorage.setItem("lastBonusTime", lastBonusTime); }
-    function resetBonusCooldown() { lastBonusTime = 0; saveBonusState(); alert("Кулдаун ежедневного бонуса сброшен! Можно получить монеты снова."); }
+    function resetBonusCooldown() { lastBonusTime = 0; saveBonusState(); alert("Кулдаун ежедневного бонуса сброшен!"); }
     function canGetBonus() { return Date.now() - lastBonusTime >= BONUS_COOLDOWN_MS; }
-    function getRemainingTime() {
-        if(canGetBonus()) return 0;
-        return BONUS_COOLDOWN_MS - (Date.now() - lastBonusTime);
-    }
     
     function claimDailyBonus() {
         if(canGetBonus()) {
@@ -199,13 +204,29 @@
             saveBonusState();
             updateUI();
             saveGame();
-            alert('✅ Вы получили 50 монет! Следующий бонус будет доступен через 24 часа.');
+            alert('✅ Вы получили 50 монет! Следующий бонус через 24 часа.');
         } else {
-            let remaining = getRemainingTime();
+            let remaining = BONUS_COOLDOWN_MS - (Date.now() - lastBonusTime);
             let hours = Math.floor(remaining / (60 * 60 * 1000));
             let minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-            alert(`⏳ Ежедневный бонус уже получен! Следующий через ${hours} ч ${minutes} мин.`);
+            alert(`⏳ Бонус уже получен! Следующий через ${hours} ч ${minutes} мин.`);
         }
+    }
+    
+    function applyPromo() { 
+        if(promoUsed) { alert("Промокод уже был использован!"); return; }
+        let code = document.getElementById("promoCode").value.trim(); 
+        if(code === "SunnyGame") { 
+            coins += 1000; 
+            promoUsed = true;
+            savePromoState();
+            updateUI(); 
+            saveGame(); 
+            alert("Промокод активирован! +1000 монет"); 
+            document.getElementById("promoCode").value = ""; 
+        } else { 
+            alert("Неверный промокод"); 
+        } 
     }
     
     function sendAdminNotification(message) {
@@ -304,21 +325,6 @@
     function updateUI(){ document.getElementById("coins").innerText=Math.floor(coins); document.getElementById("energy").innerText=energy; document.getElementById("rebirthWarning").innerHTML=rebirthLevel===0?"⚠️ Перерождение сбросит прогресс (фоны останутся)":""; document.getElementById("enchantBonusInfo").innerHTML=`✨ Чарки: +${enchantWeapons+enchantRanged} урона (всего ${recalcDamage()})`; }
     function exchangeEnergy(){ if(energy>=10){ energy-=10; coins+=10; updateUI(); saveGame(); } else alert(`Не хватает 10⚡`); }
     function support() { window.open("https://t.me/SunnySide20_bot", "_blank"); }
-    function applyPromo() { 
-        if(promoUsed) { alert("Промокод уже был использован!"); return; }
-        let code = document.getElementById("promoCode").value.trim(); 
-        if(code === "SunnyGame") { 
-            coins += 1000; 
-            promoUsed = true;
-            savePromoState();
-            updateUI(); 
-            saveGame(); 
-            alert("Промокод активирован! +1000 монет"); 
-            document.getElementById("promoCode").value = ""; 
-        } else { 
-            alert("Неверный промокод"); 
-        } 
-    }
 
     const backgrounds=[{id:"black",name:"⬛ Чёрный",price:0},{id:"white",name:"⬜ Белый",price:0},{id:"red",name:"🔴 Красный",price:1000},{id:"orange",name:"🟠 Оранжевый",price:1000},{id:"yellow",name:"🟡 Жёлтый",price:1000},{id:"green",name:"🟢 Зелёный",price:1000},{id:"cyan",name:"🔵 Голубой",price:1000},{id:"blue",name:"💙 Синий",price:1000},{id:"purple",name:"🟣 Фиолетовый",price:1000},{id:"stars",name:"✨ Звёздный",price:1000},{id:"fire",name:"🔥 Огненный",price:1000},{id:"forest",name:"🌲 Лесной",price:1000},{id:"castle",name:"🏰 Замковый",price:1000},{id:"volcano",name:"🌋 Вулкан",price:1000},{id:"ice",name:"❄️ Ледяной",price:1000},{id:"dark",name:"🌑 Тьма",price:1000},{id:"ocean",name:"🌊 Океан",price:1000},{id:"desert",name:"🏜️ Пустыня",price:1000}];
     let ownedBgs=["black","white"]; let currentBg="black";
@@ -384,13 +390,14 @@
     })();
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    loadPromoState();
     loadBonusState();
-    loadGame();
-    if(!localStorage.getItem("balanceSave")) {
+    if(!loadGame()) {
         initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black");
     }
     
     document.getElementById("dailyBonusBtn").onclick = claimDailyBonus;
+    document.getElementById("applyPromoBtn").onclick = applyPromo;
     document.getElementById("tabCraftBtn").onclick=()=>{ document.getElementById("craftSection").style.display="block"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabBattleBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="block"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabCollectionBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="block"; renderCollection(); };
@@ -407,7 +414,6 @@
     document.getElementById("supportBtn").onclick=support;
     document.getElementById("refreshNpcBtn").onclick=refreshNPC;
     document.getElementById("expandStorageBtn").onclick=expandStorage;
-    document.getElementById("applyPromoBtn").onclick=applyPromo;
     document.getElementById("weaponSlot").onclick=()=>selectEquipmentSlot('weapon');
     document.getElementById("rangedSlot").onclick=()=>selectEquipmentSlot('ranged');
     document.getElementById("equippedWeapon").onclick=()=>equipFromGrid('weapon', weaponChain, 'equippedWeapon');

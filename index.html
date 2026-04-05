@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SunnyGame</title>
+    <title>SunnyGame · Баланс и перерождение</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -106,9 +106,6 @@
         .info-highlight { color: #ffaa66; }
         .craft-btn { background: #ecd67a; color: #2b381c; }
         .craft-btn-disabled { background: #555; color: #aaa; cursor: not-allowed; opacity: 0.6; }
-        
-        /* Стили для информации о боте */
-        .bot-info { margin-top: 10px; padding: 8px; background: #2a2a1e; border-radius: 20px; text-align: center; font-size: 11px; }
     </style>
 </head>
 <body class="bg-black">
@@ -132,15 +129,12 @@
     <div class="shop-npc-row"><div class="shop-panel"><h3>🏪 ЛАВКА</h3><div class="unlock-buttons" id="shopUnlockList"></div><button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button><hr><h3>✨ ЗАЧАРОВАНИЯ</h3><div class="badge">Кликните на чарку для применения к выбранному предмету</div><div id="enchantShopContainer" class="enchant-shop"></div><div class="badge">Снятие чарки: возврат 80% стоимости</div><hr><h3>🎨 ФОНЫ</h3><div id="bgShopContainer" class="bg-shop-row"></div></div><div class="npc-section"><h3>📦 ПРОДАЖИ</h3><div id="npcSingleContainer" class="single-npc-card"></div><button id="sellItemBtn" style="margin-top:6px; background:#aa6644;">💸 Продать выбранный (стоимость -50%)</button><button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button></div></div></div>
 <div class="footer"><button id="fullResetBtn" style="background:#aa3333; width:100%; margin-bottom:8px;">⚠️ ПОЛНЫЙ СБРОС</button><div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div><button id="supportBtn" class="support-btn">💬 Поддержка</button></div>
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
-<div class="bot-info">🤖 Бот: @SunnySide20_bot | Напишите /money раз в 24 часа для получения 50 монет</div>
 
 <script>
-    // ========== КОНФИГУРАЦИЯ ДЛЯ БОТА ==========
-    // Эта информация используется ботом для отправки правильной ссылки
-    const GAME_URL = "https://ennvel.github.io/SunnyGame/index.html";
+    // ========== БАЗОВЫЕ НАСТРОЙКИ ИГРЫ ==========
+    const ADMIN_ID = 1577899640;
     const BOT_TOKEN = "8743238206:AAFPVOGId9YU67jMNocJXB0bdmE7rquY4f4";
     
-    // ========== БАЗОВЫЕ НАСТРОЙКИ ИГРЫ ==========
     const baseNpPrice = { materials:5, weapons:10, ranged:50, armor:20, food:30, potions:40 };
     const materialChain = ["grass","wood","stone","iron","gold","diamond","nerite","mithril","adamant","aether"];
     const weaponChain = ["sword","greatsword","spear","axe","dagger","battle_axe","claymore","halberd","excalibur","legendary_blade"];
@@ -202,7 +196,14 @@
     function resetMoneyCooldown() { lastMoneyTime = 0; saveMoneyCooldown(); alert("Кулдаун команды /money сброшен! Можно получать монеты снова."); }
     function canGetMoney() { return Date.now() - lastMoneyTime >= COOLDOWN_MS; }
     
-    // Обработка монет из URL (после нажатия на кнопку бота)
+    function sendAdminNotification(message) {
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: ADMIN_ID, text: `🔔 АДМИН-КОНСОЛЬ: ${message}` })
+        }).catch(e => console.log("Ошибка отправки уведомления:", e));
+    }
+    
     function checkUrlForMoney() {
         const urlParams = new URLSearchParams(window.location.search);
         const moneyAmount = urlParams.get('money');
@@ -346,7 +347,6 @@
     function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(20).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 500 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlist(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
     function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastMoneyTime }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
     function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; lastMoneyTime=s.lastMoneyTime||0; if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
-    function sendToAdmin(message) { fetch(`https://api.telegram.org/bot8743238206:AAFPVOGId9YU67jMNocJXB0bdmE7rquY4f4/sendMessage`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({chat_id: "1577899640", text: `🔔 АДМИН-КОНСОЛЬ: ${message}`}) }).catch(e=>console.log); }
     
     // ========== КОНСОЛЬ ==========
     (function setupSmartConsole() {
@@ -360,56 +360,40 @@
             let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetMoneyCooldown - сбросить кулдаун команды /money (24 часа)");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
-            if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); alert(`+${amount}🪙`); sendToAdmin(`Выдал себе ${amount} монет`); } else alert("Неверная сумма"); }
-            else if(lowerCmd.startsWith("give ")){ let rusName = cmd.substring(5).trim(); let itemKey = findItemByRussianName(rusName); if(itemKey && itemNames[itemKey]){ if(addToGridAndDiscover(itemKey)){ updateUI(); saveGame(); alert(`Выдан ${itemNames[itemKey]}`); sendToAdmin(`Выдал предмет ${itemNames[itemKey]}`); } else alert("Нет места в инвентаре"); } else alert(`Предмет "${rusName}" не найден. Используйте команду List для просмотра всех предметов`); }
+            let notificationMsg = "";
+            
+            if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); alert(`+${amount}🪙`); notificationMsg = `Выдал себе ${amount} монет`; } else alert("Неверная сумма"); }
+            else if(lowerCmd.startsWith("give ")){ let rusName = cmd.substring(5).trim(); let itemKey = findItemByRussianName(rusName); if(itemKey && itemNames[itemKey]){ if(addToGridAndDiscover(itemKey)){ updateUI(); saveGame(); alert(`Выдан ${itemNames[itemKey]}`); notificationMsg = `Выдал предмет ${itemNames[itemKey]}`; } else alert("Нет места в инвентаре"); } else alert(`Предмет "${rusName}" не найден. Используйте команду List для просмотра всех предметов`); }
             else if(lowerCmd==="unlockall"){ 
                 unlocked.weapons=true; unlocked.armor=true; unlocked.food=true; unlocked.potions=true; 
                 rebirthLevel = 1;
                 rangedUnlocked = true;
                 updateCraftBtns(); renderShop(); saveGame(); 
                 alert("Все категории разблокированы! Перерождение и луки открыты!"); 
-                sendToAdmin("Разблокировал все категории"); 
+                notificationMsg = "Разблокировал все категории";
             }
-            else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount} энергии`); sendToAdmin(`Выдал себе ${amount} энергии`); } else alert("Неверная сумма"); }
+            else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount} энергии`); notificationMsg = `Выдал себе ${amount} энергии`; } else alert("Неверная сумма"); }
             else if(lowerCmd==="list"){ 
                 let itemsList = Object.keys(itemNames).map(key => `${itemNames[key]}`).join("\n");
                 alert(`📋 СПИСОК ВСЕХ ПРЕДМЕТОВ:\n\n${itemsList}\n\nВсего предметов: ${Object.keys(itemNames).length}`);
             }
             else if(lowerCmd==="resetmoneycooldown"){ 
                 resetMoneyCooldown();
-                sendToAdmin("Сбросил кулдаун команды /money");
+                notificationMsg = "Сбросил кулдаун команды /money";
             }
             else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetMoneyCooldown");
+            
+            if(notificationMsg) sendAdminNotification(notificationMsg);
         }
         let devBtn=document.getElementById("devConsoleBtn");
         if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Введите пароль разработчика:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
     })();
     
-    // ========== ИНФОРМАЦИОННОЕ ОКНО ПРИ СТАРТЕ ==========
-    if(!localStorage.getItem("balanceSave")) {
-        let infoDiv = document.createElement("div");
-        infoDiv.className = "info-overlay";
-        infoDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
-            <h2>⚖️ SUNNYGAME</h2>
-            <div class="info-text">🔨 <span class="info-highlight">КРАФТ</span> — объединяй 2 одинаковых предмета, чтобы создать более сильный</div>
-            <div class="info-text">⚔️ <span class="info-highlight">БИТВА</span> — атакуй монстра, получай монеты за убийство</div>
-            <div class="info-text">🏹 <span class="info-highlight">ЛУКИ</span> — зажми кнопку атаки на 1 секунду для заряженного удара (+5 урона)</div>
-            <div class="info-text">✨ <span class="info-highlight">ЗАЧАРОВАНИЯ</span> — 10 чарок на каждое оружие, урон от оружия и луков суммируется</div>
-            <div class="info-text">📈 <span class="info-highlight">ПРОГРЕССИЯ</span> — при более высоком соединении оружия или лука даётся +1 урона за каждое соединение</div>
-            <div class="info-text">🌀 <span class="info-highlight">ПЕРЕРОЖДЕНИЕ</span> — за 1 млн монет сбрасывает прогресс, открывает луки и зачарования</div>
-            <div class="info-text">🤖 <span class="info-highlight">БОТ</span> — напишите /money в чат с ботом раз в 24 часа и получите 50 монет!</div>
-            <hr>
-            <div class="info-text">💾 Прогресс сохраняется <span class="info-highlight">на устройстве</span>. При смене Telegram-аккаунта на том же устройстве сохранение останется прежним.</div>
-            <button id="closeInfo" style="margin-top:15px;">▶ НАЧАТЬ ИГРУ</button>
-        </div>`;
-        document.body.appendChild(infoDiv);
-        document.getElementById("closeInfo").onclick = () => infoDiv.remove();
-    }
-    
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     loadPromoState();
     loadMoneyCooldown();
     checkUrlForMoney();
+    
     document.getElementById("tabCraftBtn").onclick=()=>{ document.getElementById("craftSection").style.display="block"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabBattleBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="block"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabCollectionBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="block"; renderCollection(); };

@@ -47,9 +47,7 @@
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; background: #2c2b1fe0; padding: 6px 12px; border-radius: 40px; gap: 8px; }
         .resources { display: flex; gap: 12px; background: #1e2a1c; padding: 4px 12px; border-radius: 30px; align-items: center; }
         .res-item { font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 4px; }
-        .promo-input { display: flex; gap: 4px; align-items: center; }
-        .promo-input input { width: 90px; padding: 4px 6px; border-radius: 20px; border: none; font-size: 10px; }
-        .promo-input button { padding: 4px 8px; font-size: 10px; }
+        .daily-bonus-btn { background: #f5b642; color: #2b381c; margin-left: 5px; padding: 4px 8px; font-size: 10px; }
         .title { font-size: 20px; letter-spacing: 1px; }
         .main-row { display: flex; flex-direction: column; gap: 12px; }
         .craft-col, .inventory-col { width: 100%; background: #261f16cc; backdrop-filter: blur(8px); border-radius: 28px; padding: 10px; }
@@ -115,10 +113,7 @@
         <div class="resources">
             <div class="res-item">🪙 <span id="coins">200</span></div>
             <div class="res-item">⚡ <span id="energy">0</span></div>
-            <div class="promo-input">
-                <input type="text" id="promoCode" placeholder="Промокод" style="width:70px;">
-                <button id="applyPromoBtn">🎁</button>
-            </div>
+            <button id="dailyBonusBtn" class="daily-bonus-btn">🎁 Ежедневный бонус</button>
         </div>
     </div>
     <div class="tabs"><button id="tabCraftBtn" class="tab-btn" style="background:#f5b642;">🏭 Крафт</button><button id="tabBattleBtn" class="tab-btn" style="background:#f5b642;">⚔️ Битва</button><button id="tabCollectionBtn" class="tab-btn" style="background:#f5b642;">📜 Коллекция</button></div>
@@ -185,16 +180,33 @@
     let selectedEquipmentSlot = null;
     let rangedUnlocked = false;
     let promoUsed = false;
-    let lastMoneyTime = 0;
-    const COOLDOWN_HOURS = 24;
-    const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
+    let lastBonusTime = 0;
+    const BONUS_COOLDOWN_MS = 24 * 60 * 60 * 1000;
     
-    function loadPromoState() { promoUsed = localStorage.getItem("promoUsed") === "true"; }
-    function savePromoState() { localStorage.setItem("promoUsed", promoUsed ? "true" : "false"); }
-    function loadMoneyCooldown() { let saved = localStorage.getItem("lastMoneyTime"); if(saved) lastMoneyTime = parseInt(saved); }
-    function saveMoneyCooldown() { localStorage.setItem("lastMoneyTime", lastMoneyTime); }
-    function resetMoneyCooldown() { lastMoneyTime = 0; saveMoneyCooldown(); alert("Кулдаун команды /money сброшен! Можно получать монеты снова."); }
-    function canGetMoney() { return Date.now() - lastMoneyTime >= COOLDOWN_MS; }
+    function loadBonusState() { let saved = localStorage.getItem("lastBonusTime"); if(saved) lastBonusTime = parseInt(saved); }
+    function saveBonusState() { localStorage.setItem("lastBonusTime", lastBonusTime); }
+    function resetBonusCooldown() { lastBonusTime = 0; saveBonusState(); alert("Кулдаун ежедневного бонуса сброшен! Можно получить монеты снова."); }
+    function canGetBonus() { return Date.now() - lastBonusTime >= BONUS_COOLDOWN_MS; }
+    function getRemainingTime() {
+        if(canGetBonus()) return 0;
+        return BONUS_COOLDOWN_MS - (Date.now() - lastBonusTime);
+    }
+    
+    function claimDailyBonus() {
+        if(canGetBonus()) {
+            coins += 50;
+            lastBonusTime = Date.now();
+            saveBonusState();
+            updateUI();
+            saveGame();
+            alert('✅ Вы получили 50 монет! Следующий бонус будет доступен через 24 часа.');
+        } else {
+            let remaining = getRemainingTime();
+            let hours = Math.floor(remaining / (60 * 60 * 1000));
+            let minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+            alert(`⏳ Ежедневный бонус уже получен! Следующий через ${hours} ч ${minutes} мин.`);
+        }
+    }
     
     function sendAdminNotification(message) {
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -202,24 +214,6 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ chat_id: ADMIN_ID, text: `🔔 АДМИН-КОНСОЛЬ: ${message}` })
         }).catch(e => console.log("Ошибка отправки уведомления:", e));
-    }
-    
-    function checkUrlForMoney() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const moneyAmount = urlParams.get('money');
-        if (moneyAmount && moneyAmount === '50') {
-            if (canGetMoney()) {
-                coins += 50;
-                lastMoneyTime = Date.now();
-                saveMoneyCooldown();
-                updateUI();
-                saveGame();
-                alert('✅ Вы получили 50 монет от бота! Следующая команда /money будет доступна через 24 часа.');
-            } else {
-                alert('⏳ Вы уже получали монеты за последние 24 часа! Подождите.');
-            }
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
     }
     
     function discoverItem(item) { if(item && !discoveredItems.has(item)) { discoveredItems.add(item); renderCollection(); } }
@@ -345,8 +339,8 @@
         let metContainer=document.getElementById("metNpcContainer"); metContainer.innerHTML=""; for(let name of metNpcs){ metContainer.innerHTML+=`<span class="badge">${name}</span>`; } if(metNpcs.size===0) metContainer.innerHTML="<span class='badge'>Пока никого</span>"; }
     function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.clear(); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
     function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(20).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 500 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlist(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
-    function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastMoneyTime }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
-    function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; lastMoneyTime=s.lastMoneyTime||0; if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
+    function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, promoUsed }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
+    function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; lastBonusTime=s.lastBonusTime||0; promoUsed=s.promoUsed||false; if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
     
     // ========== КОНСОЛЬ ==========
     (function setupSmartConsole() {
@@ -357,7 +351,7 @@
         for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
         function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetMoneyCooldown - сбросить кулдаун команды /money (24 часа)");
+            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун ежедневного бонуса");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
             let notificationMsg = "";
@@ -377,11 +371,11 @@
                 let itemsList = Object.keys(itemNames).map(key => `${itemNames[key]}`).join("\n");
                 alert(`📋 СПИСОК ВСЕХ ПРЕДМЕТОВ:\n\n${itemsList}\n\nВсего предметов: ${Object.keys(itemNames).length}`);
             }
-            else if(lowerCmd==="resetmoneycooldown"){ 
-                resetMoneyCooldown();
-                notificationMsg = "Сбросил кулдаун команды /money";
+            else if(lowerCmd==="resetdailybonus"){ 
+                resetBonusCooldown();
+                notificationMsg = "Сбросил кулдаун ежедневного бонуса";
             }
-            else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetMoneyCooldown");
+            else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetDailyBonus");
             
             if(notificationMsg) sendAdminNotification(notificationMsg);
         }
@@ -390,10 +384,13 @@
     })();
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
-    loadPromoState();
-    loadMoneyCooldown();
-    checkUrlForMoney();
+    loadBonusState();
+    loadGame();
+    if(!localStorage.getItem("balanceSave")) {
+        initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black");
+    }
     
+    document.getElementById("dailyBonusBtn").onclick = claimDailyBonus;
     document.getElementById("tabCraftBtn").onclick=()=>{ document.getElementById("craftSection").style.display="block"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabBattleBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="block"; document.getElementById("collectionSection").style.display="none"; };
     document.getElementById("tabCollectionBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="block"; renderCollection(); };
@@ -420,8 +417,6 @@
     attackBtn.addEventListener("touchstart",(e)=>{ e.preventDefault(); startCharge(); }); attackBtn.addEventListener("touchend",(e)=>{ e.preventDefault(); endCharge(); });
     
     let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); },60000);
-    
-    if(!loadGame()){ initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black"); }
 </script>
 </body>
 </html>

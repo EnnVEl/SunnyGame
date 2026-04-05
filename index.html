@@ -183,18 +183,12 @@
     let chargeTimeout = null, isCharging = false, chargedAttackReady = false;
     let selectedEquipmentSlot = null;
     let rangedUnlocked = false;
-    let usedPromoCodes = new Set(); // Хранилище использованных промокодов
-    
+    let usedPromoCodes = new Set();
     const BONUS_COOLDOWN_MS = 24 * 60 * 60 * 1000;
     let lastBonusTime = 0;
     
-    function loadPromoState() { 
-        let saved = localStorage.getItem("usedPromoCodes");
-        if(saved) usedPromoCodes = new Set(JSON.parse(saved));
-    }
-    function savePromoState() { 
-        localStorage.setItem("usedPromoCodes", JSON.stringify(Array.from(usedPromoCodes)));
-    }
+    function loadPromoState() { let saved = localStorage.getItem("usedPromoCodes"); if(saved) usedPromoCodes = new Set(JSON.parse(saved)); }
+    function savePromoState() { localStorage.setItem("usedPromoCodes", JSON.stringify(Array.from(usedPromoCodes))); }
     function loadBonusState() { let saved = localStorage.getItem("lastBonusTime"); if(saved) lastBonusTime = parseInt(saved); }
     function saveBonusState() { localStorage.setItem("lastBonusTime", lastBonusTime); }
     function resetBonusCooldown() { lastBonusTime = 0; saveBonusState(); alert("Кулдаун ежедневного бонуса сброшен!"); }
@@ -222,23 +216,11 @@
             alert("Этот промокод уже был использован!"); 
             return; 
         }
-        
         let reward = 0;
         let promoName = "";
-        
-        if(code === "SunnyGame") { 
-            reward = 1000;
-            promoName = "SunnyGame";
-        } 
-        else if(code === "EnnVel") { 
-            reward = 1000;
-            promoName = "EnnVel";
-        } 
-        else if(code === "Kilьka27") { 
-            reward = 1000;
-            promoName = "Kilьka27";
-        }
-        
+        if(code === "SunnyGame") { reward = 1000; promoName = "SunnyGame"; }
+        else if(code === "EnnVel") { reward = 1000; promoName = "EnnVel"; }
+        else if(code === "Kilьka27") { reward = 1000; promoName = "Kilьka27"; }
         if(reward > 0) {
             coins += reward;
             usedPromoCodes.add(code);
@@ -388,12 +370,32 @@
             if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); alert(`+${amount}🪙`); notificationMsg = `Выдал себе ${amount} монет`; } else alert("Неверная сумма"); }
             else if(lowerCmd.startsWith("give ")){ let rusName = cmd.substring(5).trim(); let itemKey = findItemByRussianName(rusName); if(itemKey && itemNames[itemKey]){ if(addToGridAndDiscover(itemKey)){ updateUI(); saveGame(); alert(`Выдан ${itemNames[itemKey]}`); notificationMsg = `Выдал предмет ${itemNames[itemKey]}`; } else alert("Нет места в инвентаре"); } else alert(`Предмет "${rusName}" не найден. Используйте команду List для просмотра всех предметов`); }
             else if(lowerCmd==="unlockall"){ 
-                unlocked.weapons=true; unlocked.armor=true; unlocked.food=true; unlocked.potions=true; 
+                // Разблокировка категорий
+                unlocked.weapons = true; 
+                unlocked.armor = true; 
+                unlocked.food = true; 
+                unlocked.potions = true; 
                 rebirthLevel = 1;
                 rangedUnlocked = true;
-                updateCraftBtns(); renderShop(); saveGame(); 
-                alert("Все категории разблокированы! Перерождение и луки открыты!"); 
-                notificationMsg = "Разблокировал все категории";
+                // Разблокировка всех чарок (10 для оружия и 10 для луков)
+                enchantWeapons = 10;
+                enchantRanged = 10;
+                // Разблокировка всех фонов
+                for(let bg of backgrounds) {
+                    if(!ownedBgs.includes(bg.id)) ownedBgs.push(bg.id);
+                }
+                // Разблокировка всех встреченных NPC
+                for(let name of npcNames) {
+                    metNpcs.add(name);
+                }
+                updateCraftBtns(); 
+                renderShop(); 
+                renderEnchantShop();
+                renderBgShop();
+                renderCollection();
+                saveGame(); 
+                alert("Все категории, чарки, фоны и встреченные NPC разблокированы!"); 
+                notificationMsg = "Разблокировал всё (категории, чарки, фоны, NPC)";
             }
             else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount} энергии`); notificationMsg = `Выдал себе ${amount} энергии`; } else alert("Неверная сумма"); }
             else if(lowerCmd==="list"){ 
@@ -448,4 +450,4 @@
     let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); },60000);
 </script>
 </body>
-</html>
+                                                                                                                                                                                                                                                                                                                </html>

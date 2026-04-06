@@ -381,7 +381,7 @@
             return null;
         }
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nGive [название_фона] - выдать фон\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун ежедневного бонуса");
+            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма]\nGive [предмет]\nUnlockAll\nEnergy [кол-во]\nList\nResetDailyBonus");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
             let notificationMsg = "";
@@ -389,7 +389,6 @@
             if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); alert(`+${amount}🪙`); notificationMsg = `Выдал себе ${amount} монет`; } else alert("Неверная сумма"); }
             else if(lowerCmd.startsWith("give ")){ 
                 let giveArg = cmd.substring(5).trim(); 
-                // Сначала пробуем найти фон
                 let bg = findBackgroundByName(giveArg);
                 if(bg) {
                     if(!ownedBgs.includes(bg.id)) {
@@ -402,7 +401,6 @@
                         alert(`Фон "${bg.name}" уже есть в коллекции!`);
                     }
                 } else {
-                    // Ищем предмет
                     let itemKey = findItemByRussianName(giveArg);
                     if(itemKey && itemNames[itemKey]){ 
                         if(addToGridAndDiscover(itemKey)){ 
@@ -410,7 +408,7 @@
                             alert(`Выдан ${itemNames[itemKey]}`); 
                             notificationMsg = `Выдал предмет ${itemNames[itemKey]}`; 
                         } else alert("Нет места в инвентаре"); 
-                    } else alert(`Предмет или фон "${giveArg}" не найдены. Используйте команду List для просмотра предметов`); 
+                    } else alert(`Предмет "${giveArg}" не найден. Используйте команду List для просмотра всех предметов`); 
                 }
             }
             else if(lowerCmd==="unlockall"){ 

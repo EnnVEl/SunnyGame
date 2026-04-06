@@ -332,21 +332,20 @@
     function support() { window.open("https://t.me/SunnySide20_bot", "_blank"); }
 
     const backgrounds = [
-        {id:"black",name:"⬛ Чёрный",price:0},{id:"white",name:"⬜ Белый",price:0},
-        {id:"red",name:"🔴 Красный",price:1000},{id:"orange",name:"🟠 Оранжевый",price:1000},
-        {id:"yellow",name:"🟡 Жёлтый",price:1000},{id:"green",name:"🟢 Зелёный",price:1000},
-        {id:"cyan",name:"🔵 Голубой",price:1000},{id:"blue",name:"💙 Синий",price:1000},
-        {id:"purple",name:"🟣 Фиолетовый",price:1000},{id:"stars",name:"✨ Звёздный",price:1000},
-        {id:"fire",name:"🔥 Огненный",price:1000},{id:"forest",name:"🌲 Лесной",price:1000},
-        {id:"castle",name:"🏰 Замковый",price:1000},{id:"volcano",name:"🌋 Вулкан",price:1000},
-        {id:"ice",name:"❄️ Ледяной",price:1000},{id:"dark",name:"🌑 Тьма",price:1000},
-        {id:"ocean",name:"🌊 Океан",price:1000},{id:"desert",name:"🏜️ Пустыня",price:1000}
+        {id:"black",name:"⬛ Чёрный",price:0}, {id:"white",name:"⬜ Белый",price:0},
+        {id:"red",name:"🔴 Красный",price:1000}, {id:"orange",name:"🟠 Оранжевый",price:1000},
+        {id:"yellow",name:"🟡 Жёлтый",price:1000}, {id:"green",name:"🟢 Зелёный",price:1000},
+        {id:"cyan",name:"🔵 Голубой",price:1000}, {id:"blue",name:"💙 Синий",price:1000},
+        {id:"purple",name:"🟣 Фиолетовый",price:1000}, {id:"stars",name:"✨ Звёздный",price:1000},
+        {id:"fire",name:"🔥 Огненный",price:1000}, {id:"forest",name:"🌲 Лесной",price:1000},
+        {id:"castle",name:"🏰 Замковый",price:1000}, {id:"volcano",name:"🌋 Вулкан",price:1000},
+        {id:"ice",name:"❄️ Ледяной",price:1000}, {id:"dark",name:"🌑 Тьма",price:1000},
+        {id:"ocean",name:"🌊 Океан",price:1000}, {id:"desert",name:"🏜️ Пустыня",price:1000}
     ];
     let ownedBgs=["black","white"]; let currentBg="black";
     function applyBackground(id){ document.body.className=`bg-${id}`; currentBg=id; saveGame(); }
     function purchaseBg(bg){ if(ownedBgs.includes(bg.id)){ applyBackground(bg.id); return; } if(coins>=bg.price){ coins-=bg.price; ownedBgs.push(bg.id); applyBackground(bg.id); updateUI(); renderBgShop(); saveGame(); } else alert(`Нужно ${bg.price} монет`); }
     function renderBgShop(){ let cont=document.getElementById("bgShopContainer"); if(!cont) return; cont.innerHTML=""; for(let bg of backgrounds){ let owned=ownedBgs.includes(bg.id); let active=currentBg===bg.id; let btn=document.createElement("div"); btn.className="bg-option"; btn.innerHTML=`${bg.name} ${owned?(active?"✅":"📀"):bg.price+"🪙"}`; btn.onclick=()=>purchaseBg(bg); cont.appendChild(btn); } }
-    
     function renderCollection() { 
         let container=document.getElementById("collectionContainer"); if(!container) return;
         let categories = [
@@ -372,51 +371,47 @@
         const synonyms = { "трава":"grass","бревно":"wood","камень":"stone","железо":"iron","золото":"gold","алмаз":"diamond","меч":"sword","лук":"shortbow","кожа":"leather","ягоды":"berry","бутылёк":"vial" };
         for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
         function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
-        
-        // Функция для поиска фона по названию
         function findBackgroundByName(name) {
-            let search = name.toLowerCase().trim();
+            const search = name.toLowerCase().trim();
             for(let bg of backgrounds) {
-                let bgName = bg.name.toLowerCase().replace(/[⬛⬜🔴🟠🟡🟢🔵💙🟣✨🔥🌲🏰🌋❄️🌑🌊🏜️]/g, '').trim();
-                if(bgName === search || bg.name.toLowerCase().includes(search)) {
-                    return bg.id;
-                }
+                const bgName = bg.name.toLowerCase().replace(/[⬛⬜🔴🟠🟡🟢🔵💙🟣✨🔥🌲🏰🌋❄️🌑🌊🏜️]/g, '').trim();
+                if(bgName === search || bg.name.toLowerCase().includes(search)) return bg;
+                if(bg.id.toLowerCase() === search) return bg;
             }
             return null;
         }
-        
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nGive фон [название] - выдать фон\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун ежедневного бонуса");
+            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nGive [название_фона] - выдать фон\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун ежедневного бонуса");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
             let notificationMsg = "";
             
             if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); alert(`+${amount}🪙`); notificationMsg = `Выдал себе ${amount} монет`; } else alert("Неверная сумма"); }
-            else if(lowerCmd.startsWith("give фон ")){ 
-                let rusName = cmd.substring(8).trim(); 
-                let bgId = findBackgroundByName(rusName);
-                if(bgId && !ownedBgs.includes(bgId)) {
-                    ownedBgs.push(bgId);
-                    renderBgShop();
-                    saveGame();
-                    alert(`Фон "${bgId}" добавлен в коллекцию!`); 
-                    notificationMsg = `Выдал фон ${bgId}`;
-                } else if(bgId && ownedBgs.includes(bgId)) {
-                    alert(`Фон "${bgId}" уже есть в коллекции!`);
-                } else {
-                    alert(`Фон "${rusName}" не найден. Доступные фоны: ${backgrounds.map(b=>b.name).join(", ")}`);
-                }
-            }
             else if(lowerCmd.startsWith("give ")){ 
-                let rusName = cmd.substring(5).trim(); 
-                let itemKey = findItemByRussianName(rusName); 
-                if(itemKey && itemNames[itemKey]){ 
-                    if(addToGridAndDiscover(itemKey)){ 
-                        updateUI(); saveGame(); 
-                        alert(`Выдан ${itemNames[itemKey]}`); 
-                        notificationMsg = `Выдал предмет ${itemNames[itemKey]}`; 
-                    } else alert("Нет места в инвентаре"); 
-                } else alert(`Предмет "${rusName}" не найден. Используйте команду List для просмотра всех предметов`); 
+                let giveArg = cmd.substring(5).trim(); 
+                // Сначала пробуем найти фон
+                let bg = findBackgroundByName(giveArg);
+                if(bg) {
+                    if(!ownedBgs.includes(bg.id)) {
+                        ownedBgs.push(bg.id);
+                        renderBgShop();
+                        saveGame();
+                        alert(`Фон "${bg.name}" добавлен в коллекцию!`);
+                        notificationMsg = `Выдал фон ${bg.name}`;
+                    } else {
+                        alert(`Фон "${bg.name}" уже есть в коллекции!`);
+                    }
+                } else {
+                    // Ищем предмет
+                    let itemKey = findItemByRussianName(giveArg);
+                    if(itemKey && itemNames[itemKey]){ 
+                        if(addToGridAndDiscover(itemKey)){ 
+                            updateUI(); saveGame(); 
+                            alert(`Выдан ${itemNames[itemKey]}`); 
+                            notificationMsg = `Выдал предмет ${itemNames[itemKey]}`; 
+                        } else alert("Нет места в инвентаре"); 
+                    } else alert(`Предмет или фон "${giveArg}" не найдены. Используйте команду List для просмотра предметов`); 
+                }
             }
             else if(lowerCmd==="unlockall"){ 
                 unlocked.weapons = true; unlocked.armor = true; unlocked.food = true; unlocked.potions = true; 
@@ -431,13 +426,13 @@
             else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount} энергии`); notificationMsg = `Выдал себе ${amount} энергии`; } else alert("Неверная сумма"); }
             else if(lowerCmd==="list"){ 
                 let itemsList = Object.keys(itemNames).map(key => `${itemNames[key]}`).join("\n");
-                alert(`📋 СПИСОК ВСЕХ ПРЕДМЕТОВ:\n\n${itemsList}\n\nВсего предметов: ${Object.keys(itemNames).length}\n\n🎨 Доступные фоны: ${backgrounds.map(b=>b.name).join(", ")}`);
+                alert(`📋 СПИСОК ВСЕХ ПРЕДМЕТОВ:\n\n${itemsList}\n\nВсего предметов: ${Object.keys(itemNames).length}`);
             }
             else if(lowerCmd==="resetdailybonus"){ 
                 resetBonusCooldown();
                 notificationMsg = "Сбросил кулдаун ежедневного бонуса";
             }
-            else alert("Неизвестная команда. Доступные команды: Money, Give, Give фон, UnlockAll, Energy, List, ResetDailyBonus");
+            else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetDailyBonus");
             
             if(notificationMsg) sendAdminNotification(notificationMsg);
         }

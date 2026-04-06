@@ -381,7 +381,7 @@
             return null;
         }
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма]\nGive [предмет]\nUnlockAll\nEnergy [кол-во]\nList\nResetDailyBonus");
+            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун ежедневного бонуса");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
             let notificationMsg = "";

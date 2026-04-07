@@ -36,7 +36,7 @@
         body.bg-stars { background: #0a0f2a; background-image: radial-gradient(white 1px, transparent 1px); background-size: 35px 35px; }
         body.bg-fire { background: #cc3300; background-image: repeating-linear-gradient(0deg, #ff6a2a40 2px, transparent 2px); }
         body.bg-forest { background: #228833; background-image: radial-gradient(circle at 20% 40%, #44aa44 1px, transparent 1px); background-size: 25px 25px; }
-        body.bg-castle { background: #5a5a6e; background-image: linear-gradient(45deg, #7a7a8e40 1px, transparent 1px); background-size: 35px 35px; }
+        body.bg-castle { background: #5a5a6e; background-image: linear-gradient(45deg, #7a8a8e40 1px, transparent 1px); background-size: 35px 35px; }
         body.bg-volcano { background: #882200; background-image: radial-gradient(circle at 50% 80%, #ff8844 3px, transparent 3px); background-size: 60px 60px; }
         body.bg-ice { background: #44aacc; background-image: repeating-linear-gradient(45deg, #aaddff40 1px, transparent 1px); background-size: 20px 20px; }
         body.bg-dark { background: #111122; background-image: radial-gradient(circle at 30% 40%, #333355 1px, transparent 1px); background-size: 45px 45px; }
@@ -264,7 +264,44 @@
     function initNPC() { npcList = npcNames.map((name,idx)=>({ id:idx, name:name, wishlist:generateWishlist() })); currentNpc = npcList[0]; renderNPC(); }
     function nextNPC() { let idx = npcList.findIndex(n=>n===currentNpc); let next = (idx+1)%npcList.length; currentNpc = npcList[next]; metNpcs.add(currentNpc.name); renderCollection(); renderNPC(); }
     function refreshNPC() { if(coins>=10){ coins-=10; nextNPC(); updateUI(); saveGame(); alert("Продавец обновлён!"); } else alert("Нужно 10 монет"); }
-    function sellToNPC() { if(!currentNpc) return; let wishlist = currentNpc.wishlist; let foundItems = []; let foundIndexes = []; for(let i=0;i<grid.length;i++){ if(grid[i] && wishlist.includes(grid[i]) && !foundItems.includes(grid[i])){ foundItems.push(grid[i]); foundIndexes.push(i); } } if(foundItems.length < wishlist.length){ alert(`Для продажи нужны все 3 предмета!\nНужно: ${wishlist.map(w=>itemNames[w]).join(", ")}`); return; } let totalPrice = 0; for(let idx of foundIndexes){ totalPrice += getItemSellPrice(grid[idx]); grid[idx] = null; } coins += totalPrice; selectedIndex = null; renderGrid(); updateUI(); nextNPC(); saveGame(); alert(`Продано! Получено ${totalPrice}🪙`); }
+    
+    // Новая формула продажи: сумма стоимостей крафта трёх предметов + 30%
+    function calculateNpcSellPrice(wishlist) {
+        let totalCraftCost = 0;
+        for(let item of wishlist) {
+            totalCraftCost += getItemRealPrice(item);
+        }
+        return Math.floor(totalCraftCost * 1.3); // +30%
+    }
+    
+    function sellToNPC() { 
+        if(!currentNpc) return; 
+        let wishlist = currentNpc.wishlist; 
+        let foundItems = []; 
+        let foundIndexes = []; 
+        for(let i=0;i<grid.length;i++){ 
+            if(grid[i] && wishlist.includes(grid[i]) && !foundItems.includes(grid[i])){ 
+                foundItems.push(grid[i]); 
+                foundIndexes.push(i); 
+            } 
+        } 
+        if(foundItems.length < wishlist.length){ 
+            alert(`Для продажи нужны все 3 предмета!\nНужно: ${wishlist.map(w=>itemNames[w]).join(", ")}`); 
+            return; 
+        } 
+        let totalPrice = calculateNpcSellPrice(wishlist);
+        for(let idx of foundIndexes){ 
+            grid[idx] = null; 
+        } 
+        coins += totalPrice; 
+        selectedIndex = null; 
+        renderGrid(); 
+        updateUI(); 
+        nextNPC(); 
+        saveGame(); 
+        alert(`Продано! Получено ${totalPrice}🪙`); 
+    }
+    
     function sellSelectedItem() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let item = grid[selectedIndex]; let price = getItemSellPrice(item); if(confirm(`Продать ${itemNames[item]} за ${price} монет?`)) { coins += price; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); updateUI(); saveGame(); alert(`Продано за ${price}🪙`); } } else alert("Выберите предмет в сетке"); }
     function addToStorage() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let emptyIdx = storage.findIndex(s => s === null); if(emptyIdx === -1) alert("Хранилище заполнено (3/3)"); else { storage[emptyIdx] = grid[selectedIndex]; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); renderStorage(); saveGame(); } } else alert("Выберите предмет в сетке"); }
     function removeFromStorage(idx) { if(storage[idx] !== null) { if(addToGridAndDiscover(storage[idx])) { storage[idx] = null; renderStorage(); saveGame(); } else alert("Нет места в сетке"); } }
@@ -326,7 +363,7 @@
     }
     function renderGrid(){ let cont=document.getElementById("grid"); cont.innerHTML=""; for(let i=0;i<grid.length;i++){ let key=grid[i]; let div=document.createElement("div"); div.className="cell"; if(selectedIndex===i) div.classList.add("selected"); div.textContent=key?itemNames[key]:"⬚"; if(!key) div.classList.add("empty"); div.onclick=(idx=>()=>clickCell(idx))(i); cont.appendChild(div); } }
     function renderStorage(){ let cont=document.getElementById("storageContainer"); cont.innerHTML="<div style='display:flex; flex-wrap:wrap; gap:6px;'>"; for(let i=0;i<storage.length;i++){ let item=storage[i]; cont.innerHTML+=`<div class="storage-slot" style="flex:1; min-width:80px;"><div class="storage-item">${item?itemNames[item]:"⬚ пусто"}</div>${item?`<button class="storage-remove" onclick="window.removeFromStorage(${i})">✖</button>`:""}</div>`; } cont.innerHTML+="</div><button onclick='window.addToStorage()' style='margin-top:4px;'>📦 В хранилище</button>"; } window.addToStorage=addToStorage; window.removeFromStorage=removeFromStorage;
-    function renderNPC(){ let cont=document.getElementById("npcSingleContainer"); if(!currentNpc) return; let wishText=currentNpc.wishlist.map(w=>itemNames[w]||w).join(", "); cont.innerHTML=`<div class="npc-name">🧙 ${currentNpc.name}</div><div class="npc-wishlist">📋 ХОЧЕТ КУПИТЬ:<br> ${wishText}</div><button class="sell-to-npc" id="sellToNpcBtn">💰 ПРОДАТЬ ВСЕ</button>`; document.getElementById("sellToNpcBtn")?.addEventListener("click",sellToNPC); }
+    function renderNPC(){ let cont=document.getElementById("npcSingleContainer"); if(!currentNpc) return; let wishText=currentNpc.wishlist.map(w=>itemNames[w]||w).join(", "); let totalPrice = calculateNpcSellPrice(currentNpc.wishlist); cont.innerHTML=`<div class="npc-name">🧙 ${currentNpc.name}</div><div class="npc-wishlist">📋 ХОЧЕТ КУПИТЬ:<br> ${wishText}</div><div class="badge" style="margin:4px 0;">💰 Предлагает: ${totalPrice}🪙</div><button class="sell-to-npc" id="sellToNpcBtn">💰 ПРОДАТЬ ВСЕ</button>`; document.getElementById("sellToNpcBtn")?.addEventListener("click",sellToNPC); }
     function updateUI(){ document.getElementById("coins").innerText=Math.floor(coins); document.getElementById("energy").innerText=energy; document.getElementById("rebirthWarning").innerHTML=rebirthLevel===0?"⚠️ Перерождение сбросит прогресс (фоны останутся)":""; document.getElementById("enchantBonusInfo").innerHTML=`✨ Чарки: +${enchantWeapons+enchantRanged} урона (всего ${recalcDamage()})`; }
     function exchangeEnergy(){ if(energy>=10){ energy-=10; coins+=10; updateUI(); saveGame(); } else alert(`Не хватает 10⚡`); }
     function support() { window.open("https://t.me/SunnySide20_bot", "_blank"); }
@@ -381,7 +418,7 @@
             return null;
         }
         function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун ежедневного бонуса");
+            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун ежедневного бонуса\nResetBalance - сбросить баланс и прогресс (как новая игра)");
             if(!cmd) return;
             let lowerCmd=cmd.toLowerCase();
             let notificationMsg = "";
@@ -430,7 +467,13 @@
                 resetBonusCooldown();
                 notificationMsg = "Сбросил кулдаун ежедневного бонуса";
             }
-            else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetDailyBonus");
+            else if(lowerCmd==="resetbalance"){ 
+                if(confirm("⚠️ СБРОС БАЛАНСА: весь прогресс будет удалён (монеты, предметы, чарки, разблокировки). Фоны останутся? Нажмите ОК для подтверждения.")) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            }
+            else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetDailyBonus, ResetBalance");
             
             if(notificationMsg) sendAdminNotification(notificationMsg);
         }

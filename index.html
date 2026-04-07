@@ -30,19 +30,27 @@
         body.bg-white .badge { background: #222; color: white; }
         body.bg-white .bg-option { background: #2c2b1f; color: #ffefb9 !important; }
         body.bg-white .warning { color: #cc6600 !important; background: rgba(0,0,0,0.7); }
-        body.bg-red { background: #ff3333; } body.bg-orange { background: #ff8800; } body.bg-yellow { background: #ffdd00; }
-        body.bg-green { background: #33cc33; } body.bg-cyan { background: #00cccc; } body.bg-blue { background: #3399ff; }
-        body.bg-purple { background: #9933ff; } body.bg-black { background: #000000; }
-        body.bg-stars { background: #0a0f2a; background-image: radial-gradient(white 1px, transparent 1px); background-size: 35px 35px; }
-        body.bg-fire { background: #cc3300; background-image: repeating-linear-gradient(0deg, #ff6a2a40 2px, transparent 2px); }
-        body.bg-forest { background: #228833; background-image: radial-gradient(circle at 20% 40%, #44aa44 1px, transparent 1px); background-size: 25px 25px; }
-        body.bg-castle { background: #5a5a6e; background-image: linear-gradient(45deg, #7a7a8e40 1px, transparent 1px); background-size: 35px 35px; }
-        body.bg-volcano { background: #882200; background-image: radial-gradient(circle at 50% 80%, #ff8844 3px, transparent 3px); background-size: 60px 60px; }
-        body.bg-ice { background: #44aacc; background-image: repeating-linear-gradient(45deg, #aaddff40 1px, transparent 1px); background-size: 20px 20px; }
-        body.bg-dark { background: #111122; background-image: radial-gradient(circle at 30% 40%, #333355 1px, transparent 1px); background-size: 45px 45px; }
-        body.bg-ocean { background: #0066aa; background-image: linear-gradient(0deg, #33aadd40 1px, transparent 1px); background-size: 30px 30px; }
-        body.bg-desert { background: #ccaa44; background-image: radial-gradient(circle at 10% 90%, #eedd88 2px, transparent 2px); background-size: 40px 40px; }
+        /* цветные фоны с градиентами */
+        body.bg-red { background: linear-gradient(145deg, #ff3333, #cc0000); }
+        body.bg-orange { background: linear-gradient(145deg, #ff8800, #cc5500); }
+        body.bg-yellow { background: linear-gradient(145deg, #ffdd00, #ccaa00); }
+        body.bg-green { background: linear-gradient(145deg, #33cc33, #1a6b1a); }
+        body.bg-cyan { background: linear-gradient(145deg, #00cccc, #008888); }
+        body.bg-blue { background: linear-gradient(145deg, #3399ff, #1155cc); }
+        body.bg-purple { background: linear-gradient(145deg, #9933ff, #5511aa); }
+        body.bg-black { background: #000000; }
+        body.bg-stars { background: linear-gradient(135deg, #0a0f2a, #010108); background-image: radial-gradient(white 1px, transparent 1px), linear-gradient(135deg, #0a0f2a, #010108); background-size: 35px 35px, auto; background-blend-mode: overlay; }
+        body.bg-fire { background: linear-gradient(45deg, #ff4500, #ffaa00, #ff6600); }
+        body.bg-forest { background: linear-gradient(135deg, #228833, #0a3a0a); }
+        body.bg-castle { background: linear-gradient(145deg, #5a5a6e, #2a2a3a); }
+        body.bg-volcano { background: linear-gradient(145deg, #882200, #2a0a00); }
+        body.bg-ice { background: repeating-linear-gradient(45deg, #44aacc, #88ddff 30px, #aaddff 60px); }
+        body.bg-dark { background: linear-gradient(145deg, #111122, #330066); }
+        body.bg-ocean { background: linear-gradient(0deg, #0066aa, #88ddff); }
+        body.bg-desert { background: linear-gradient(145deg, #ccaa44, #aa8833); }
         body.bg-sunset { background: linear-gradient(135deg, #6a0dad 0%, #ff4500 50%, #1a0a0a 100%); background-attachment: fixed; }
+        body.bg-meadow { background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 50%, #228B22 100%); background-attachment: fixed; position: relative; }
+        body.bg-meadow::before { content: "☁️☁️☁️"; position: absolute; top: 10px; left: 0; right: 0; text-align: center; font-size: 60px; opacity: 0.5; pointer-events: none; white-space: nowrap; }
         
         .game-container { max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); border-radius: 28px; padding: 10px 12px 16px; }
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; background: #2c2b1fe0; padding: 6px 12px; border-radius: 40px; gap: 8px; }
@@ -128,14 +136,14 @@
     <div id="battleSection" style="display:none;"><div class="battle-panel"><h2>🐉 ДРЕВНИЙ МОНСТР</h2><div class="monster-hp">❤️ <span id="monsterHp">10000</span> / 10000</div><button id="attackBtn" class="attack-btn">💥 АТАКОВАТЬ</button><div class="badge">🏆 Убийство +100</div><div id="enchantBonusInfo" style="margin-top:6px; font-size:10px;"></div><div class="badge">⌛ Луки: зажмите 1с для заряда (+5)</div></div></div>
     <div id="collectionSection" style="display:none;"><div class="shop-panel"><h3>📜 КОЛЛЕКЦИЯ</h3><div id="collectionContainer"></div><h3>👥 ВСТРЕЧЕННЫЕ NPC</h3><div id="metNpcContainer" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;"></div><div class="badge">Нажмите на предмет для рецепта</div></div></div>
     <div class="rebirth-container"><button id="rebirthBtn">🌀 Перерождение 1M</button></div>
-    <div class="shop-npc-row"><div class="shop-panel"><h3>🏪 ЛАВКА</h3><div class="unlock-buttons" id="shopUnlockList"></div><button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button><hr><h3>✨ ЗАЧАРОВАНИЯ</h3><div class="badge">Кликните на чарку для применения к выбранному предмету</div><div id="enchantShopContainer" class="enchant-shop"></div><div class="badge">Снятие чарки: возврат 80% стоимости</div><hr><h3>🎨 ФОНЫ</h3><div id="bgShopContainer" class="bg-shop-row"></div></div><div class="npc-section"><h3>📦 ПРОДАЖИ</h3><div id="npcSingleContainer" class="single-npc-card"></div><button id="sellItemBtn" style="margin-top:6px; background:#aa6644;">💸 Продать выбранный (стоимость -50%)</button><button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button></div></div></div>
+    <div class="shop-npc-row"><div class="shop-panel"><h3>🏪 ЛАВКА</h3><div class="unlock-buttons" id="shopUnlockList"></div><button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button><hr><h3>✨ ЗАЧАРОВАНИЯ</h3><div class="badge">Кликните на чарку для её применения</div><div id="enchantShopContainer" class="enchant-shop"></div><div class="badge">Снятие чарки: возврат 80% стоимости</div><hr><h3>🎨 ФОНЫ</h3><div id="bgShopContainer" class="bg-shop-row"></div></div><div class="npc-section"><h3>📦 ПРОДАЖИ</h3><div id="npcSingleContainer" class="single-npc-card"></div><button id="sellItemBtn" style="margin-top:6px; background:#aa6644;">💸 Продать выбранный (стоимость -50%)</button><button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button></div></div></div>
 <div class="footer"><button id="fullResetBtn" style="background:#aa3333; width:100%; margin-bottom:8px;">⚠️ ПОЛНЫЙ СБРОС</button><div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div><button id="supportBtn" class="support-btn">💬 Поддержка</button></div>
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
 
 <script>
     // ========== СИСТЕМА АВТООБНОВЛЕНИЙ ==========
     (function setupAutoUpdate() {
-        const VERSION = "1.3.0";
+        const VERSION = "2.0.0";
         const CHECK_INTERVAL = 10000;
         let updateNotificationShown = false;
         
@@ -241,7 +249,7 @@
         {id:"castle",name:"🏰 Замковый",price:1000}, {id:"volcano",name:"🌋 Вулкан",price:1000},
         {id:"ice",name:"❄️ Ледяной",price:1000}, {id:"dark",name:"🌑 Тьма",price:1000},
         {id:"ocean",name:"🌊 Океан",price:1000}, {id:"desert",name:"🏜️ Пустыня",price:1000},
-        {id:"sunset",name:"🌅 Закат",price:1000}
+        {id:"sunset",name:"🌅 Закат",price:1000}, {id:"meadow",name:"🌿 Поляна",price:1000}
     ];
     let ownedBgs=["black","white"]; let currentBg="black";
     
@@ -279,6 +287,7 @@
         if(code === "SunnyGame") { reward = 1000; promoName = "SunnyGame"; }
         else if(code === "EnnVel") { reward = 1000; promoName = "EnnVel"; }
         else if(code === "Kilьka27") { reward = 1000; promoName = "Kilьka27"; }
+        else if(code === "kirka") { reward = 1000; promoName = "kirka"; }
         if(reward > 0) {
             coins += reward;
             usedPromoCodes.add(code);
@@ -317,6 +326,7 @@
 
     const npcNames = ["Северус Снейп","Арагорн","Геральт","Эльза","Торин","Сэм","Бриенна","Добби","Мерлин","Красная Шапочка","Да Винчи","Рипли","Джон Сноу","Лара Крофт","Шрек","Фродо","Гэндальф","Клеопатра","Зевс","Артур Морган"];
     let npcList = [], currentNpc = null;
+    let npcWishlistsLocked = false;
     function getAvailableItemsForWish() { let items = [...materialChain]; if(unlocked.weapons) items.push(...weaponChain); if(rangedUnlocked) items.push(...rangedChain); if(unlocked.armor) items.push(...armorChain); if(unlocked.food) items.push(...foodChain); if(unlocked.potions) items.push(...potionChain); return items; }
     function generateWishlistBalanced() {
         let pool = getAvailableItemsForWish();
@@ -346,7 +356,8 @@
     function initNPC() { npcList = npcNames.map((name,idx)=>({ id:idx, name:name, wishlist:generateWishlistBalanced() })); currentNpc = npcList[0]; renderNPC(); }
     function nextNPC() { let idx = npcList.findIndex(n=>n===currentNpc); let next = (idx+1)%npcList.length; currentNpc = npcList[next]; currentNpc.wishlist = generateWishlistBalanced(); metNpcs.add(currentNpc.name); renderCollection(); renderNPC(); }
     function refreshNPC() { if(coins>=10){ coins-=10; nextNPC(); updateUI(); saveGame(); alert("Продавец обновлён!"); } else alert("Нужно 10 монет"); }
-    function updateAllNpcWishlists() { for(let npc of npcList) { npc.wishlist = generateWishlistBalanced(); } if(currentNpc) renderNPC(); }
+    function updateAllNpcWishlists() { if(!npcWishlistsLocked) { for(let npc of npcList) { npc.wishlist = generateWishlistBalanced(); } if(currentNpc) renderNPC(); } }
+    function lockNpcWishlists(lock) { npcWishlistsLocked = lock; }
     function calculateNpcSellPrice(wishlist) { let totalCraftCost = 0; for(let item of wishlist) { totalCraftCost += getItemRealPrice(item); } return Math.floor(totalCraftCost * 1.3); }
     function sellToNPC() { 
         if(!currentNpc) return; 
@@ -369,6 +380,7 @@
         selectedIndex = null; 
         renderGrid(); 
         updateUI(); 
+        lockNpcWishlists(false);
         updateAllNpcWishlists();
         nextNPC(); 
         saveGame(); 
@@ -382,10 +394,18 @@
     function craftBase(cost, item, unlockedFlag, needRebirth=false){ 
         if(needRebirth && !rangedUnlocked){ alert("Луки доступны только после перерождения!"); return; } 
         if(!unlockedFlag){ alert("Категория не разблокирована"); return; } 
-        if(coins>=cost){ coins-=cost; if(addToGridAndDiscover(item)) { updateUI(); saveGame(); updateAllNpcWishlists(); } } else alert(`Нужно ${cost} монет`); 
+        if(coins>=cost){ 
+            lockNpcWishlists(true);
+            coins-=cost; 
+            if(addToGridAndDiscover(item)) { 
+                updateUI(); 
+                saveGame(); 
+            } 
+            lockNpcWishlists(false);
+        } else alert(`Нужно ${cost} монет`); 
     }
     function moveItem(from, to) { if(grid[from] === null) return false; if(grid[to] === null) { grid[to] = grid[from]; grid[from] = null; renderGrid(); saveGame(); return true; } return false; }
-    function clickCell(idx){ if(grid[idx] === null) return; if(selectedIndex === null){ selectedIndex = idx; renderGrid(); return; } let first = selectedIndex, second = idx; selectedIndex = null; if(first === second){ renderGrid(); return; } let item1 = grid[first], item2 = grid[second]; if(item1 && item2 && item1 === item2 && getMergeResult(item1)) { let next = getMergeResult(item1); grid[second] = next; grid[first] = null; discoverItem(next); coins += 3; updateUI(); saveGame(); updateAllNpcWishlists(); renderGrid(); } else { moveItem(first, second); } }
+    function clickCell(idx){ if(grid[idx] === null) return; if(selectedIndex === null){ selectedIndex = idx; renderGrid(); return; } let first = selectedIndex, second = idx; selectedIndex = null; if(first === second){ renderGrid(); return; } let item1 = grid[first], item2 = grid[second]; if(item1 && item2 && item1 === item2 && getMergeResult(item1)) { let next = getMergeResult(item1); lockNpcWishlists(true); grid[second] = next; grid[first] = null; discoverItem(next); coins += 3; updateUI(); saveGame(); lockNpcWishlists(false); renderGrid(); } else { moveItem(first, second); } }
     function showItemInfo(item) { let cat = getItemCategory(item); let tier = cat.chain.indexOf(item); alert(`🔍 ${itemNames[item]}\nСоединение: ${tier+1}\nСостоит из: ${Math.pow(2, tier)} × ${itemNames[cat.chain[0]]}\nСтоимость крафта: ${getItemRealPrice(item)}🪙\nЦена продажи: ${getItemSellPrice(item)}🪙\nЧары: ${(cat.type === 'weapons' ? enchantWeapons : (cat.type === 'ranged' ? enchantRanged : 0))}/10`); }
     function equipFromGrid(slotType, chain, elementId) { if(selectedIndex === null || grid[selectedIndex] === null) { if(slotType === 'weapon' && equippedWeapon) showItemInfo(equippedWeapon); else if(slotType === 'ranged' && equippedRanged) showItemInfo(equippedRanged); else alert("Выберите предмет в сетке"); return; } if(!chain.includes(grid[selectedIndex])) { alert("Этот предмет нельзя экипировать в этот слот"); return; } let itemToEquip = grid[selectedIndex]; if(slotType === 'weapon') { if(equippedWeapon) addToGridAndDiscover(equippedWeapon); equippedWeapon = itemToEquip; alert(`⚔️ ${itemNames[itemToEquip]} экипирован в оружие`); } else { if(equippedRanged) addToGridAndDiscover(equippedRanged); equippedRanged = itemToEquip; alert(`🏹 ${itemNames[itemToEquip]} экипирован в луки`); } grid[selectedIndex] = null; selectedIndex = null; renderGrid(); updateUI(); document.getElementById(elementId).innerHTML = itemNames[itemToEquip] + ' <button class="unequip-btn" onclick="window.unequipItem(\'' + slotType + '\')">Снять</button>'; saveGame(); }
     function unequipItem(slotType) { let item = null; if(slotType === 'weapon' && equippedWeapon) { item = equippedWeapon; if(addToGridAndDiscover(equippedWeapon)) { equippedWeapon = null; alert(`Снято: ${itemNames[item]}`); } else { alert("Нет места в сетке"); return; } } else if(slotType === 'ranged' && equippedRanged) { item = equippedRanged; if(addToGridAndDiscover(equippedRanged)) { equippedRanged = null; alert(`Снято: ${itemNames[item]}`); } else { alert("Нет места в сетке"); return; } } else { alert("Нет предмета для снятия"); return; } document.getElementById(slotType === 'weapon' ? 'equippedWeapon' : 'equippedRanged').innerHTML = "— пусто —"; renderGrid(); updateUI(); saveGame(); }
@@ -471,7 +491,7 @@
         function findBackgroundByName(name) {
             const search = name.toLowerCase().trim();
             for(let bg of backgrounds) {
-                const bgName = bg.name.toLowerCase().replace(/[⬛⬜🔴🟠🟡🟢🔵💙🟣✨🔥🌲🏰🌋❄️🌑🌊🏜️🌅]/g, '').trim();
+                const bgName = bg.name.toLowerCase().replace(/[⬛⬜🔴🟠🟡🟢🔵💙🟣✨🔥🌲🏰🌋❄️🌑🌊🏜️🌅🌿]/g, '').trim();
                 if(bgName === search || bg.name.toLowerCase().includes(search)) return bg;
                 if(bg.id.toLowerCase() === search) return bg;
             }
@@ -542,6 +562,26 @@
     })();
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    // Информационное окно при старте
+    if(!localStorage.getItem("balanceSave")) {
+        let infoDiv = document.createElement("div");
+        infoDiv.className = "info-overlay";
+        infoDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
+            <h2>⚖️ SUNNYGAME</h2>
+            <div class="info-text">🔨 <span class="info-highlight">КРАФТ</span> — объединяй 2 одинаковых предмета, чтобы создать более сильный</div>
+            <div class="info-text">⚔️ <span class="info-highlight">БИТВА</span> — атакуй монстра, получай монеты за убийство</div>
+            <div class="info-text">🏹 <span class="info-highlight">ЛУКИ</span> — зажми кнопку атаки на 1 секунду для заряженного удара (+5 урона)</div>
+            <div class="info-text">✨ <span class="info-highlight">ЗАЧАРОВАНИЯ</span> — 10 чарок на каждое оружие, урон от оружия и луков суммируется</div>
+            <div class="info-text">📈 <span class="info-highlight">ПРОГРЕССИЯ</span> — при более высоком соединении оружия или лука даётся +1 урона за каждое соединение</div>
+            <div class="info-text">🌀 <span class="info-highlight">ПЕРЕРОЖДЕНИЕ</span> — за 1 млн монет сбрасывает прогресс, открывает луки и зачарования</div>
+            <hr>
+            <div class="info-text">💾 Прогресс сохраняется <span class="info-highlight">на устройстве</span>. При смене Telegram-аккаунта на том же устройстве сохранение останется прежним.</div>
+            <button id="closeInfo" style="margin-top:15px;">▶ НАЧАТЬ ИГРУ</button>
+        </div>`;
+        document.body.appendChild(infoDiv);
+        document.getElementById("closeInfo").onclick = () => infoDiv.remove();
+    }
+    
     loadPromoState();
     loadBonusState();
     if(!loadGame()) {

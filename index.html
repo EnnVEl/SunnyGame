@@ -30,7 +30,7 @@
         body.bg-white .badge { background: #222; color: white; }
         body.bg-white .bg-option { background: #2c2b1f; color: #ffefb9 !important; }
         body.bg-white .warning { color: #cc6600 !important; background: rgba(0,0,0,0.7); }
-        /* цветные фоны с градиентами */
+        /* Цветные фоны с градиентами */
         body.bg-red { background: linear-gradient(145deg, #ff3333, #cc0000); }
         body.bg-orange { background: linear-gradient(145deg, #ff8800, #cc5500); }
         body.bg-yellow { background: linear-gradient(145deg, #ffdd00, #ccaa00); }
@@ -39,15 +39,18 @@
         body.bg-blue { background: linear-gradient(145deg, #3399ff, #1155cc); }
         body.bg-purple { background: linear-gradient(145deg, #9933ff, #5511aa); }
         body.bg-black { background: #000000; }
-        body.bg-stars { background: linear-gradient(135deg, #0a0f2a, #010108); background-image: radial-gradient(white 1px, transparent 1px), linear-gradient(135deg, #0a0f2a, #010108); background-size: 35px 35px, auto; background-blend-mode: overlay; }
-        body.bg-fire { background: linear-gradient(45deg, #ff4500, #ffaa00, #ff6600); }
+        body.bg-stars { background: linear-gradient(135deg, #0a0f2a, #010108), radial-gradient(circle at 20% 30%, white 1px, transparent 1px); background-size: auto, 35px 35px; background-blend-mode: overlay; }
+        body.bg-fire { background: linear-gradient(45deg, #ff0000, #ff8800, #ffff00); }
         body.bg-forest { background: linear-gradient(135deg, #228833, #0a3a0a); }
         body.bg-castle { background: linear-gradient(145deg, #5a5a6e, #2a2a3a); }
-        body.bg-volcano { background: linear-gradient(145deg, #882200, #2a0a00); }
-        body.bg-ice { background: repeating-linear-gradient(45deg, #44aacc, #88ddff 30px, #aaddff 60px); }
-        body.bg-dark { background: linear-gradient(145deg, #111122, #330066); }
-        body.bg-ocean { background: linear-gradient(0deg, #0066aa, #88ddff); }
-        body.bg-desert { background: linear-gradient(145deg, #ccaa44, #aa8833); }
+        body.bg-volcano { background: linear-gradient(145deg, #ff3300, #330000), repeating-linear-gradient(45deg, #ff660020 0px, #ff660020 5px, #cc330020 5px, #cc330020 10px); background-blend-mode: overlay; position: relative; }
+        body.bg-volcano::after { content: "💥🌋💥"; position: absolute; bottom: 20px; right: 20px; font-size: 45px; opacity: 0.4; pointer-events: none; }
+        body.bg-ice { background: repeating-linear-gradient(45deg, #44aacc, #88ddff 30px, #ffffff 60px); }
+        body.bg-dark { background: linear-gradient(145deg, #111122, #330066, #6600cc); }
+        body.bg-ocean { background: linear-gradient(0deg, #003366, #0066aa, #3399cc), repeating-linear-gradient(90deg, #ffffff20 0px, #ffffff20 2px, transparent 2px, transparent 40px); background-blend-mode: overlay; position: relative; }
+        body.bg-ocean::after { content: "🌊🌊🌊"; position: absolute; bottom: 15px; left: 0; right: 0; text-align: center; font-size: 35px; opacity: 0.5; pointer-events: none; }
+        body.bg-desert { background: linear-gradient(180deg, #87CEEB 0%, #f4a460 50%, #ccaa44 100%); position: relative; }
+        body.bg-desert::after { content: "🏜️🏜️🏜️\n▲\n▲"; position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 45px; opacity: 0.6; pointer-events: none; white-space: pre; line-height: 1; font-weight: bold; color: #eebb55; text-shadow: 2px 2px 0 #8B5A2B; }
         body.bg-sunset { background: linear-gradient(135deg, #6a0dad 0%, #ff4500 50%, #1a0a0a 100%); background-attachment: fixed; }
         body.bg-meadow { background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 50%, #228B22 100%); background-attachment: fixed; position: relative; }
         body.bg-meadow::before { content: "☁️☁️☁️"; position: absolute; top: 10px; left: 0; right: 0; text-align: center; font-size: 60px; opacity: 0.5; pointer-events: none; white-space: nowrap; }
@@ -143,8 +146,7 @@
 <script>
     // ========== СИСТЕМА АВТООБНОВЛЕНИЙ ==========
     (function setupAutoUpdate() {
-        const VERSION = "2.0.0";
-        const CHECK_INTERVAL = 10000;
+        const CHECK_INTERVAL = 1000;
         let updateNotificationShown = false;
         
         function checkForUpdates() {
@@ -182,7 +184,7 @@
         checkForUpdates();
     })();
     
-    // ========== ОСТАЛЬНОЙ КОД ИГРЫ ==========
+    // ========== ОСТАЛЬНОЙ КОД ИГРЫ (без изменений) ==========
     const ADMIN_ID = 1577899640;
     const BOT_TOKEN = "8743238206:AAFPVOGId9YU67jMNocJXB0bdmE7rquY4f4";
     

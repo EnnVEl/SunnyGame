@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SunnyGame · Баланс и перерождение</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Segoe UI', Arial, system-ui; margin: 0; padding: 12px; color: #f9efc0; min-height: 100vh; transition: background 0.4s ease; background: #000000; }
@@ -30,7 +28,6 @@
         body.bg-white .badge { background: #222; color: white; }
         body.bg-white .bg-option { background: #2c2b1f; color: #ffefb9 !important; }
         body.bg-white .warning { color: #cc6600 !important; background: rgba(0,0,0,0.7); }
-        /* Цветные фоны с градиентами */
         body.bg-red { background: linear-gradient(145deg, #ff3333, #cc0000); }
         body.bg-orange { background: linear-gradient(145deg, #ff8800, #cc5500); }
         body.bg-yellow { background: linear-gradient(145deg, #ffdd00, #ccaa00); }
@@ -94,7 +91,8 @@
         .attack-btn { background: #d64531; color: white; font-size: 18px; padding: 6px 20px; }
         .attack-btn.charging { background: #44aa44; transform: scale(1.02); }
         .badge { background: #222; padding: 2px 8px; border-radius: 20px; font-size: 9px; display: inline-block; margin-top: 4px; color: white; }
-        .dev-console { position: fixed; bottom: 6px; right: 6px; background: #1a1a1a; border-radius: 8px; padding: 2px 5px; font-size: 8px; opacity: 0.6; cursor: pointer; z-index: 999; color: white; }
+        .dev-console { position: fixed; bottom: 6px; right: 6px; background: #1a1a1a; border-radius: 8px; padding: 2px 5px; font-size: 8px; opacity: 0.6; cursor: pointer; z-index: 999; color: white; display: none; }
+        .dev-console.visible { display: block; }
         .inventory-slot { background: #3a2a1a; border-radius: 18px; padding: 6px; margin: 6px 0; text-align: center; border: 2px solid #c7a15e; cursor: pointer; }
         .slot-item { font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; padding: 2px 6px; background: #2a1a0a; border-radius: 14px; margin-top: 4px; cursor: pointer; }
         .unequip-btn { background: #aa6644; font-size: 9px; padding: 2px 6px; margin-left: 6px; box-shadow: 0 2px 0 #5a3322; }
@@ -123,6 +121,7 @@
         .craft-btn-disabled { background: #555; color: #aaa; cursor: not-allowed; opacity: 0.6; }
         .update-notify { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ffaa33; color: #2b381c; padding: 12px 20px; border-radius: 40px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; gap: 15px; align-items: center; font-size: 14px; }
         .update-notify button { background: #2b381c; color: #ffaa33; margin: 0; padding: 6px 15px; }
+        .admin-warning { background: #aa3333; color: white; padding: 4px 8px; border-radius: 20px; font-size: 10px; margin-left: 10px; display: inline-block; }
     </style>
 </head>
 <body class="bg-black">
@@ -144,6 +143,45 @@
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
 
 <script>
+    // ========== НАСТРОЙКИ АДМИНИСТРАТОРА ==========
+    // ⚠️ ВАЖНО: ЗАМЕНИТЕ ЭТОТ ID НА ВАШ TELEGRAM ID!
+    const ADMIN_TELEGRAM_ID = 1577899640;  // <-- СЮДА ВСТАВЬТЕ ВАШ ID
+    
+    // Функция проверки прав администратора
+    function isUserAdmin() {
+        try {
+            // Проверяем, открыта ли игра внутри Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                const user = window.Telegram.WebApp.initDataUnsafe?.user;
+                if (user && user.id === ADMIN_TELEGRAM_ID) {
+                    console.log("✅ Администратор авторизован:", user.username || user.id);
+                    return true;
+                }
+                console.log("❌ Доступ запрещён: ID пользователя", user?.id, "не совпадает с ADMIN_ID");
+            } else {
+                console.log("⚠️ Игра открыта вне Telegram WebApp, DEV-консоль скрыта");
+            }
+        } catch(e) {
+            console.error("Ошибка проверки администратора:", e);
+        }
+        return false;
+    }
+    
+    // Функция для отображения DEV-консоли только админу
+    function initDevConsole() {
+        const devBtn = document.getElementById("devConsoleBtn");
+        if (isUserAdmin()) {
+            devBtn.classList.add("visible");
+            devBtn.style.display = "block";
+            console.log("🔓 DEV-консоль активирована для администратора");
+        } else {
+            devBtn.classList.remove("visible");
+            devBtn.style.display = "none";
+            // Блокируем возможность вызвать консоль через window
+            window.openDevConsole = function() { alert("⛔ Доступ запрещён"); };
+        }
+    }
+    
     // ========== СИСТЕМА АВТООБНОВЛЕНИЙ ==========
     (function setupAutoUpdate() {
         const CHECK_INTERVAL = 1000;
@@ -184,10 +222,7 @@
         checkForUpdates();
     })();
     
-    // ========== ОСТАЛЬНОЙ КОД ИГРЫ (без изменений) ==========
-    const ADMIN_ID = 1577899640;
-    const BOT_TOKEN = "8743238206:AAHRY7FSA0iZtl-wwje0aR77vj_vNIWCiTc";
-    
+    // ========== ОСТАЛЬНОЙ КОД ИГРЫ ==========
     const baseNpPrice = { materials:5, weapons:10, ranged:50, armor:20, food:30, potions:40 };
     const materialChain = ["grass","wood","stone","iron","gold","diamond","nerite","mithril","adamant","aether"];
     const weaponChain = ["sword","greatsword","spear","axe","dagger","battle_axe","claymore","halberd","excalibur","legendary_blade"];
@@ -301,14 +336,6 @@
         } else { 
             alert("Неверный промокод"); 
         } 
-    }
-    
-    function sendAdminNotification(message) {
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: ADMIN_ID, text: `🔔 АДМИН-КОНСОЛЬ: ${message}` })
-        }).catch(e => console.log("Ошибка отправки уведомления:", e));
     }
     
     function discoverItem(item) { if(item && !discoveredItems.has(item)) { discoveredItems.add(item); renderCollection(); } }
@@ -482,13 +509,18 @@
     function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes) }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
     function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; lastBonusTime=s.lastBonusTime||0; usedPromoCodes=new Set(s.usedPromoCodes||[]); if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
     
-    // ========== КОНСОЛЬ ==========
-    (function setupSmartConsole() {
-        const SECRET_PASSWORD = "#@6819EnnVel4509@#";
+    // ========== КОНСОЛЬ (ТОЛЬКО ДЛЯ АДМИНА) ==========
+    function openDevConsole() {
+        if (!isUserAdmin()) {
+            alert("⛔ Доступ запрещён. Вы не являетесь администратором.");
+            return;
+        }
+        
         let rusToEng = {};
         for (let [eng, rus] of Object.entries(itemNames)) { let cleanRus = rus.replace(/[^\w\sа-яА-ЯёЁ]/g, '').trim(); rusToEng[cleanRus.toLowerCase()] = eng; rusToEng[rus.toLowerCase()] = eng; }
         const synonyms = { "трава":"grass","бревно":"wood","камень":"stone","железо":"iron","золото":"gold","алмаз":"diamond","меч":"sword","лук":"shortbow","кожа":"leather","ягоды":"berry","бутылёк":"vial" };
         for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
+        
         function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
         function findBackgroundByName(name) {
             const search = name.toLowerCase().trim();
@@ -499,69 +531,59 @@
             }
             return null;
         }
-        function openConsole() {
-            let cmd = prompt("🔧 КОНСОЛЬ\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун ежедневного бонуса\nResetBalance - сбросить баланс и прогресс (как новая игра)");
-            if(!cmd) return;
-            let lowerCmd=cmd.toLowerCase();
-            let notificationMsg = "";
-            
-            if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); updateAllNpcWishlists(); alert(`+${amount}🪙`); notificationMsg = `Выдал себе ${amount} монет`; } else alert("Неверная сумма"); }
-            else if(lowerCmd.startsWith("give ")){ 
-                let giveArg = cmd.substring(5).trim(); 
-                let bg = findBackgroundByName(giveArg);
-                if(bg) {
-                    if(!ownedBgs.includes(bg.id)) {
-                        ownedBgs.push(bg.id);
-                        renderBgShop();
-                        saveGame();
-                        alert(`Фон "${bg.name}" добавлен в коллекцию!`);
-                        notificationMsg = `Выдал фон ${bg.name}`;
-                    } else {
-                        alert(`Фон "${bg.name}" уже есть в коллекции!`);
-                    }
+        
+        let cmd = prompt("🔧 КОНСОЛЬ АДМИНИСТРАТОРА\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун\nResetBalance - сбросить баланс (как новая игра)");
+        if(!cmd) return;
+        let lowerCmd=cmd.toLowerCase();
+        
+        if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); updateAllNpcWishlists(); alert(`+${amount}🪙`); } else alert("Неверная сумма"); }
+        else if(lowerCmd.startsWith("give ")){ 
+            let giveArg = cmd.substring(5).trim(); 
+            let bg = findBackgroundByName(giveArg);
+            if(bg) {
+                if(!ownedBgs.includes(bg.id)) {
+                    ownedBgs.push(bg.id);
+                    renderBgShop();
+                    saveGame();
+                    alert(`Фон "${bg.name}" добавлен в коллекцию!`);
                 } else {
-                    let itemKey = findItemByRussianName(giveArg);
-                    if(itemKey && itemNames[itemKey]){ 
-                        if(addToGridAndDiscover(itemKey)){ 
-                            updateUI(); saveGame(); 
-                            alert(`Выдан ${itemNames[itemKey]}`); 
-                            notificationMsg = `Выдал предмет ${itemNames[itemKey]}`; 
-                        } else alert("Нет места в инвентаре"); 
-                    } else alert(`Предмет "${giveArg}" не найден. Используйте команду List для просмотра всех предметов`); 
+                    alert(`Фон "${bg.name}" уже есть в коллекции!`);
                 }
+            } else {
+                let itemKey = findItemByRussianName(giveArg);
+                if(itemKey && itemNames[itemKey]){ 
+                    if(addToGridAndDiscover(itemKey)){ 
+                        updateUI(); saveGame(); 
+                        alert(`Выдан ${itemNames[itemKey]}`); 
+                    } else alert("Нет места в инвентаре"); 
+                } else alert(`Предмет "${giveArg}" не найден. Используйте команду List для просмотра всех предметов`); 
             }
-            else if(lowerCmd==="unlockall"){ 
-                unlocked.weapons = true; unlocked.armor = true; unlocked.food = true; unlocked.potions = true; 
-                rebirthLevel = 1; rangedUnlocked = true;
-                enchantWeapons = 10; enchantRanged = 10;
-                for(let bg of backgrounds) { if(!ownedBgs.includes(bg.id)) ownedBgs.push(bg.id); }
-                for(let name of npcNames) { metNpcs.add(name); }
-                updateCraftBtns(); renderShop(); renderEnchantShop(); renderBgShop(); renderCollection(); updateAllNpcWishlists(); saveGame(); 
-                alert("Все категории, чарки, фоны и встреченные NPC разблокированы!"); 
-                notificationMsg = "Разблокировал всё (категории, чарки, фоны, NPC)";
-            }
-            else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount} энергии`); notificationMsg = `Выдал себе ${amount} энергии`; } else alert("Неверная сумма"); }
-            else if(lowerCmd==="list"){ 
-                let itemsList = Object.keys(itemNames).map(key => `${itemNames[key]}`).join("\n");
-                alert(`📋 СПИСОК ВСЕХ ПРЕДМЕТОВ:\n\n${itemsList}\n\nВсего предметов: ${Object.keys(itemNames).length}`);
-            }
-            else if(lowerCmd==="resetdailybonus"){ 
-                resetBonusCooldown();
-                notificationMsg = "Сбросил кулдаун ежедневного бонуса";
-            }
-            else if(lowerCmd==="resetbalance"){ 
-                if(confirm("⚠️ СБРОС БАЛАНСА: весь прогресс будет удалён (монеты, предметы, чарки, разблокировки). Фоны останутся? Нажмите ОК для подтверждения.")) {
-                    localStorage.clear();
-                    location.reload();
-                }
-            }
-            else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetDailyBonus, ResetBalance");
-            
-            if(notificationMsg) sendAdminNotification(notificationMsg);
         }
-        let devBtn=document.getElementById("devConsoleBtn");
-        if(devBtn) devBtn.onclick=(e)=>{ let pwd=prompt("🔐 Введите пароль разработчика:"); if(pwd===SECRET_PASSWORD) openConsole(); else if(pwd!==null) alert("Неверный пароль!"); };
-    })();
+        else if(lowerCmd==="unlockall"){ 
+            unlocked.weapons = true; unlocked.armor = true; unlocked.food = true; unlocked.potions = true; 
+            rebirthLevel = 1; rangedUnlocked = true;
+            enchantWeapons = 10; enchantRanged = 10;
+            for(let bg of backgrounds) { if(!ownedBgs.includes(bg.id)) ownedBgs.push(bg.id); }
+            for(let name of npcNames) { metNpcs.add(name); }
+            updateCraftBtns(); renderShop(); renderEnchantShop(); renderBgShop(); renderCollection(); updateAllNpcWishlists(); saveGame(); 
+            alert("Все категории, чарки, фоны и встреченные NPC разблокированы!"); 
+        }
+        else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount} энергии`); } else alert("Неверная сумма"); }
+        else if(lowerCmd==="list"){ 
+            let itemsList = Object.keys(itemNames).map(key => `${itemNames[key]}`).join("\n");
+            alert(`📋 СПИСОК ВСЕХ ПРЕДМЕТОВ:\n\n${itemsList}\n\nВсего предметов: ${Object.keys(itemNames).length}`);
+        }
+        else if(lowerCmd==="resetdailybonus"){ 
+            resetBonusCooldown();
+        }
+        else if(lowerCmd==="resetbalance"){ 
+            if(confirm("⚠️ СБРОС БАЛАНСА: весь прогресс будет удалён (монеты, предметы, чарки, разблокировки). Фоны останутся? Нажмите ОК для подтверждения.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+        else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetDailyBonus, ResetBalance");
+    }
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     // Информационное окно при старте
@@ -588,6 +610,14 @@
     loadBonusState();
     if(!loadGame()) {
         initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black");
+    }
+    
+    // Инициализируем DEV-консоль (только для админа)
+    initDevConsole();
+    // Привязываем функцию к кнопке
+    const devBtn = document.getElementById("devConsoleBtn");
+    if (devBtn) {
+        devBtn.onclick = openDevConsole;
     }
     
     document.getElementById("dailyBonusBtn").onclick = claimDailyBonus;

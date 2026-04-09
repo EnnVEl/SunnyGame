@@ -15,9 +15,10 @@ PROMO_REWARD = 1000
 
 # Админы: Markiz и EnnVel
 ADMINS = {
-    "Markiz": 8680140491,
-    "EnnVel": 1577899640
+    8680140491: "Markiz",
+    1577899640: "EnnVel"
 }
+ADMIN_IDS = list(ADMINS.keys())
 # =================================
 
 # ========== ПРОМОКОДЫ ==========
@@ -207,8 +208,7 @@ async def prom_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text(message_text, parse_mode="Markdown")
 
 async def words_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if update.message.chat.type != 'private':
-        return
+    # Работает и в группе, и в ЛС
     words_list = "\n".join([f"• {word}" for word in sorted(KEYWORDS)])
     message_text = (
         f"📋 *Список РП команд:*\n\n{words_list}\n\n"
@@ -232,7 +232,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     users_db[user.id] = {"name": user.first_name, "username": user.username, "id": user.id}
     user_last_message_time[user.id] = current_time
     
-    # Кнопки для выбора темы
+    # Клавиатура с выбором темы
     keyboard = [
         [InlineKeyboardButton("🧠 Психолог", callback_data=f"theme_psychologist_{user.id}")],
         [InlineKeyboardButton("👫 Друг", callback_data=f"theme_friend_{user.id}")],
@@ -241,24 +241,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Выберите тему обращения:", reply_markup=reply_markup)
+    display_name = f"@{user.username}" if user.username else user.first_name
+    await send_to_admins(context, user.id, display_name, "Новый пользователь")
 
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message.chat.type != 'private':
         return
     user = update.effective_user
-    keyboard = [
-        [InlineKeyboardButton("👑 Markiz", callback_data=f"admin_Markiz_{user.id}")],
-        [InlineKeyboardButton("👑 EnnVel", callback_data=f"admin_EnnVel_{user.id}")]
-    ]
+    
+    # Клавиатура с выбором админа
+    keyboard = []
+    for admin_id, admin_name in ADMINS.items():
+        keyboard.append([InlineKeyboardButton(f"👑 {admin_name}", callback_data=f"admin_select_{admin_id}_{user.id}")])
+    
     reply_markup = InlineKeyboardMarkup(keyboard)
     current = user_selected_admin.get(user.id)
-    current_text = ""
-    if current == ADMINS["Markiz"]:
-        current_text = "Текущий админ: Markiz"
-    elif current == ADMINS["EnnVel"]:
-        current_text = "Текущий админ: EnnVel"
-    else:
-        current_text = "Админ не выбран"
+    current_text = f"Текущий админ: {ADMINS.get(current, 'не выбран')}" if current else "Текущий админ: не выбран"
     
     await update.message.reply_text(
         f"👥 *Выберите админа для ваших сообщений:*\n\n{current_text}",
@@ -266,19 +264,31 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         reply_markup=reply_markup
     )
 
-async def set_admin_by_name(message, user, text) -> bool:
-    """Смена админа по команде 'позови Markiz' или 'позови EnnVel'"""
-    match = re.search(r'позови\s+(Markiz|EnnVel)', text.lower())
-    if match:
-        admin_name = match.group(1)
-        if admin_name == "markiz":
-            admin_name = "Markiz"
-        elif admin_name == "ennvel":
-            admin_name = "EnnVel"
-        
-        if admin_name in ADMINS:
-            user_selected_admin[user.id] = ADMINS[admin_name]
-            await message.reply_text(f"✅ Админ изменён на {admin_name}! Теперь все сообщения будут пересылаться ему.")
+async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message.chat.type != 'private':
+        return
+    
+    user = update.effective_user
+    display_name = f"@{user.username}" if user.username else user.first_name
+    recipient = user_selected_admin.get(user.id)
+    if not recipient:
+        recipient = ADMIN_IDS[0]
+    
+    await context.bot.send_message(
+        chat_id=recipient,
+        text=f"💬 Пользователь {display_name} зовёт поболтать! Напиши ответ скорее 😉"
+    )
+    
+    await update.message.reply_text("✅ Ваше сообщение отправлено администратору!")
+
+async def change_admin_by_mention(message, user, context) -> bool:
+    """Смена админа по упоминанию: позови Markiz или позови EnnVel"""
+    text = message.text.lower().strip()
+    
+    for admin_id, admin_name in ADMINS.items():
+        if f"позови {admin_name.lower()}" in text or f"позовите {admin_name.lower()}" in text:
+            user_selected_admin[user.id] = admin_id
+            await message.reply_text(f"✅ Теперь ваши сообщения будут пересылаться админу {admin_name}!")
             return True
     return False
 
@@ -507,7 +517,7 @@ async def cmd_marry(message, user, display_name, text, context) -> bool:
                     user2_name = f"@{username2}" if info.get('username') else info.get("name", username2)
         
         if not user1_id or not user2_id:
-            await message.reply_text("❌ Не удалось найти одного из пользователей.")
+            await message.reply_text("❌ Не удалось найти одного из пользователей. Убедитесь, что вы правильно написали юзернеймы.")
             return True
         
         if user1_id == user2_id:
@@ -565,8 +575,11 @@ async def cmd_marry(message, user, display_name, text, context) -> bool:
     else:
         await message.reply_text(
             "❌ Использование команды 'поженить':\n\n"
-            "1. `поженить @username1 @username2`\n"
-            "2. Ответьте на сообщение и напишите `поженить`",
+            "1. `поженить @username1 @username2` - поженить двух пользователей\n"
+            "2. Ответьте на сообщение пользователя и напишите `поженить`\n\n"
+            "Примеры:\n"
+            "`поженить @user1 @user2`\n"
+            "или ответьте на сообщение и напишите `поженить`",
             parse_mode="Markdown"
         )
         return True
@@ -779,10 +792,10 @@ def get_recipient_admin(user_id):
     selected = user_selected_admin.get(user_id)
     if selected:
         return selected
-    return ADMINS["Markiz"]
+    return ADMIN_IDS[0]
 
 def get_all_admins():
-    return list(ADMINS.values())
+    return ADMIN_IDS
 
 async def send_to_admins(context, user_id, display_name, content, photo=None, voice=None):
     recipient = get_recipient_admin(user_id)
@@ -803,23 +816,6 @@ async def send_to_admins(context, user_id, display_name, content, photo=None, vo
             caption=f"🎤 Голосовое от {display_name}"
         )
 
-async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if update.message.chat.type != 'private':
-        return
-    
-    user = update.effective_user
-    display_name = f"@{user.username}" if user.username else user.first_name
-    recipient = user_selected_admin.get(user.id)
-    if not recipient:
-        recipient = ADMINS["Markiz"]
-    
-    await context.bot.send_message(
-        chat_id=recipient,
-        text=f"💬 Пользователь {display_name} зовёт поболтать! Напиши ответ скорее 😉"
-    )
-    
-    await update.message.reply_text("✅ Ваше сообщение отправлено администратору!")
-
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     user = query.from_user
@@ -827,6 +823,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     users_db[user.id] = {"name": user.first_name, "username": user.username, "id": user.id}
     display_name = f"@{user.username}" if user.username else user.first_name
     
+    # Обработка выбора темы
     if query.data.startswith("theme_"):
         parts = query.data.split("_")
         theme_key = parts[1]
@@ -838,11 +835,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await query.edit_message_text(f"✅ Принято, тема: {theme}\n\nВы всегда можете поменять тему при вводе команды /start.")
             await send_to_admins(context, target_user_id, display_name, f"выбрал тему: {theme}")
             
-            # Кнопки выбора админа
-            keyboard = [
-                [InlineKeyboardButton("👑 Markiz", callback_data=f"admin_Markiz_{target_user_id}")],
-                [InlineKeyboardButton("👑 EnnVel", callback_data=f"admin_EnnVel_{target_user_id}")]
-            ]
+            # После выбора темы показываем выбор админа
+            keyboard = []
+            for admin_id, admin_name in ADMINS.items():
+                keyboard.append([InlineKeyboardButton(f"👑 {admin_name}", callback_data=f"admin_select_{admin_id}_{target_user_id}")])
             reply_markup = InlineKeyboardMarkup(keyboard)
             await context.bot.send_message(
                 chat_id=target_user_id,
@@ -852,27 +848,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             )
         return
     
-    if query.data.startswith("admin_"):
+    # Обработка выбора админа
+    if query.data.startswith("admin_select_"):
         parts = query.data.split("_")
-        admin_name = parts[1]
-        target_user_id = int(parts[2])
-        
-        if admin_name == "Markiz":
-            user_selected_admin[target_user_id] = ADMINS["Markiz"]
-            await query.edit_message_text(
-                f"✅ *Админ выбран: Markiz*\n\n"
-                f"Вы всегда можете поменять админа при вводе команды /admin\n"
-                f"или написав 'позови Markiz' или 'позови EnnVel'.",
-                parse_mode="Markdown"
-            )
-        elif admin_name == "EnnVel":
-            user_selected_admin[target_user_id] = ADMINS["EnnVel"]
-            await query.edit_message_text(
-                f"✅ *Админ выбран: EnnVel*\n\n"
-                f"Вы всегда можете поменять админа при вводе команды /admin\n"
-                f"или написав 'позови Markiz' или 'позови EnnVel'.",
-                parse_mode="Markdown"
-            )
+        admin_id = int(parts[2])
+        target_user_id = int(parts[3])
+        user_selected_admin[target_user_id] = admin_id
+        admin_name = ADMINS.get(admin_id, "Админ")
+        await query.edit_message_text(
+            f"✅ *Админ выбран: {admin_name}*\n\n"
+            f"Вы всегда можете поменять админа при вводе команды /admin.\n"
+            f"Или напишите `позови {admin_name}` в любой момент.",
+            parse_mode="Markdown"
+        )
         return
 
 async def handle_group_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -880,15 +868,15 @@ async def handle_group_message(update: Update, context: ContextTypes.DEFAULT_TYP
     if not message or not message.text:
         return
     
+    # Пропускаем команды с / (кроме /words)
     if message.text.startswith('/'):
+        if message.text.startswith('/words'):
+            await words_command(update, context)
         return
     
     user = message.from_user
     text = message.text.strip()
     display_name = f"@{user.username}" if user.username else user.first_name
-    
-    # Проверяем смену админа через "позови"
-    await set_admin_by_name(message, user, text)
     
     if await check_caesar_message(message):
         return
@@ -915,6 +903,10 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
     
     if message.text:
         text_lower = message.text.lower().strip()
+        
+        # Проверка на смену админа через "позови"
+        if await change_admin_by_mention(message, user, context):
+            return
         
         if text_lower == "/hello":
             await hello(update, context)
@@ -996,7 +988,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
                          message.photo[-1].file_id if message.photo else None,
                          message.voice.file_id if message.voice else None)
     
-    last_active_user[get_recipient_admin(user.id)] = user.id
+    last_active_user[ADMIN_IDS[0]] = user.id
 
 async def handle_group_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.message
@@ -1019,7 +1011,7 @@ def main():
     application.add_handler(CallbackQueryHandler(handle_marriage_response, pattern="^marry_"))
     application.add_handler(CallbackQueryHandler(handle_divorce_response, pattern="^divorce_"))
     application.add_handler(CallbackQueryHandler(button_handler, pattern="^theme_"))
-    application.add_handler(CallbackQueryHandler(button_handler, pattern="^admin_"))
+    application.add_handler(CallbackQueryHandler(button_handler, pattern="^admin_select_"))
     
     application.add_handler(MessageHandler(filters.TEXT & filters.ChatType.GROUPS, handle_group_message))
     application.add_handler(MessageHandler(filters.TEXT & filters.ChatType.SUPERGROUP, handle_group_message))
@@ -1029,7 +1021,7 @@ def main():
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, handle_group_join))
     
     print("🚀 Бот запущен!")
-    print(f"👑 Админы: Markiz - {ADMINS['Markiz']}, EnnVel - {ADMINS['EnnVel']}")
+    print(f"👑 Админы: {', '.join(ADMINS.values())}")
     print(f"🤖 Bot username: @{BOT_USERNAME}")
     application.run_polling()
 

@@ -286,7 +286,10 @@ async def change_admin_by_mention(message, user, context) -> bool:
     text = message.text.lower().strip()
     
     for admin_id, admin_name in ADMINS.items():
-        if f"позови {admin_name.lower()}" in text or f"позовите {admin_name.lower()}" in text:
+        # Проверяем разные варианты написания
+        if (f"позови {admin_name.lower()}" in text or 
+            f"позовите {admin_name.lower()}" in text or
+            f"позвать {admin_name.lower()}" in text):
             user_selected_admin[user.id] = admin_id
             await message.reply_text(f"✅ Теперь ваши сообщения будут пересылаться админу {admin_name}!")
             return True
@@ -868,27 +871,14 @@ async def handle_group_message(update: Update, context: ContextTypes.DEFAULT_TYP
     if not message or not message.text:
         return
     
-    # Пропускаем команды с / (кроме /words)
+    # Только команда /words работает в группе
     if message.text.startswith('/'):
         if message.text.startswith('/words'):
             await words_command(update, context)
         return
     
-    user = message.from_user
-    text = message.text.strip()
-    display_name = f"@{user.username}" if user.username else user.first_name
-    
-    if await check_caesar_message(message):
-        return
-    
-    if text.lower() == "бот":
-        await message.reply_text("На месте! 🖐")
-        return
-    
-    if user.id not in users_db:
-        users_db[user.id] = {"name": user.first_name, "username": user.username, "id": user.id}
-    
-    await handle_rp_command(message, user, display_name, message.text, context, is_group=True)
+    # Остальные сообщения в группе игнорируем (без РП команд)
+    return
 
 async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
@@ -937,11 +927,13 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
     
     display_name = f"@{user.username}" if user.username else user.name
     
+    # Сначала проверяем РП команды (если это не админ)
     if message.text and user.id not in get_all_admins():
         rp_handled = await handle_rp_command(message, user, display_name, message.text, context, is_group=False)
         if rp_handled:
             return
     
+    # Если админ отвечает пользователю
     if user.id in get_all_admins():
         target_user_id = None
         if message.reply_to_message:
@@ -980,6 +972,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
             await message.reply_text(f"✅ Сообщение принято")
         return
     
+    # Обычный пользователь отправляет сообщение админу
     if message.text and message.text.strip().lower() == "бот":
         await message.reply_text("На месте! 🖐")
         return
@@ -988,7 +981,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
                          message.photo[-1].file_id if message.photo else None,
                          message.voice.file_id if message.voice else None)
     
-    last_active_user[ADMIN_IDS[0]] = user.id
+    last_active_user[get_recipient_admin(user.id)] = user.id
 
 async def handle_group_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.message

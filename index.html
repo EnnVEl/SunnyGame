@@ -1,1021 +1,653 @@
-import logging
-import re
-import time
-import json
-import os
-import asyncio
-from datetime import datetime
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
-
-# ========== ВАШИ ДАННЫЕ ==========
-BOT_USERNAME = "SunnySide20_bot"
-PROMO_REWARD = 1000
-
-# Админы: Markiz и EnnVel
-ADMINS = {
-    8680140491: "Markiz",
-    1577899640: "EnnVel"
-}
-ADMIN_IDS = list(ADMINS.keys())
-# =================================
-
-# ========== ПРОМОКОДЫ ==========
-PROMOCODES = ["EnnVel", "SunnyGame", "Kilьka27", "kirka"]
-
-# ========== СЛОВАРЬ ОТВЕТОВ (РП КОМАНДЫ) ==========
-RESPONSES = {
-    "пнуть": "🦵 {user} пнул(а) {target}!",
-    "ударить": "👊 {user} ударил(а) {target}!",
-    "шлёпнуть": "🖐️ {user} шлёпнул(а) {target}!",
-    "ущипнуть": "🤏 {user} ущипнул(а) {target}!",
-    "кусь": "🦷 {user} укусил(а) {target}!",
-    "укусить": "🦷 {user} укусил(а) {target}!",
-    "обнять": "🤗 {user} обнял(а) {target}!",
-    "поцеловать": "😘 {user} поцеловал(а) {target}!",
-    "прижать": "🤲 {user} прижал(а) к себе {target}!",
-    "погладить": "🖐️ {user} погладил(а) {target}!",
-    "лизнуть": "👅 {user} лизнул(а) {target}!",
-    "покормить": "🍕 {user} покормил(а) {target}!",
-    "отравить": "☠️ {user} отравил(а) {target}!",
-    "похвалить": "🌟 {user} похвалил(а) {target}!",
-    "испугать": "👻 {user} испугал(а) {target}!",
-    "извиниться": "🙏 {user} извинился(ась) перед {target}!",
-    "извините": "🙏 {user} извинился(ась) перед {target}!",
-    "дать пять": "🖐️ {user} дал(а) пять {target}!",
-    "пожать руку": "🤝 {user} пожал(а) руку {target}!",
-    "понюхать": "👃 {user} понюхал(а) {target}!",
-    "убить": "💀 {user} убил(а) {target}!",
-    "расстрелять": "🔫 {user} расстрелял(а) {target}!",
-    "сжечь": "🔥 {user} сжёг(ла) {target}!",
-    "кастрировать": "✂️ {user} кастрировал(а) {target}!",
-    "трахнуть": "🍆💦 {user} трахнул(а) {target}!",
-    "секс": "🍆💦 {user} занялся(ась) сексом с {target}!",
-    "выебать": "🍆💦 {user} выебал(а) {target}!",
-    "уебать": "👊 {user} уебал(а) {target}!",
-    "послать нахуй": "🖕 {user} послал(а) нахуй {target}!",
-    "изнасиловать": "🚨 {user} изнасиловал(а) {target}!",
-    "отшлёпать": "🖐️💢 {user} отшлёпал(а) {target}!",
-    "съесть": "🍽️ {user} съел(а) {target}!",
-}
-
-KEYWORDS = list(RESPONSES.keys())
-
-# ========== СКРЫТАЯ ФУНКЦИЯ ШИФР ЦЕЗАРЯ ДЛЯ БУКВ ==========
-def caesar_shift_char(char: str) -> str:
-    if 'а' <= char <= 'я':
-        if char == 'я':
-            return 'а'
-        else:
-            return chr(ord(char) + 1)
-    elif 'А' <= char <= 'Я':
-        if char == 'Я':
-            return 'А'
-        else:
-            return chr(ord(char) + 1)
-    elif 'a' <= char <= 'z':
-        if char == 'z':
-            return 'a'
-        else:
-            return chr(ord(char) + 1)
-    elif 'A' <= char <= 'Z':
-        if char == 'Z':
-            return 'A'
-        else:
-            return chr(ord(char) + 1)
-    else:
-        return char
-
-def caesar_shift(text: str) -> str:
-    result = []
-    for char in text:
-        result.append(caesar_shift_char(char))
-    return ''.join(result)
-
-async def check_caesar_message(message) -> bool:
-    if message.text and len(message.text.strip()) == 1:
-        char = message.text.strip()
-        if ('а' <= char.lower() <= 'я') or ('a' <= char.lower() <= 'z'):
-            shifted = caesar_shift(char)
-            await message.reply_text(shifted)
-            return True
-    return False
-
-# ========== СИСТЕМА БРАКОВ ==========
-MARRIAGES_FILE = "marriages_new.json"
-PROPOSALS_FILE = "proposals.json"
-DIVORCE_REQUESTS_FILE = "divorce_requests.json"
-
-def load_marriages():
-    if os.path.exists(MARRIAGES_FILE):
-        with open(MARRIAGES_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-def save_marriages(marriages):
-    with open(MARRIAGES_FILE, "w", encoding="utf-8") as f:
-        json.dump(marriages, f, ensure_ascii=False, indent=2)
-
-def load_proposals():
-    if os.path.exists(PROPOSALS_FILE):
-        with open(PROPOSALS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-def save_proposals(proposals):
-    with open(PROPOSALS_FILE, "w", encoding="utf-8") as f:
-        json.dump(proposals, f, ensure_ascii=False, indent=2)
-
-def load_divorce_requests():
-    if os.path.exists(DIVORCE_REQUESTS_FILE):
-        with open(DIVORCE_REQUESTS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-def save_divorce_requests(requests):
-    with open(DIVORCE_REQUESTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(requests, f, ensure_ascii=False, indent=2)
-
-def is_married(user_id: int) -> bool:
-    marriages = load_marriages()
-    return str(user_id) in marriages
-
-def get_marriage_info(user_id: int):
-    marriages = load_marriages()
-    return marriages.get(str(user_id))
-
-def get_spouse(user_id: int) -> int | None:
-    marriage = get_marriage_info(user_id)
-    if marriage:
-        return marriage["spouse_id"]
-    return None
-
-def create_marriage(user1: int, user2: int):
-    marriages = load_marriages()
-    date_str = datetime.now().strftime("%d.%m.%Y")
-    marriages[str(user1)] = {"spouse_id": user2, "date": date_str, "timestamp": datetime.now().timestamp()}
-    marriages[str(user2)] = {"spouse_id": user1, "date": date_str, "timestamp": datetime.now().timestamp()}
-    save_marriages(marriages)
-
-def delete_marriage(user_id: int):
-    marriages = load_marriages()
-    spouse_id = get_spouse(user_id)
-    if spouse_id:
-        marriages.pop(str(user_id), None)
-        marriages.pop(str(spouse_id), None)
-        save_marriages(marriages)
-
-def calculate_marriage_duration(timestamp: float) -> str:
-    try:
-        now = datetime.now().timestamp()
-        delta = now - timestamp
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SunnyGame · Баланс и перерождение</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <style>
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', Arial, system-ui; margin: 0; padding: 12px; color: #f9efc0; min-height: 100vh; transition: background 0.4s ease; background: #000000; }
+        body.bg-white { background: #ffffff; }
+        body.bg-white, body.bg-white .game-container, body.bg-white .header, body.bg-white .resources, 
+        body.bg-white .shop-panel, body.bg-white .npc-section, body.bg-white .battle-panel,
+        body.bg-white .inventory-col, body.bg-white .single-npc-card, body.bg-white .npc-wishlist,
+        body.bg-white .grid, body.bg-white .title, body.bg-white button,
+        body.bg-white .res-item { color: #111111 !important; text-shadow: none !important; }
+        body.bg-white .badge, body.bg-white .enchant-shop .badge, body.bg-white .warning,
+        body.bg-white .unlock-btn, body.bg-white .enchant-btn, body.bg-white .bg-option,
+        body.bg-white .dev-console, body.bg-white .inventory-slot .badge,
+        body.bg-white .battle-panel .badge, body.bg-white .monster-hp { color: #ffffff !important; }
+        body.bg-white .game-container { background: rgba(245, 245, 245, 0.7); backdrop-filter: blur(2px); }
+        body.bg-white .header, body.bg-white .resources, body.bg-white .shop-panel, 
+        body.bg-white .npc-section, body.bg-white .inventory-col, body.bg-white .grid { background: rgba(235, 235, 235, 0.85); backdrop-filter: blur(8px); border-color: #c0a86a; }
+        body.bg-white .single-npc-card, body.bg-white .npc-wishlist { background: #f5e6c8; }
+        body.bg-white .cell { background: #5e3a2b; background-image: radial-gradient(circle at 25% 30%, #7e5a45, #3f2a1d); color: #f9efc0; text-shadow: 1px 1px 0 #2c1a10; font-size: 16px; }
+        body.bg-white .title { text-shadow: 2px 2px 0 #b8956a; color: #2c2b1f; }
+        body.bg-white button { background: #e8d48a; color: #1f2a0e; }
+        body.bg-white .badge { background: #222; color: white; }
+        body.bg-white .bg-option { background: #2c2b1f; color: #ffefb9 !important; }
+        body.bg-white .warning { color: #cc6600 !important; background: rgba(0,0,0,0.7); }
+        body.bg-red { background: linear-gradient(145deg, #ff3333, #cc0000); }
+        body.bg-orange { background: linear-gradient(145deg, #ff8800, #cc5500); }
+        body.bg-yellow { background: linear-gradient(145deg, #ffdd00, #ccaa00); }
+        body.bg-green { background: linear-gradient(145deg, #33cc33, #1a6b1a); }
+        body.bg-cyan { background: linear-gradient(145deg, #00cccc, #008888); }
+        body.bg-blue { background: linear-gradient(145deg, #3399ff, #1155cc); }
+        body.bg-purple { background: linear-gradient(145deg, #9933ff, #5511aa); }
+        body.bg-black { background: #000000; }
+        body.bg-stars { background: linear-gradient(135deg, #0a0f2a, #010108), radial-gradient(circle at 20% 30%, white 1px, transparent 1px); background-size: auto, 35px 35px; background-blend-mode: overlay; }
+        body.bg-fire { background: linear-gradient(45deg, #ff0000, #ff8800, #ffff00); }
+        body.bg-forest { background: linear-gradient(135deg, #228833, #0a3a0a); }
+        body.bg-castle { background: linear-gradient(145deg, #5a5a6e, #2a2a3a); }
+        body.bg-volcano { background: linear-gradient(145deg, #ff3300, #330000), repeating-linear-gradient(45deg, #ff660020 0px, #ff660020 5px, #cc330020 5px, #cc330020 10px); background-blend-mode: overlay; position: relative; }
+        body.bg-volcano::after { content: "💥🌋💥"; position: absolute; bottom: 20px; right: 20px; font-size: 45px; opacity: 0.4; pointer-events: none; }
+        body.bg-ice { background: repeating-linear-gradient(45deg, #44aacc, #88ddff 30px, #ffffff 60px); }
+        body.bg-dark { background: linear-gradient(145deg, #111122, #330066, #6600cc); }
+        body.bg-ocean { background: linear-gradient(0deg, #003366, #0066aa, #3399cc), repeating-linear-gradient(90deg, #ffffff20 0px, #ffffff20 2px, transparent 2px, transparent 40px); background-blend-mode: overlay; position: relative; }
+        body.bg-ocean::after { content: "🌊🌊🌊"; position: absolute; bottom: 15px; left: 0; right: 0; text-align: center; font-size: 35px; opacity: 0.5; pointer-events: none; }
+        body.bg-desert { background: linear-gradient(180deg, #87CEEB 0%, #f4a460 50%, #ccaa44 100%); position: relative; }
+        body.bg-desert::after { content: "🏜️🏜️🏜️\n▲\n▲"; position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 45px; opacity: 0.6; pointer-events: none; white-space: pre; line-height: 1; font-weight: bold; color: #eebb55; text-shadow: 2px 2px 0 #8B5A2B; }
+        body.bg-sunset { background: linear-gradient(135deg, #6a0dad 0%, #ff4500 50%, #1a0a0a 100%); background-attachment: fixed; }
+        body.bg-meadow { background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 50%, #228B22 100%); background-attachment: fixed; position: relative; }
+        body.bg-meadow::before { content: "☁️☁️☁️"; position: absolute; top: 10px; left: 0; right: 0; text-align: center; font-size: 60px; opacity: 0.5; pointer-events: none; white-space: nowrap; }
         
-        days = int(delta // 86400)
-        hours = int((delta % 86400) // 3600)
-        minutes = int((delta % 3600) // 60)
-        
-        if days > 0:
-            return f"{days} дн. {hours} ч."
-        elif hours > 0:
-            return f"{hours} ч. {minutes} мин."
-        else:
-            return f"{minutes} мин."
-    except:
-        return "неизвестно"
+        .game-container { max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); border-radius: 28px; padding: 10px 12px 16px; }
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; background: #2c2b1fe0; padding: 6px 12px; border-radius: 40px; gap: 8px; }
+        .resources { display: flex; gap: 12px; background: #1e2a1c; padding: 4px 12px; border-radius: 30px; align-items: center; }
+        .res-item { font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 4px; }
+        .title { font-size: 20px; letter-spacing: 1px; }
+        .main-row { display: flex; flex-direction: column; gap: 12px; }
+        .craft-col, .inventory-col { width: 100%; background: #261f16cc; backdrop-filter: blur(8px); border-radius: 28px; padding: 10px; }
+        .bonus-panel { background: #2a2a1e; border-radius: 28px; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+        .bonus-btn { background: #f5b642; color: #2b381c; padding: 5px 12px; font-size: 12px; }
+        .promo-group { display: flex; gap: 6px; align-items: center; background: #3a3a2a; padding: 4px 12px; border-radius: 30px; }
+        .promo-group input { width: 90px; padding: 5px 8px; border-radius: 30px; border: none; font-size: 11px; background: #2a2a1e; color: #f9efc0; }
+        .promo-group input::placeholder { color: #aa9f7b; }
+        .promo-group button { background: #c9a03d; padding: 5px 12px; font-size: 11px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #1f2c18cc; padding: 10px; border-radius: 20px; margin: 0; overflow-x: auto; }
+        .cell { background: #5e3a2b; background-image: radial-gradient(circle at 25% 30%, #7e5a45, #3f2a1d); aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; box-shadow: 0 2px 0 #2c1a10; border: 1px solid #c7a15e; text-align: center; word-break: break-word; padding: 2px; }
+        .cell.selected { border: 3px solid #ffd966; box-shadow: 0 2px 0 #2c1a10; }
+        .cell.empty { color: #aa9f7b; font-size: 16px; }
+        .action-bar { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        button { background: #ecd67a; border: none; font-size: 11px; font-weight: bold; padding: 5px 10px; border-radius: 30px; cursor: pointer; color: #2b381c; box-shadow: 0 2px 0 #8b6946; }
+        button:active { transform: translateY(2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .tab-btn { background: #ecd67a; color: #2b381c; }
+        .shop-npc-row { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+        .shop-panel, .npc-section { background: #261f16cc; backdrop-filter: blur(8px); border-radius: 24px; padding: 10px; border: 1px solid #efcd8a; }
+        .unlock-buttons, .enchant-shop { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; max-height: 180px; overflow-y: auto; }
+        .unlock-btn, .enchant-btn { background: #4f6b3e; color: #ffefb9; box-shadow: 0 2px 0 #2b3a1f; display: flex; justify-content: space-between; align-items: center; font-size: 10px; padding: 4px 8px; border-radius: 30px; cursor: pointer; }
+        .exchange-btn { background: #c9a03d; margin-top: 10px; width: 100%; }
+        .single-npc-card { background: #e5d5b0; color: #2a2418; border-radius: 24px; padding: 10px; box-shadow: 0 4px 0 #aa8b60; }
+        .npc-name { font-weight: bold; font-size: 1.2rem; }
+        .npc-wishlist { font-size: 0.8rem; background: #fff0cf; padding: 6px; border-radius: 20px; margin: 6px 0; }
+        .sell-to-npc { background: #ca9622; color: white; padding: 4px 12px; width: 60%; }
+        .bg-shop-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; max-height: 80px; overflow-y: auto; justify-content: center; }
+        .bg-option { background: #2c2b1f; border-radius: 30px; padding: 3px 6px; font-size: 9px; cursor: pointer; border: 1px solid gold; text-align: center; min-width: 55px; }
+        .battle-panel { background: #1e1a2ecc; border-radius: 28px; padding: 12px; margin-top: 12px; text-align: center; }
+        .monster-hp { font-size: 20px; font-weight: bold; background: black; display: inline-block; padding: 4px 16px; border-radius: 30px; margin: 5px; color: white; }
+        .attack-btn { background: #d64531; color: white; font-size: 18px; padding: 6px 20px; }
+        .attack-btn.charging { background: #44aa44; transform: scale(1.02); }
+        .badge { background: #222; padding: 2px 8px; border-radius: 20px; font-size: 9px; display: inline-block; margin-top: 4px; color: white; }
+        .dev-console { position: fixed; bottom: 6px; right: 6px; background: #1a1a1a; border-radius: 8px; padding: 2px 5px; font-size: 8px; opacity: 0.6; cursor: pointer; z-index: 999; color: white; display: none; }
+        .dev-console.visible { display: block; }
+        .inventory-slot { background: #3a2a1a; border-radius: 18px; padding: 6px; margin: 6px 0; text-align: center; border: 2px solid #c7a15e; cursor: pointer; }
+        .slot-item { font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; padding: 2px 6px; background: #2a1a0a; border-radius: 14px; margin-top: 4px; cursor: pointer; }
+        .unequip-btn { background: #aa6644; font-size: 9px; padding: 2px 6px; margin-left: 6px; box-shadow: 0 2px 0 #5a3322; }
+        .warning { color: #ffaa66; font-size: 9px; margin-top: 4px; background: rgba(0,0,0,0.7); display: inline-block; padding: 2px 8px; border-radius: 20px; }
+        .collection-category { margin-bottom: 12px; }
+        .collection-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; max-height: 200px; overflow-y: auto; padding: 6px; background: #2c2b1faa; border-radius: 16px; }
+        .collection-item { background: #2c2b1f; border-radius: 12px; padding: 4px; text-align: center; font-size: 9px; border: 1px solid gold; cursor: pointer; }
+        .collection-item.unlocked { background: #4f6b3e; border-color: #ffd966; }
+        .collection-item.locked { opacity: 0.5; filter: grayscale(0.5); }
+        .enchant-slot { background: #3a2a1a; border-radius: 14px; padding: 4px; margin: 4px 0; text-align: center; display: flex; justify-content: space-between; align-items: center; }
+        .refund-btn { background: #aa8844; font-size: 9px; padding: 2px 5px; margin-left: 5px; }
+        hr { margin: 6px 0; }
+        .storage-slot { background: #4a3a2a; border-radius: 14px; padding: 4px; margin: 4px 0; display: flex; align-items: center; gap: 8px; }
+        .storage-item { flex: 1; font-size: 12px; }
+        .storage-remove { background: #aa4444; font-size: 9px; padding: 2px 6px; border-radius: 20px; }
+        .info-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; color: white; text-align: center; flex-direction: column; }
+        .confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
+        .footer { text-align: center; margin-top: 20px; padding: 10px; }
+        .footer-text { font-size: 10px; color: #aa66ff; text-shadow: 1px 1px 0 #000; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .support-btn { background: #25d366; color: white; margin-top: 8px; width: 100%; }
+        .inline-btn { background: #c9a03d; font-size: 10px; padding: 3px 8px; margin-left: 5px; }
+        .rebirth-container { margin-bottom: 10px; text-align: center; }
+        .info-text { font-size: 13px; margin: 8px 0; line-height: 1.4; }
+        .info-highlight { color: #ffaa66; }
+        .craft-btn { background: #ecd67a; color: #2b381c; }
+        .craft-btn-disabled { background: #555; color: #aaa; cursor: not-allowed; opacity: 0.6; }
+        .update-notify { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ffaa33; color: #2b381c; padding: 12px 20px; border-radius: 40px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; gap: 15px; align-items: center; font-size: 14px; }
+        .update-notify button { background: #2b381c; color: #ffaa33; margin: 0; padding: 6px 15px; }
+        .admin-warning { background: #aa3333; color: white; padding: 4px 8px; border-radius: 20px; font-size: 10px; margin-left: 10px; display: inline-block; }
+    </style>
+</head>
+<body class="bg-black">
+<div class="game-container">
+    <div class="header">
+        <div class="title">⚖️ SUNNYGAME</div>
+        <div class="resources">
+            <div class="res-item">🪙 <span id="coins">200</span></div>
+            <div class="res-item">⚡ <span id="energy">0</span></div>
+        </div>
+    </div>
+    <div class="tabs"><button id="tabCraftBtn" class="tab-btn" style="background:#f5b642;">🏭 Крафт</button><button id="tabBattleBtn" class="tab-btn" style="background:#f5b642;">⚔️ Битва</button><button id="tabCollectionBtn" class="tab-btn" style="background:#f5b642;">📜 Коллекция</button></div>
+    <div id="craftSection"><div class="main-row"><div class="craft-col"><div class="bonus-panel"><button id="dailyBonusBtn" class="bonus-btn">🎁 Ежедневный бонус (50 монет)</button><div class="promo-group"><input type="text" id="promoCode" placeholder="Промокод"><button id="applyPromoBtn">Активировать</button></div></div><div class="grid" id="grid"></div><div class="action-bar"><button id="craftResourceBtn" class="craft-btn">🌾 Материалы -5</button><button id="craftWeaponBtn" class="craft-btn" disabled>⚔️ Оружие -10</button><button id="craftArmorBtn" class="craft-btn" disabled>🛡️ Броня -20</button><button id="craftFoodBtn" class="craft-btn" disabled>🍇 Еда -30</button><button id="craftPotionBtn" class="craft-btn" disabled>🧪 Зелья -40</button><button id="craftRangedWeaponBtn" class="craft-btn" disabled style="background:#555;">🏹 Луки (после перерождения)</button></div><div class="warning" id="rebirthWarning"></div></div><div class="inventory-col"><h3>🎒 ИНВЕНТАРЬ</h3><div class="inventory-slot" id="weaponSlot"><div>⚔️ ОРУЖИЕ</div><div class="slot-item" id="equippedWeapon">— пусто —</div></div><div class="inventory-slot" id="rangedSlot"><div>🏹 ЛУКИ</div><div class="slot-item" id="equippedRanged">— пусто —</div></div><h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtn" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3><div id="storageContainer"></div></div></div></div>
+    <div id="battleSection" style="display:none;"><div class="battle-panel"><h2>🐉 ДРЕВНИЙ МОНСТР</h2><div class="monster-hp">❤️ <span id="monsterHp">10000</span> / 10000</div><button id="attackBtn" class="attack-btn">💥 АТАКОВАТЬ</button><div class="badge">🏆 Убийство +100</div><div id="enchantBonusInfo" style="margin-top:6px; font-size:10px;"></div><div class="badge">⌛ Луки: зажмите 1с для заряда (+5)</div></div></div>
+    <div id="collectionSection" style="display:none;"><div class="shop-panel"><h3>📜 КОЛЛЕКЦИЯ</h3><div id="collectionContainer"></div><h3>👥 ВСТРЕЧЕННЫЕ NPC</h3><div id="metNpcContainer" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;"></div><div class="badge">Нажмите на предмет для рецепта</div></div></div>
+    <div class="rebirth-container"><button id="rebirthBtn">🌀 Перерождение 1M</button></div>
+    <div class="shop-npc-row"><div class="shop-panel"><h3>🏪 ЛАВКА</h3><div class="unlock-buttons" id="shopUnlockList"></div><button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button><hr><h3>✨ ЗАЧАРОВАНИЯ</h3><div class="badge">Кликните на чарку для её применения</div><div id="enchantShopContainer" class="enchant-shop"></div><div class="badge">Снятие чарки: возврат 80% стоимости</div><hr><h3>🎨 ФОНЫ</h3><div id="bgShopContainer" class="bg-shop-row"></div></div><div class="npc-section"><h3>📦 ПРОДАЖИ</h3><div id="npcSingleContainer" class="single-npc-card"></div><button id="sellItemBtn" style="margin-top:6px; background:#aa6644;">💸 Продать выбранный (стоимость -50%)</button><button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button></div></div></div>
+<div class="footer"><button id="fullResetBtn" style="background:#aa3333; width:100%; margin-bottom:8px;">⚠️ ПОЛНЫЙ СБРОС</button><div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div><button id="supportBtn" class="support-btn">💬 Поддержка</button></div>
+<div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
 
-def get_user_display_name(user_id: int) -> str:
-    for uid, info in users_db.items():
-        if uid == user_id:
-            if info.get('username'):
-                return f"@{info['username']}"
-            else:
-                return info.get('name', str(user_id))
-    return str(user_id)
-
-proposal_counter = 0
-divorce_counter = 0
-
-# ========== КОМАНДЫ ==========
-async def prom_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if update.message.chat.type != 'private':
-        return
-    promocodes_list = "\n".join([f"• `{code}`" for code in PROMOCODES])
-    message_text = (
-        f"🎁 *Активные промокоды для SunnyGame:*\n\n{promocodes_list}\n\n"
-        f"📌 Введите промокод в игре, чтобы получить {PROMO_REWARD} монет!"
-    )
-    await update.message.reply_text(message_text, parse_mode="Markdown")
-
-async def words_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # Работает и в группе, и в ЛС
-    words_list = "\n".join([f"• {word}" for word in sorted(KEYWORDS)])
-    message_text = (
-        f"📋 *Список РП команд:*\n\n{words_list}\n\n"
-        f"*Как использовать:*\n"
-        f"• Через ответ на сообщение: ответьте и напишите команду\n"
-        f"• Через упоминание: `пнуть @username` или `обнять @username`\n\n"
-        f"*Брачные команды:*\n"
-        f"  - `брак` - предложить брак (ответом на сообщение или с @)\n"
-        f"  - `развод` - предложить развод\n"
-        f"  - `мой брак` - показать информацию о вашем браке\n"
-        f"  - `браки` - показать все браки в чате\n"
-        f"  - `поженить @user1 @user2` - поженить двух пользователей"
-    )
-    await update.message.reply_text(message_text, parse_mode="Markdown")
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if update.message.chat.type != 'private':
-        return
-    user = update.effective_user
-    current_time = time.time()
-    users_db[user.id] = {"name": user.first_name, "username": user.username, "id": user.id}
-    user_last_message_time[user.id] = current_time
+<script>
+    // ========== НАСТРОЙКИ АДМИНИСТРАТОРА ==========
+    // ⚠️ ВАЖНО: ЗАМЕНИТЕ ЭТОТ ID НА ВАШ TELEGRAM ID!
+    const ADMIN_TELEGRAM_ID = 1577899640;  // <-- СЮДА ВСТАВЬТЕ ВАШ ID
     
-    # Клавиатура с выбором темы
-    keyboard = [
-        [InlineKeyboardButton("🧠 Психолог", callback_data=f"theme_psychologist_{user.id}")],
-        [InlineKeyboardButton("👫 Друг", callback_data=f"theme_friend_{user.id}")],
-        [InlineKeyboardButton("👧 Девушка", callback_data=f"theme_girl_{user.id}")],
-        [InlineKeyboardButton("👨 Парень", callback_data=f"theme_boy_{user.id}")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Выберите тему обращения:", reply_markup=reply_markup)
-    display_name = f"@{user.username}" if user.username else user.first_name
-    await send_to_admins(context, user.id, display_name, "Новый пользователь")
-
-async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if update.message.chat.type != 'private':
-        return
-    user = update.effective_user
-    
-    # Клавиатура с выбором админа
-    keyboard = []
-    for admin_id, admin_name in ADMINS.items():
-        keyboard.append([InlineKeyboardButton(f"👑 {admin_name}", callback_data=f"admin_select_{admin_id}_{user.id}")])
-    
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    current = user_selected_admin.get(user.id)
-    current_text = f"Текущий админ: {ADMINS.get(current, 'не выбран')}" if current else "Текущий админ: не выбран"
-    
-    await update.message.reply_text(
-        f"👥 *Выберите админа для ваших сообщений:*\n\n{current_text}",
-        parse_mode="Markdown",
-        reply_markup=reply_markup
-    )
-
-async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if update.message.chat.type != 'private':
-        return
-    
-    user = update.effective_user
-    display_name = f"@{user.username}" if user.username else user.first_name
-    recipient = user_selected_admin.get(user.id)
-    if not recipient:
-        recipient = ADMIN_IDS[0]
-    
-    await context.bot.send_message(
-        chat_id=recipient,
-        text=f"💬 Пользователь {display_name} зовёт поболтать! Напиши ответ скорее 😉"
-    )
-    
-    await update.message.reply_text("✅ Ваше сообщение отправлено администратору!")
-
-async def change_admin_by_mention(message, user, context) -> bool:
-    """Смена админа по упоминанию: позови Markiz или позови EnnVel"""
-    text = message.text.lower().strip()
-    
-    for admin_id, admin_name in ADMINS.items():
-        # Проверяем разные варианты написания
-        if (f"позови {admin_name.lower()}" in text or 
-            f"позовите {admin_name.lower()}" in text or
-            f"позвать {admin_name.lower()}" in text):
-            user_selected_admin[user.id] = admin_id
-            await message.reply_text(f"✅ Теперь ваши сообщения будут пересылаться админу {admin_name}!")
-            return True
-    return False
-
-# ========== БРАЧНЫЕ КОМАНДЫ ==========
-async def cmd_propose(message, user, display_name, context) -> bool:
-    global proposal_counter
-    
-    target_user = None
-    
-    if message.reply_to_message:
-        target_user = message.reply_to_message.from_user
-    else:
-        mention_match = re.search(r'@(\w+)', message.text)
-        if mention_match:
-            username = mention_match.group(1)
-            try:
-                async for member in context.bot.get_chat_administrators(message.chat_id):
-                    if member.user.username == username:
-                        target_user = member.user
-                        break
-            except:
-                pass
-            if not target_user:
-                for uid, info in users_db.items():
-                    if info.get("username") == username:
-                        target_user = type('User', (), {'id': uid, 'username': username, 'first_name': info.get('name')})()
-                        break
-    
-    if not target_user:
-        await message.reply_text("❌ Ответьте на сообщение пользователя или напишите `брак @username`")
-        return True
-    
-    if user.id == target_user.id:
-        await message.reply_text("❌ Нельзя жениться на себе")
-        return True
-    
-    if is_married(user.id):
-        await message.reply_text("❌ Вы уже состоите в браке! Напишите 'развод' чтобы развестись")
-        return True
-    
-    if is_married(target_user.id):
-        await message.reply_text("❌ Этот пользователь уже в браке")
-        return True
-    
-    proposer_name = f"@{user.username}" if user.username else user.first_name
-    target_name = f"@{target_user.username}" if target_user.username else target_user.first_name
-    
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="✅ Согласиться", callback_data=f"marry_accept_{user.id}_{target_user.id}_{message.chat.id}"),
-            InlineKeyboardButton(text="❌ Отказаться", callback_data=f"marry_decline_{user.id}_{target_user.id}_{message.chat.id}")
-        ]
-    ])
-    
-    proposal_counter += 1
-    proposals = load_proposals()
-    proposals[str(proposal_counter)] = {
-        "from": user.id,
-        "to": target_user.id,
-        "from_name": proposer_name,
-        "to_name": target_name,
-        "chat_id": message.chat.id,
-        "message_id": None
+    // Функция проверки прав администратора
+    function isUserAdmin() {
+        try {
+            // Проверяем, открыта ли игра внутри Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                const user = window.Telegram.WebApp.initDataUnsafe?.user;
+                if (user && user.id === ADMIN_TELEGRAM_ID) {
+                    console.log("✅ Администратор авторизован:", user.username || user.id);
+                    return true;
+                }
+                console.log("❌ Доступ запрещён: ID пользователя", user?.id, "не совпадает с ADMIN_ID");
+            } else {
+                console.log("⚠️ Игра открыта вне Telegram WebApp, DEV-консоль скрыта");
+            }
+        } catch(e) {
+            console.error("Ошибка проверки администратора:", e);
+        }
+        return false;
     }
-    save_proposals(proposals)
     
-    sent_msg = await message.reply_text(
-        f"💍 {proposer_name} сделал(а) предложение {target_name}!\n\n"
-        f"{target_name}, вы согласны?",
-        reply_markup=keyboard
-    )
-    
-    proposals[str(proposal_counter)]["message_id"] = sent_msg.message_id
-    save_proposals(proposals)
-    
-    async def auto_cancel():
-        await asyncio.sleep(60)
-        proposals = load_proposals()
-        if str(proposal_counter) in proposals:
-            try:
-                await sent_msg.edit_text(f"⌛ Время на раздумья истекло. Предложение отменено.")
-            except:
-                pass
-            proposals.pop(str(proposal_counter), None)
-            save_proposals(proposals)
-    
-    asyncio.create_task(auto_cancel())
-    return True
-
-async def cmd_divorce(message, user, display_name, context) -> bool:
-    global divorce_counter
-    
-    if not is_married(user.id):
-        await message.reply_text("❌ Вы не состоите в браке")
-        return True
-    
-    spouse_id = get_spouse(user.id)
-    spouse_name = get_user_display_name(spouse_id)
-    user_name = f"@{user.username}" if user.username else user.first_name
-    
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="✅ Да, хочу развод", callback_data=f"divorce_accept_{user.id}_{spouse_id}_{message.chat.id}"),
-            InlineKeyboardButton(text="❌ Нет, передумай", callback_data=f"divorce_decline_{user.id}_{spouse_id}_{message.chat.id}")
-        ]
-    ])
-    
-    divorce_counter += 1
-    requests = load_divorce_requests()
-    requests[str(divorce_counter)] = {
-        "from": user.id,
-        "to": spouse_id,
-        "from_name": user_name,
-        "to_name": spouse_name,
-        "chat_id": message.chat.id,
-        "message_id": None
+    // Функция для отображения DEV-консоли только админу
+    function initDevConsole() {
+        const devBtn = document.getElementById("devConsoleBtn");
+        if (isUserAdmin()) {
+            devBtn.classList.add("visible");
+            devBtn.style.display = "block";
+            console.log("🔓 DEV-консоль активирована для администратора");
+        } else {
+            devBtn.classList.remove("visible");
+            devBtn.style.display = "none";
+            // Блокируем возможность вызвать консоль через window
+            window.openDevConsole = function() { alert("⛔ Доступ запрещён"); };
+        }
     }
-    save_divorce_requests(requests)
     
-    sent_msg = await message.reply_text(
-        f"⚠️ {user_name} хочет расторгнуть брак с {spouse_name}.\n\n"
-        f"{spouse_name}, вы согласны на развод?\n📅 Запрос действителен 120 секунд.",
-        reply_markup=keyboard
-    )
+    // ========== СИСТЕМА АВТООБНОВЛЕНИЙ ==========
+    (function setupAutoUpdate() {
+        const CHECK_INTERVAL = 1000;
+        let updateNotificationShown = false;
+        
+        function checkForUpdates() {
+            fetch(window.location.href + "?v=" + Date.now(), {
+                method: 'HEAD',
+                cache: 'no-store'
+            }).then(response => {
+                const serverEtag = response.headers.get('ETag') || response.headers.get('Last-Modified') || Date.now().toString();
+                const storedEtag = localStorage.getItem('game_etag');
+                if (storedEtag && storedEtag !== serverEtag && !updateNotificationShown) {
+                    updateNotificationShown = true;
+                    showUpdateNotification();
+                }
+                localStorage.setItem('game_etag', serverEtag);
+            }).catch(e => console.log("Update check failed:", e));
+        }
+        
+        function showUpdateNotification() {
+            const notifyDiv = document.createElement('div');
+            notifyDiv.className = 'update-notify';
+            notifyDiv.innerHTML = `
+                🔄 Доступна новая версия игры!
+                <button id="updateNowBtn">Обновить сейчас</button>
+                <button id="updateLaterBtn">Позже</button>
+            `;
+            document.body.appendChild(notifyDiv);
+            document.getElementById('updateNowBtn').onclick = () => {
+                localStorage.removeItem('game_etag');
+                location.reload();
+            };
+            document.getElementById('updateLaterBtn').onclick = () => notifyDiv.remove();
+        }
+        
+        setInterval(checkForUpdates, CHECK_INTERVAL);
+        checkForUpdates();
+    })();
     
-    requests[str(divorce_counter)]["message_id"] = sent_msg.message_id
-    save_divorce_requests(requests)
+    // ========== ОСТАЛЬНОЙ КОД ИГРЫ ==========
+    const baseNpPrice = { materials:5, weapons:10, ranged:50, armor:20, food:30, potions:40 };
+    const materialChain = ["grass","wood","stone","iron","gold","diamond","nerite","mithril","adamant","aether"];
+    const weaponChain = ["sword","greatsword","spear","axe","dagger","battle_axe","claymore","halberd","excalibur","legendary_blade"];
+    const rangedChain = ["shortbow","longbow","hunting_bow","recurve_bow","compound_bow","wind_bow","eagle_bow","shadow_bow","dragon_bow","celestial_bow"];
+    const armorChain = ["leather","gambeson","chainmail","plate","chestplate","leggings","helmet","boots","pauldrons","legendary_armor"];
+    const foodChain = ["berry","bread","cheese","meat","fish","soup","cake","pie","elven_bread","ambrosia"];
+    const potionChain = ["vial","weak_potion","medium_potion","strong_potion","elixir","poison","stamina","invisibility","healing","immortality"];
     
-    async def auto_cancel():
-        await asyncio.sleep(120)
-        requests = load_divorce_requests()
-        if str(divorce_counter) in requests:
-            try:
-                await sent_msg.edit_text(f"⌛ Время на ответ истекло. Запрос на развод отменён.")
-            except:
-                pass
-            requests.pop(str(divorce_counter), None)
-            save_divorce_requests(requests)
+    const itemNames = {
+        "grass":"🌱 Трава","wood":"🪵 Бревно","stone":"🪨 Камень","iron":"🔩 Железо","gold":"👑 Золото","diamond":"💎 Алмаз","nerite":"⚜️ Нефрит","mithril":"✨ Мифрил","adamant":"🛡️ Адамантий","aether":"🌀 Эфир",
+        "sword":"⚔️ Меч","greatsword":"🗡️ Двуручник","spear":"🔱 Копьё","axe":"🪓 Секира","dagger":"🔪 Кинжал","battle_axe":"⚔️ Боевой топор","claymore":"🗡️ Клеймор","halberd":"🔱 Алебарда","excalibur":"✨ Экскалибур","legendary_blade":"🌟 Легендарный клинок",
+        "shortbow":"🏹 Короткий лук","longbow":"🏹 Длинный лук","hunting_bow":"🏹 Охотничий","recurve_bow":"🏹 Рекурсивный","compound_bow":"🏹 Блочный","wind_bow":"🌪️ Ветровой","eagle_bow":"🦅 Орлиный","shadow_bow":"🌑 Теневой","dragon_bow":"🐉 Драконий","celestial_bow":"✨ Небесный",
+        "leather":"🧥 Кожа","gambeson":"🧵 Стёганый","chainmail":"🔗 Кольчуга","plate":"🛡️ Латы","chestplate":"❤️ Нагрудник","leggings":"👖 Поножи","helmet":"⛑️ Шлем","boots":"👢 Сапоги","pauldrons":"🏅 Наплечники","legendary_armor":"✨ Легендарный доспех",
+        "berry":"🍓 Ягоды","bread":"🍞 Хлеб","cheese":"🧀 Сыр","meat":"🍗 Мясо","fish":"🐟 Рыба","soup":"🥣 Суп","cake":"🍰 Торт","pie":"🥧 Пирог","elven_bread":"🌿 Эльфийский","ambrosia":"✨ Амброзия",
+        "vial":"🧴 Бутылёк","weak_potion":"🧪 Малое","medium_potion":"🧪 Среднее","strong_potion":"⚡ Сильное","elixir":"✨ Эликсир","poison":"☠️ Яд","stamina":"💪 Бодрящее","invisibility":"👻 Невидимость","healing":"💚 Лечение","immortality":"🌟 Бессмертие"
+    };
     
-    asyncio.create_task(auto_cancel())
-    return True
+    function getItemCategory(item) {
+        if(materialChain.includes(item)) return { chain: materialChain, basePrice: baseNpPrice.materials, type: 'materials' };
+        if(weaponChain.includes(item)) return { chain: weaponChain, basePrice: baseNpPrice.weapons, type: 'weapons' };
+        if(rangedChain.includes(item)) return { chain: rangedChain, basePrice: baseNpPrice.ranged, type: 'ranged' };
+        if(armorChain.includes(item)) return { chain: armorChain, basePrice: baseNpPrice.armor, type: 'armor' };
+        if(foodChain.includes(item)) return { chain: foodChain, basePrice: baseNpPrice.food, type: 'food' };
+        if(potionChain.includes(item)) return { chain: potionChain, basePrice: baseNpPrice.potions, type: 'potions' };
+        return null;
+    }
+    function getItemRealPrice(item) { let cat = getItemCategory(item); if(!cat) return 5; return cat.basePrice * Math.pow(2, cat.chain.indexOf(item)); }
+    function getItemSellPrice(item) { return Math.floor(getItemRealPrice(item) / 2); }
+    function getCraftFrom(item) { let cat = getItemCategory(item); if(!cat) return "?"; let idx = cat.chain.indexOf(item); if(idx === 0) return "Начальный"; return `${Math.pow(2, idx)} × ${itemNames[cat.chain[0]]}`; }
+    function getMergeResult(item) { let cat = getItemCategory(item); if(cat){ let i = cat.chain.indexOf(item); if(i < cat.chain.length-1) return cat.chain[i+1]; } return null; }
+    function getItemTier(item, chain) { return chain.indexOf(item)+1; }
+    function getEnchantCost(level) { return 500 + (level * 500); }
+    function getRefundCost(level) { return Math.floor(getEnchantCost(level) * 0.8); }
+    
+    let unlocked = { weapons:false, armor:false, food:false, potions:false };
+    let unlocksCount = { weapons:0, armor:0, food:0, potions:0 };
+    let coins = 200, energy = 0;
+    let grid = Array(20).fill(null);
+    let selectedIndex = null;
+    let rebirthLevel = 0;
+    let enchantWeapons = 0, enchantRanged = 0;
+    let equippedWeapon = null, equippedRanged = null;
+    let discoveredItems = new Set();
+    let metNpcs = new Set();
+    let storage = [null, null, null];
+    let monsterHp = 10000;
+    let chargeTimeout = null, isCharging = false, chargedAttackReady = false;
+    let selectedEquipmentSlot = null;
+    let rangedUnlocked = false;
+    let usedPromoCodes = new Set();
+    const BONUS_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+    let lastBonusTime = 0;
+    
+    const backgrounds = [
+        {id:"black",name:"⬛ Чёрный",price:0}, {id:"white",name:"⬜ Белый",price:0},
+        {id:"red",name:"🔴 Красный",price:1000}, {id:"orange",name:"🟠 Оранжевый",price:1000},
+        {id:"yellow",name:"🟡 Жёлтый",price:1000}, {id:"green",name:"🟢 Зелёный",price:1000},
+        {id:"cyan",name:"🔵 Голубой",price:1000}, {id:"blue",name:"💙 Синий",price:1000},
+        {id:"purple",name:"🟣 Фиолетовый",price:1000}, {id:"stars",name:"✨ Звёздный",price:1000},
+        {id:"fire",name:"🔥 Огненный",price:1000}, {id:"forest",name:"🌲 Лесной",price:1000},
+        {id:"castle",name:"🏰 Замковый",price:1000}, {id:"volcano",name:"🌋 Вулкан",price:1000},
+        {id:"ice",name:"❄️ Ледяной",price:1000}, {id:"dark",name:"🌑 Тьма",price:1000},
+        {id:"ocean",name:"🌊 Океан",price:1000}, {id:"desert",name:"🏜️ Пустыня",price:1000},
+        {id:"sunset",name:"🌅 Закат",price:1000}, {id:"meadow",name:"🌿 Поляна",price:1000}
+    ];
+    let ownedBgs=["black","white"]; let currentBg="black";
+    
+    function loadPromoState() { let saved = localStorage.getItem("usedPromoCodes"); if(saved) usedPromoCodes = new Set(JSON.parse(saved)); }
+    function savePromoState() { localStorage.setItem("usedPromoCodes", JSON.stringify(Array.from(usedPromoCodes))); }
+    function loadBonusState() { let saved = localStorage.getItem("lastBonusTime"); if(saved) lastBonusTime = parseInt(saved); }
+    function saveBonusState() { localStorage.setItem("lastBonusTime", lastBonusTime); }
+    function resetBonusCooldown() { lastBonusTime = 0; saveBonusState(); alert("Кулдаун ежедневного бонуса сброшен!"); }
+    function canGetBonus() { return Date.now() - lastBonusTime >= BONUS_COOLDOWN_MS; }
+    
+    function claimDailyBonus() {
+        if(canGetBonus()) {
+            coins += 50;
+            lastBonusTime = Date.now();
+            saveBonusState();
+            updateUI();
+            saveGame();
+            alert('✅ Вы получили 50 монет! Следующий бонус через 24 часа.');
+        } else {
+            let remaining = BONUS_COOLDOWN_MS - (Date.now() - lastBonusTime);
+            let hours = Math.floor(remaining / (60 * 60 * 1000));
+            let minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+            alert(`⏳ Бонус уже получен! Следующий через ${hours} ч ${minutes} мин.`);
+        }
+    }
+    
+    function applyPromo() { 
+        let code = document.getElementById("promoCode").value.trim(); 
+        if(usedPromoCodes.has(code)) { 
+            alert("Этот промокод уже был использован!"); 
+            return; 
+        }
+        let reward = 0;
+        let promoName = "";
+        if(code === "SunnyGame") { reward = 1000; promoName = "SunnyGame"; }
+        else if(code === "EnnVel") { reward = 1000; promoName = "EnnVel"; }
+        else if(code === "Kilьka27") { reward = 1000; promoName = "Kilьka27"; }
+        else if(code === "kirka") { reward = 1000; promoName = "kirka"; }
+        if(reward > 0) {
+            coins += reward;
+            usedPromoCodes.add(code);
+            savePromoState();
+            updateUI(); 
+            saveGame(); 
+            alert(`Промокод ${promoName} активирован! +${reward} монет`); 
+            document.getElementById("promoCode").value = ""; 
+        } else { 
+            alert("Неверный промокод"); 
+        } 
+    }
+    
+    function discoverItem(item) { if(item && !discoveredItems.has(item)) { discoveredItems.add(item); renderCollection(); } }
+    function addToGridAndDiscover(itemId) { discoverItem(itemId); let empty = grid.findIndex(c => c === null); if(empty === -1) return false; grid[empty] = itemId; renderGrid(); return true; }
+    function recalcDamage() { return 1 + (enchantWeapons + enchantRanged) + (equippedWeapon ? getItemTier(equippedWeapon, weaponChain) : 0) + (equippedRanged ? getItemTier(equippedRanged, rangedChain) : 0); }
+    
+    function attackMonster(normal=true) { 
+        let dmg = recalcDamage(); 
+        if(!normal && chargedAttackReady && equippedRanged) { dmg += 5; chargedAttackReady = false; } 
+        monsterHp = Math.max(0, monsterHp - dmg); 
+        document.getElementById("monsterHp").innerText = monsterHp; 
+        if(monsterHp === 0){ coins += 100; updateUI(); monsterHp = 10000; document.getElementById("monsterHp").innerText = 10000; alert("Вы убили монстра! +100 монет"); } 
+        updateUI(); saveGame(); 
+    }
+    function startCharge() { if(!equippedRanged) { attackMonster(true); return; } isCharging = true; const btn = document.getElementById("attackBtn"); btn.classList.remove("charging"); if(chargeTimeout) clearTimeout(chargeTimeout); chargeTimeout = setTimeout(() => { chargedAttackReady = true; btn.classList.add("charging"); }, 1000); }
+    function endCharge() { if(chargeTimeout) clearTimeout(chargeTimeout); const btn = document.getElementById("attackBtn"); btn.classList.remove("charging"); if(isCharging) { if(chargedAttackReady) attackMonster(false); else attackMonster(true); } isCharging = false; chargedAttackReady = false; }
 
-async def cmd_my_marriage(message, user, display_name, context) -> bool:
-    if not is_married(user.id):
-        await message.reply_text("❌ Вы не состоите в браке\n\nЧтобы пожениться, ответьте на сообщение пользователя и напишите 'брак'")
-        return True
-    
-    marriage = get_marriage_info(user.id)
-    spouse_id = marriage["spouse_id"]
-    date_str = marriage["date"]
-    duration = calculate_marriage_duration(marriage["timestamp"])
-    
-    spouse_name = get_user_display_name(spouse_id)
-    
-    await message.reply_text(
-        f"💍 *Ваш брак*\n\n"
-        f"👰/🤵 Супруг(а): {spouse_name}\n"
-        f"📅 Дата регистрации: {date_str}\n"
-        f"⏱️ Длительность: {duration}\n\n"
-        f"💔 Для развода напишите 'развод'",
-        parse_mode="Markdown"
-    )
-    return True
+    const npcNames = ["Северус Снейп","Арагорн","Геральт","Эльза","Торин","Сэм","Бриенна","Добби","Мерлин","Красная Шапочка","Да Винчи","Рипли","Джон Сноу","Лара Крофт","Шрек","Фродо","Гэндальф","Клеопатра","Зевс","Артур Морган"];
+    let npcList = [], currentNpc = null;
+    let npcWishlistsLocked = false;
+    function getAvailableItemsForWish() { let items = [...materialChain]; if(unlocked.weapons) items.push(...weaponChain); if(rangedUnlocked) items.push(...rangedChain); if(unlocked.armor) items.push(...armorChain); if(unlocked.food) items.push(...foodChain); if(unlocked.potions) items.push(...potionChain); return items; }
+    function generateWishlistBalanced() {
+        let pool = getAvailableItemsForWish();
+        if(pool.length === 0) return ["grass", "grass", "grass"];
+        let maxTotalCost = coins;
+        let bestWishlist = null;
+        let bestTotal = 0;
+        for(let attempt = 0; attempt < 200; attempt++) {
+            let candidate = [];
+            for(let i = 0; i < 3; i++) {
+                let randomItem = pool[Math.floor(Math.random() * pool.length)];
+                candidate.push(randomItem);
+            }
+            let total = candidate.reduce((sum, item) => sum + getItemRealPrice(item), 0);
+            if(total <= maxTotalCost && total > bestTotal) {
+                bestTotal = total;
+                bestWishlist = [...candidate];
+            }
+            if(bestTotal === maxTotalCost) break;
+        }
+        if(bestWishlist === null) {
+            let sortedByPrice = [...pool].sort((a,b) => getItemRealPrice(a) - getItemRealPrice(b));
+            bestWishlist = [sortedByPrice[0], sortedByPrice[0], sortedByPrice[0]];
+        }
+        return bestWishlist;
+    }
+    function initNPC() { npcList = npcNames.map((name,idx)=>({ id:idx, name:name, wishlist:generateWishlistBalanced() })); currentNpc = npcList[0]; renderNPC(); }
+    function nextNPC() { let idx = npcList.findIndex(n=>n===currentNpc); let next = (idx+1)%npcList.length; currentNpc = npcList[next]; currentNpc.wishlist = generateWishlistBalanced(); metNpcs.add(currentNpc.name); renderCollection(); renderNPC(); }
+    function refreshNPC() { if(coins>=10){ coins-=10; nextNPC(); updateUI(); saveGame(); alert("Продавец обновлён!"); } else alert("Нужно 10 монет"); }
+    function updateAllNpcWishlists() { if(!npcWishlistsLocked) { for(let npc of npcList) { npc.wishlist = generateWishlistBalanced(); } if(currentNpc) renderNPC(); } }
+    function lockNpcWishlists(lock) { npcWishlistsLocked = lock; }
+    function calculateNpcSellPrice(wishlist) { let totalCraftCost = 0; for(let item of wishlist) { totalCraftCost += getItemRealPrice(item); } return Math.floor(totalCraftCost * 1.3); }
+    function sellToNPC() { 
+        if(!currentNpc) return; 
+        let wishlist = currentNpc.wishlist; 
+        let foundItems = []; 
+        let foundIndexes = []; 
+        for(let i=0;i<grid.length;i++){ 
+            if(grid[i] && wishlist.includes(grid[i]) && !foundItems.includes(grid[i])){ 
+                foundItems.push(grid[i]); 
+                foundIndexes.push(i); 
+            } 
+        } 
+        if(foundItems.length < wishlist.length){ 
+            alert(`Для продажи нужны все 3 предмета!\nНужно: ${wishlist.map(w=>itemNames[w]).join(", ")}`); 
+            return; 
+        } 
+        let totalPrice = calculateNpcSellPrice(wishlist);
+        for(let idx of foundIndexes){ grid[idx] = null; } 
+        coins += totalPrice; 
+        selectedIndex = null; 
+        renderGrid(); 
+        updateUI(); 
+        lockNpcWishlists(false);
+        updateAllNpcWishlists();
+        nextNPC(); 
+        saveGame(); 
+        alert(`Продано! Получено ${totalPrice}🪙`); 
+    }
+    function sellSelectedItem() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let item = grid[selectedIndex]; let price = getItemSellPrice(item); if(confirm(`Продать ${itemNames[item]} за ${price} монет?`)) { coins += price; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); updateUI(); saveGame(); alert(`Продано за ${price}🪙`); } } else alert("Выберите предмет в сетке"); }
+    function addToStorage() { if(selectedIndex !== null && grid[selectedIndex] !== null) { let emptyIdx = storage.findIndex(s => s === null); if(emptyIdx === -1) alert("Хранилище заполнено (3/3)"); else { storage[emptyIdx] = grid[selectedIndex]; grid[selectedIndex] = null; selectedIndex = null; renderGrid(); renderStorage(); saveGame(); } } else alert("Выберите предмет в сетке"); }
+    function removeFromStorage(idx) { if(storage[idx] !== null) { if(addToGridAndDiscover(storage[idx])) { storage[idx] = null; renderStorage(); saveGame(); } else alert("Нет места в сетке"); } }
+    function expandStorage() { if(coins>=1000 && storage.length < 10){ coins-=1000; storage.push(null); renderStorage(); updateUI(); saveGame(); alert("Ячейка хранилища добавлена!"); } else if(storage.length>=10) alert("Максимум 10 ячеек"); else alert("Нужно 1000 монет"); }
 
-async def cmd_all_marriages(message, user, display_name, context) -> bool:
-    marriages = load_marriages()
-    
-    if not marriages:
-        await message.reply_text("📋 В чате пока нет ни одного брака.")
-        return True
-    
-    seen_pairs = set()
-    marriage_list = "📋 *Список всех браков:*\n\n"
-    
-    for user_id_str, marriage in marriages.items():
-        user_id = int(user_id_str)
-        spouse_id = marriage["spouse_id"]
-        
-        pair_key = f"{min(user_id, spouse_id)}_{max(user_id, spouse_id)}"
-        if pair_key in seen_pairs:
-            continue
-        seen_pairs.add(pair_key)
-        
-        user_name = get_user_display_name(user_id)
-        spouse_name = get_user_display_name(spouse_id)
-        
-        duration = calculate_marriage_duration(marriage["timestamp"])
-        marriage_list += f"• {user_name} 💍 {spouse_name}\n   📅 С {marriage['date']} ⏱️ {duration}\n\n"
-    
-    if len(marriage_list) > 4000:
-        marriage_list = marriage_list[:4000] + "\n\n... и ещё несколько браков"
-    
-    await message.reply_text(marriage_list, parse_mode="Markdown")
-    return True
+    function craftBase(cost, item, unlockedFlag, needRebirth=false){ 
+        if(needRebirth && !rangedUnlocked){ alert("Луки доступны только после перерождения!"); return; } 
+        if(!unlockedFlag){ alert("Категория не разблокирована"); return; } 
+        if(coins>=cost){ 
+            lockNpcWishlists(true);
+            coins-=cost; 
+            if(addToGridAndDiscover(item)) { 
+                updateUI(); 
+                saveGame(); 
+            } 
+            lockNpcWishlists(false);
+        } else alert(`Нужно ${cost} монет`); 
+    }
+    function moveItem(from, to) { if(grid[from] === null) return false; if(grid[to] === null) { grid[to] = grid[from]; grid[from] = null; renderGrid(); saveGame(); return true; } return false; }
+    function clickCell(idx){ if(grid[idx] === null) return; if(selectedIndex === null){ selectedIndex = idx; renderGrid(); return; } let first = selectedIndex, second = idx; selectedIndex = null; if(first === second){ renderGrid(); return; } let item1 = grid[first], item2 = grid[second]; if(item1 && item2 && item1 === item2 && getMergeResult(item1)) { let next = getMergeResult(item1); lockNpcWishlists(true); grid[second] = next; grid[first] = null; discoverItem(next); coins += 3; updateUI(); saveGame(); lockNpcWishlists(false); renderGrid(); } else { moveItem(first, second); } }
+    function showItemInfo(item) { let cat = getItemCategory(item); let tier = cat.chain.indexOf(item); alert(`🔍 ${itemNames[item]}\nСоединение: ${tier+1}\nСостоит из: ${Math.pow(2, tier)} × ${itemNames[cat.chain[0]]}\nСтоимость крафта: ${getItemRealPrice(item)}🪙\nЦена продажи: ${getItemSellPrice(item)}🪙\nЧары: ${(cat.type === 'weapons' ? enchantWeapons : (cat.type === 'ranged' ? enchantRanged : 0))}/10`); }
+    function equipFromGrid(slotType, chain, elementId) { if(selectedIndex === null || grid[selectedIndex] === null) { if(slotType === 'weapon' && equippedWeapon) showItemInfo(equippedWeapon); else if(slotType === 'ranged' && equippedRanged) showItemInfo(equippedRanged); else alert("Выберите предмет в сетке"); return; } if(!chain.includes(grid[selectedIndex])) { alert("Этот предмет нельзя экипировать в этот слот"); return; } let itemToEquip = grid[selectedIndex]; if(slotType === 'weapon') { if(equippedWeapon) addToGridAndDiscover(equippedWeapon); equippedWeapon = itemToEquip; alert(`⚔️ ${itemNames[itemToEquip]} экипирован в оружие`); } else { if(equippedRanged) addToGridAndDiscover(equippedRanged); equippedRanged = itemToEquip; alert(`🏹 ${itemNames[itemToEquip]} экипирован в луки`); } grid[selectedIndex] = null; selectedIndex = null; renderGrid(); updateUI(); document.getElementById(elementId).innerHTML = itemNames[itemToEquip] + ' <button class="unequip-btn" onclick="window.unequipItem(\'' + slotType + '\')">Снять</button>'; saveGame(); }
+    function unequipItem(slotType) { let item = null; if(slotType === 'weapon' && equippedWeapon) { item = equippedWeapon; if(addToGridAndDiscover(equippedWeapon)) { equippedWeapon = null; alert(`Снято: ${itemNames[item]}`); } else { alert("Нет места в сетке"); return; } } else if(slotType === 'ranged' && equippedRanged) { item = equippedRanged; if(addToGridAndDiscover(equippedRanged)) { equippedRanged = null; alert(`Снято: ${itemNames[item]}`); } else { alert("Нет места в сетке"); return; } } else { alert("Нет предмета для снятия"); return; } document.getElementById(slotType === 'weapon' ? 'equippedWeapon' : 'equippedRanged').innerHTML = "— пусто —"; renderGrid(); updateUI(); saveGame(); }
+    window.unequipItem = unequipItem;
+    function selectEquipmentSlot(slotType) { selectedEquipmentSlot = slotType; document.querySelectorAll('.inventory-slot').forEach(el => el.style.border = '2px solid #c7a15e'); if(slotType === 'weapon') document.getElementById('weaponSlot').style.border = '4px solid #ffd966'; if(slotType === 'ranged') document.getElementById('rangedSlot').style.border = '4px solid #ffd966'; if(slotType === 'weapon' && equippedWeapon) showItemInfo(equippedWeapon); else if(slotType === 'ranged' && equippedRanged) showItemInfo(equippedRanged); else if(slotType === 'weapon' && !equippedWeapon) alert("Слот оружия пуст"); else if(slotType === 'ranged' && !equippedRanged) alert("Слот луков пуст"); }
+    function applyEnchant(type) { if(rebirthLevel===0){ alert("Переродитесь для чарок (1 млн монет)"); return; } if(type === 'weapon' && equippedWeapon === null){ alert("Сначала экипируйте оружие в слот!"); return; } if(type === 'ranged' && equippedRanged === null){ alert("Сначала экипируйте лук в слот!"); return; } let currentLevel = (type === 'weapon') ? enchantWeapons : enchantRanged; if(currentLevel >= 10) { alert("Максимум 10 чарок на этот предмет!"); return; } let cost = getEnchantCost(currentLevel); if(coins >= cost) { if(type === 'weapon') enchantWeapons++; else enchantRanged++; coins -= cost; updateUI(); renderEnchantShop(); saveGame(); alert(`Чара на ${type === 'weapon' ? 'оружие' : 'луки'} активирована! Урон +1. Уровень: ${currentLevel+1}/10`); } else alert(`Нужно ${cost} монет`); }
+    function refundEnchant(type) { let currentLevel = (type === 'weapon') ? enchantWeapons : enchantRanged; if(currentLevel === 0) { alert("Нет чарок для снятия"); return; } let refund = getRefundCost(currentLevel - 1); if(type === 'weapon') enchantWeapons--; else enchantRanged--; coins += refund; updateUI(); renderEnchantShop(); saveGame(); alert(`Чара снята! Возвращено ${refund} монет (80% стоимости)`); }
+    function renderEnchantShop() { let cont = document.getElementById("enchantShopContainer"); if(!cont) return; if(rebirthLevel===0){ cont.innerHTML="<div class='badge'>🔒 Переродитесь (1M монет)</div>"; return; } cont.innerHTML = `<div><b>⚔️ ОРУЖИЕ</b> (${enchantWeapons}/10) ${enchantWeapons<10 ? `<button class="enchant-btn" onclick="window.applyEnchant('weapon')">Купить чару ${getEnchantCost(enchantWeapons)}🪙 (+1 урон)</button>` : '✅ MAX'}</div><div><b>🏹 ЛУКИ</b> (${enchantRanged}/10) ${enchantRanged<10 ? `<button class="enchant-btn" onclick="window.applyEnchant('ranged')">Купить чару ${getEnchantCost(enchantRanged)}🪙 (+1 урон)</button>` : '✅ MAX'}</div><div><button class="refund-btn" onclick="window.refundEnchant('weapon')">Снять последнюю чару с оружия (+${enchantWeapons>0?getRefundCost(enchantWeapons-1):0}🪙)</button><button class="refund-btn" onclick="window.refundEnchant('ranged')">Снять последнюю чару с луков (+${enchantRanged>0?getRefundCost(enchantRanged-1):0}🪙)</button></div>`; }
+    window.applyEnchant = applyEnchant; window.refundEnchant = refundEnchant;
+    function unlockCategory(cat, display){ let cost=500+(unlocksCount[cat]*150); if(unlocked[cat]){ alert("Уже открыто"); return; } if(coins>=cost){ coins-=cost; unlocked[cat]=true; unlocksCount[cat]++; updateCraftBtns(); renderShop(); updateUI(); updateAllNpcWishlists(); alert(`${display} разблокирована!`); saveGame();} else alert(`Нужно ${cost} монет`); }
+    function updateCraftBtns(){ 
+        document.getElementById("craftWeaponBtn").disabled=!unlocked.weapons; 
+        document.getElementById("craftArmorBtn").disabled=!unlocked.armor; 
+        document.getElementById("craftFoodBtn").disabled=!unlocked.food; 
+        document.getElementById("craftPotionBtn").disabled=!unlocked.potions; 
+        document.getElementById("craftRangedWeaponBtn").disabled=!rangedUnlocked; 
+        if(rangedUnlocked) {
+            document.getElementById("craftRangedWeaponBtn").innerHTML = "🏹 Луки -50";
+            document.getElementById("craftRangedWeaponBtn").style.background = "#ecd67a";
+            document.getElementById("craftRangedWeaponBtn").style.color = "#2b381c";
+        } else {
+            document.getElementById("craftRangedWeaponBtn").innerHTML = "🏹 Луки (после перерождения)";
+            document.getElementById("craftRangedWeaponBtn").style.background = "#555";
+            document.getElementById("craftRangedWeaponBtn").style.color = "#aaa";
+        }
+    }
+    function renderShop(){ let cont=document.getElementById("shopUnlockList"); cont.innerHTML=""; let cats=[{id:"weapons",name:"⚔️ ОРУЖИЕ"},{id:"armor",name:"🛡️ БРОНЯ"},{id:"food",name:"🍇 ЕДА"},{id:"potions",name:"🧪 ЗЕЛЬЯ"}]; for(let c of cats){ let isUnlock=unlocked[c.id]; let cost=500+(unlocksCount[c.id]*150); let btn=document.createElement("button"); btn.className="unlock-btn"+(isUnlock?" unlocked":""); btn.innerHTML=`<span>${c.name}</span><span>${isUnlock?"✅":cost+"🪙"}</span>`; if(!isUnlock) btn.onclick=()=>unlockCategory(c.id,c.name); else btn.disabled=true; cont.appendChild(btn); } 
+        let rangedBtn = document.createElement("button"); 
+        if(rangedUnlocked) { 
+            rangedBtn.className="unlock-btn unlocked"; 
+            rangedBtn.style.background = "#4f6b3e";
+            rangedBtn.style.color = "#ffefb9";
+            rangedBtn.innerHTML=`<span>🏹 ЛУКИ</span><span>✅</span>`; 
+            rangedBtn.disabled=true; 
+        } 
+        else if(rebirthLevel===0) { 
+            rangedBtn.className="unlock-btn"; 
+            rangedBtn.innerHTML=`<span>🏹 ЛУКИ</span><span>🔒 переродитесь</span>`; 
+            rangedBtn.disabled=true; 
+        } 
+        else { 
+            rangedBtn.className="unlock-btn"; 
+            rangedBtn.innerHTML=`<span>🏹 ЛУКИ</span><span>500🪙</span>`; 
+            rangedBtn.onclick=()=>{ if(coins>=500 && rebirthLevel>=1 && !rangedUnlocked){ coins-=500; rangedUnlocked=true; updateCraftBtns(); renderShop(); updateUI(); updateAllNpcWishlists(); saveGame(); alert("Луки разблокированы!"); } else alert("Нужно 500 монет и перерождение"); }; 
+        } 
+        cont.appendChild(rangedBtn); 
+    }
+    function renderGrid(){ let cont=document.getElementById("grid"); cont.innerHTML=""; for(let i=0;i<grid.length;i++){ let key=grid[i]; let div=document.createElement("div"); div.className="cell"; if(selectedIndex===i) div.classList.add("selected"); div.textContent=key?itemNames[key]:"⬚"; if(!key) div.classList.add("empty"); div.onclick=(idx=>()=>clickCell(idx))(i); cont.appendChild(div); } }
+    function renderStorage(){ let cont=document.getElementById("storageContainer"); cont.innerHTML="<div style='display:flex; flex-wrap:wrap; gap:6px;'>"; for(let i=0;i<storage.length;i++){ let item=storage[i]; cont.innerHTML+=`<div class="storage-slot" style="flex:1; min-width:80px;"><div class="storage-item">${item?itemNames[item]:"⬚ пусто"}</div>${item?`<button class="storage-remove" onclick="window.removeFromStorage(${i})">✖</button>`:""}</div>`; } cont.innerHTML+="</div><button onclick='window.addToStorage()' style='margin-top:4px;'>📦 В хранилище</button>"; } window.addToStorage=addToStorage; window.removeFromStorage=removeFromStorage;
+    function renderNPC(){ let cont=document.getElementById("npcSingleContainer"); if(!currentNpc) return; let wishText=currentNpc.wishlist.map(w=>itemNames[w]||w).join(", "); let totalPrice = calculateNpcSellPrice(currentNpc.wishlist); cont.innerHTML=`<div class="npc-name">🧙 ${currentNpc.name}</div><div class="npc-wishlist">📋 ХОЧЕТ КУПИТЬ:<br> ${wishText}</div><div class="badge" style="margin:4px 0;">💰 Предлагает: ${totalPrice}🪙</div><button class="sell-to-npc" id="sellToNpcBtn">💰 ПРОДАТЬ ВСЕ</button>`; document.getElementById("sellToNpcBtn")?.addEventListener("click",sellToNPC); }
+    function updateUI(){ document.getElementById("coins").innerText=Math.floor(coins); document.getElementById("energy").innerText=energy; document.getElementById("rebirthWarning").innerHTML=rebirthLevel===0?"⚠️ Перерождение сбросит прогресс (фоны останутся)":""; document.getElementById("enchantBonusInfo").innerHTML=`✨ Чарки: +${enchantWeapons+enchantRanged} урона (всего ${recalcDamage()})`; }
+    function exchangeEnergy(){ if(energy>=10){ energy-=10; coins+=10; updateUI(); saveGame(); updateAllNpcWishlists(); } else alert(`Не хватает 10⚡`); }
+    function support() { window.open("https://t.me/SunnySide20_bot", "_blank"); }
 
-async def cmd_marry(message, user, display_name, text, context) -> bool:
-    parts = text.split()
+    function applyBackground(id){ document.body.className=`bg-${id}`; currentBg=id; saveGame(); }
+    function purchaseBg(bg){ if(ownedBgs.includes(bg.id)){ applyBackground(bg.id); return; } if(coins>=bg.price){ coins-=bg.price; ownedBgs.push(bg.id); applyBackground(bg.id); updateUI(); renderBgShop(); saveGame(); } else alert(`Нужно ${bg.price} монет`); }
+    function renderBgShop(){ let cont=document.getElementById("bgShopContainer"); if(!cont) return; cont.innerHTML=""; for(let bg of backgrounds){ let owned=ownedBgs.includes(bg.id); let active=currentBg===bg.id; let btn=document.createElement("div"); btn.className="bg-option"; btn.innerHTML=`${bg.name} ${owned?(active?"✅":"📀"):bg.price+"🪙"}`; btn.onclick=()=>purchaseBg(bg); cont.appendChild(btn); } }
+    function renderCollection() { 
+        let container=document.getElementById("collectionContainer"); if(!container) return;
+        let categories = [
+            {name:"🌾 Материалы", items:materialChain, basePrice:baseNpPrice.materials},
+            {name:"⚔️ Оружие", items:weaponChain, basePrice:baseNpPrice.weapons},
+            {name:"🛡️ Броня", items:armorChain, basePrice:baseNpPrice.armor},
+            {name:"🍇 Еда", items:foodChain, basePrice:baseNpPrice.food},
+            {name:"🧪 Зелья", items:potionChain, basePrice:baseNpPrice.potions},
+            {name:"🏹 Луки", items:rangedChain, basePrice:baseNpPrice.ranged}
+        ];
+        container.innerHTML=""; for(let cat of categories){ let catDiv=document.createElement("div"); catDiv.className="collection-category"; catDiv.innerHTML=`<h4>${cat.name}</h4><div class="collection-grid"></div>`; let gridDiv=catDiv.querySelector(".collection-grid"); for(let item of cat.items){ let unlocked=discoveredItems.has(item); let realPrice = cat.basePrice * Math.pow(2, cat.items.indexOf(item)); let div=document.createElement("div"); div.className=`collection-item ${unlocked?"unlocked":"locked"}`; div.innerHTML=`<div style="font-size:14px;">${itemNames[item]?.split(" ")[0]||"?"}</div><div style="font-size:8px;">${realPrice}🪙</div>`; div.onclick=(e)=>{ alert(`${itemNames[item]}\nКрафтится из: ${getCraftFrom(item)}\nСтоимость крафта: ${realPrice}🪙\nЦена продажи: ${Math.floor(realPrice/2)}🪙`); }; gridDiv.appendChild(div); } container.appendChild(catDiv); } 
+        let metContainer=document.getElementById("metNpcContainer"); metContainer.innerHTML=""; for(let name of metNpcs){ metContainer.innerHTML+=`<span class="badge">${name}</span>`; } if(metNpcs.size===0) metContainer.innerHTML="<span class='badge'>Пока никого</span>"; }
+    function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.clear(); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
+    function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(20).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 500 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlistBalanced(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
+    function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes) }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
+    function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; lastBonusTime=s.lastBonusTime||0; usedPromoCodes=new Set(s.usedPromoCodes||[]); if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); return true; } catch(e){ return false; } }
     
-    if len(parts) >= 3:
-        username1 = parts[1].replace("@", "")
-        username2 = parts[2].replace("@", "")
+    // ========== КОНСОЛЬ (ТОЛЬКО ДЛЯ АДМИНА) ==========
+    function openDevConsole() {
+        if (!isUserAdmin()) {
+            alert("⛔ Доступ запрещён. Вы не являетесь администратором.");
+            return;
+        }
         
-        user1_id = None
-        user2_id = None
-        user1_name = username1
-        user2_name = username2
+        let rusToEng = {};
+        for (let [eng, rus] of Object.entries(itemNames)) { let cleanRus = rus.replace(/[^\w\sа-яА-ЯёЁ]/g, '').trim(); rusToEng[cleanRus.toLowerCase()] = eng; rusToEng[rus.toLowerCase()] = eng; }
+        const synonyms = { "трава":"grass","бревно":"wood","камень":"stone","железо":"iron","золото":"gold","алмаз":"diamond","меч":"sword","лук":"shortbow","кожа":"leather","ягоды":"berry","бутылёк":"vial" };
+        for (let [rusName, engKey] of Object.entries(synonyms)) rusToEng[rusName.toLowerCase()] = engKey;
         
-        try:
-            async for member in context.bot.get_chat_administrators(message.chat_id):
-                if member.user.username == username1:
-                    user1_id = member.user.id
-                    user1_name = f"@{member.user.username}" if member.user.username else member.user.first_name
-                if member.user.username == username2:
-                    user2_id = member.user.id
-                    user2_name = f"@{member.user.username}" if member.user.username else member.user.first_name
-        except:
-            pass
+        function findItemByRussianName(russianName) { if(!russianName) return null; let search=russianName.toLowerCase().trim(); if(rusToEng[search]) return rusToEng[search]; for(let [eng,rus] of Object.entries(itemNames)){ if(rus.toLowerCase().includes(search)) return eng; } return null; }
+        function findBackgroundByName(name) {
+            const search = name.toLowerCase().trim();
+            for(let bg of backgrounds) {
+                const bgName = bg.name.toLowerCase().replace(/[⬛⬜🔴🟠🟡🟢🔵💙🟣✨🔥🌲🏰🌋❄️🌑🌊🏜️🌅🌿]/g, '').trim();
+                if(bgName === search || bg.name.toLowerCase().includes(search)) return bg;
+                if(bg.id.toLowerCase() === search) return bg;
+            }
+            return null;
+        }
         
-        if not user1_id or not user2_id:
-            for uid, info in users_db.items():
-                if info.get("username") == username1:
-                    user1_id = uid
-                    user1_name = f"@{username1}" if info.get('username') else info.get("name", username1)
-                if info.get("username") == username2:
-                    user2_id = uid
-                    user2_name = f"@{username2}" if info.get('username') else info.get("name", username2)
+        let cmd = prompt("🔧 КОНСОЛЬ АДМИНИСТРАТОРА\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун\nResetBalance - сбросить баланс (как новая игра)");
+        if(!cmd) return;
+        let lowerCmd=cmd.toLowerCase();
         
-        if not user1_id or not user2_id:
-            await message.reply_text("❌ Не удалось найти одного из пользователей. Убедитесь, что вы правильно написали юзернеймы.")
-            return True
-        
-        if user1_id == user2_id:
-            await message.reply_text("❌ Нельзя поженить пользователя с самим собой!")
-            return True
-        
-        if is_married(user1_id):
-            await message.reply_text(f"❌ {user1_name} уже состоит в браке!")
-            return True
-        
-        if is_married(user2_id):
-            await message.reply_text(f"❌ {user2_name} уже состоит в браке!")
-            return True
-        
-        create_marriage(user1_id, user2_id)
-        
-        await message.reply_text(
-            f"💍 *Пара поженилась!*\n\n"
-            f"{user1_name} 💍 {user2_name}\n\n"
-            f"📅 Дата брака: {datetime.now().strftime('%d.%m.%Y')}\n"
-            f"👑 Инициатор: {display_name}",
-            parse_mode="Markdown"
-        )
-        return True
+        if(lowerCmd.startsWith("money ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ coins += amount; updateUI(); saveGame(); updateAllNpcWishlists(); alert(`+${amount}🪙`); } else alert("Неверная сумма"); }
+        else if(lowerCmd.startsWith("give ")){ 
+            let giveArg = cmd.substring(5).trim(); 
+            let bg = findBackgroundByName(giveArg);
+            if(bg) {
+                if(!ownedBgs.includes(bg.id)) {
+                    ownedBgs.push(bg.id);
+                    renderBgShop();
+                    saveGame();
+                    alert(`Фон "${bg.name}" добавлен в коллекцию!`);
+                } else {
+                    alert(`Фон "${bg.name}" уже есть в коллекции!`);
+                }
+            } else {
+                let itemKey = findItemByRussianName(giveArg);
+                if(itemKey && itemNames[itemKey]){ 
+                    if(addToGridAndDiscover(itemKey)){ 
+                        updateUI(); saveGame(); 
+                        alert(`Выдан ${itemNames[itemKey]}`); 
+                    } else alert("Нет места в инвентаре"); 
+                } else alert(`Предмет "${giveArg}" не найден. Используйте команду List для просмотра всех предметов`); 
+            }
+        }
+        else if(lowerCmd==="unlockall"){ 
+            unlocked.weapons = true; unlocked.armor = true; unlocked.food = true; unlocked.potions = true; 
+            rebirthLevel = 1; rangedUnlocked = true;
+            enchantWeapons = 10; enchantRanged = 10;
+            for(let bg of backgrounds) { if(!ownedBgs.includes(bg.id)) ownedBgs.push(bg.id); }
+            for(let name of npcNames) { metNpcs.add(name); }
+            updateCraftBtns(); renderShop(); renderEnchantShop(); renderBgShop(); renderCollection(); updateAllNpcWishlists(); saveGame(); 
+            alert("Все категории, чарки, фоны и встреченные NPC разблокированы!"); 
+        }
+        else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount} энергии`); } else alert("Неверная сумма"); }
+        else if(lowerCmd==="list"){ 
+            let itemsList = Object.keys(itemNames).map(key => `${itemNames[key]}`).join("\n");
+            alert(`📋 СПИСОК ВСЕХ ПРЕДМЕТОВ:\n\n${itemsList}\n\nВсего предметов: ${Object.keys(itemNames).length}`);
+        }
+        else if(lowerCmd==="resetdailybonus"){ 
+            resetBonusCooldown();
+        }
+        else if(lowerCmd==="resetbalance"){ 
+            if(confirm("⚠️ СБРОС БАЛАНСА: весь прогресс будет удалён (монеты, предметы, чарки, разблокировки). Фоны останутся? Нажмите ОК для подтверждения.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+        else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetDailyBonus, ResetBalance");
+    }
     
-    elif message.reply_to_message:
-        target_user = message.reply_to_message.from_user
-        
-        if user.id == target_user.id:
-            await message.reply_text("❌ Нельзя поженить самого себя!")
-            return True
-        
-        if is_married(user.id):
-            await message.reply_text("❌ Вы уже состоите в браке!")
-            return True
-        
-        if is_married(target_user.id):
-            await message.reply_text(f"❌ {target_user.first_name} уже состоит в браке!")
-            return True
-        
-        user_name = f"@{user.username}" if user.username else user.first_name
-        target_name = f"@{target_user.username}" if target_user.username else target_user.first_name
-        
-        create_marriage(user.id, target_user.id)
-        
-        await message.reply_text(
-            f"💍 *Пара поженилась!*\n\n"
-            f"{user_name} 💍 {target_name}\n\n"
-            f"📅 Дата брака: {datetime.now().strftime('%d.%m.%Y')}\n"
-            f"👑 Инициатор: {display_name}",
-            parse_mode="Markdown"
-        )
-        return True
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    // Информационное окно при старте
+    if(!localStorage.getItem("balanceSave")) {
+        let infoDiv = document.createElement("div");
+        infoDiv.className = "info-overlay";
+        infoDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
+            <h2>⚖️ SUNNYGAME</h2>
+            <div class="info-text">🔨 <span class="info-highlight">КРАФТ</span> — объединяй 2 одинаковых предмета, чтобы создать более сильный</div>
+            <div class="info-text">⚔️ <span class="info-highlight">БИТВА</span> — атакуй монстра, получай монеты за убийство</div>
+            <div class="info-text">🏹 <span class="info-highlight">ЛУКИ</span> — зажми кнопку атаки на 1 секунду для заряженного удара (+5 урона)</div>
+            <div class="info-text">✨ <span class="info-highlight">ЗАЧАРОВАНИЯ</span> — 10 чарок на каждое оружие, урон от оружия и луков суммируется</div>
+            <div class="info-text">📈 <span class="info-highlight">ПРОГРЕССИЯ</span> — при более высоком соединении оружия или лука даётся +1 урона за каждое соединение</div>
+            <div class="info-text">🌀 <span class="info-highlight">ПЕРЕРОЖДЕНИЕ</span> — за 1 млн монет сбрасывает прогресс, открывает луки и зачарования</div>
+            <hr>
+            <div class="info-text">💾 Прогресс сохраняется <span class="info-highlight">на устройстве</span>. При смене Telegram-аккаунта на том же устройстве сохранение останется прежним.</div>
+            <button id="closeInfo" style="margin-top:15px;">▶ НАЧАТЬ ИГРУ</button>
+        </div>`;
+        document.body.appendChild(infoDiv);
+        document.getElementById("closeInfo").onclick = () => infoDiv.remove();
+    }
     
-    else:
-        await message.reply_text(
-            "❌ Использование команды 'поженить':\n\n"
-            "1. `поженить @username1 @username2` - поженить двух пользователей\n"
-            "2. Ответьте на сообщение пользователя и напишите `поженить`\n\n"
-            "Примеры:\n"
-            "`поженить @user1 @user2`\n"
-            "или ответьте на сообщение и напишите `поженить`",
-            parse_mode="Markdown"
-        )
-        return True
-
-# ========== ОБРАБОТКА КНОПОК ==========
-async def handle_marriage_response(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    query = update.callback_query
-    await query.answer()
+    loadPromoState();
+    loadBonusState();
+    if(!loadGame()) {
+        initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); applyBackground("black");
+    }
     
-    data = query.data
-    user = query.from_user
+    // Инициализируем DEV-консоль (только для админа)
+    initDevConsole();
+    // Привязываем функцию к кнопке
+    const devBtn = document.getElementById("devConsoleBtn");
+    if (devBtn) {
+        devBtn.onclick = openDevConsole;
+    }
     
-    parts = data.split("_")
-    action = parts[1]
-    proposer_id = int(parts[2])
-    target_id = int(parts[3])
-    chat_id = int(parts[4])
+    document.getElementById("dailyBonusBtn").onclick = claimDailyBonus;
+    document.getElementById("applyPromoBtn").onclick = applyPromo;
+    document.getElementById("tabCraftBtn").onclick=()=>{ document.getElementById("craftSection").style.display="block"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="none"; };
+    document.getElementById("tabBattleBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="block"; document.getElementById("collectionSection").style.display="none"; };
+    document.getElementById("tabCollectionBtn").onclick=()=>{ document.getElementById("craftSection").style.display="none"; document.getElementById("battleSection").style.display="none"; document.getElementById("collectionSection").style.display="block"; renderCollection(); };
+    document.getElementById("craftResourceBtn").onclick=()=>craftBase(5,"grass",true);
+    document.getElementById("craftWeaponBtn").onclick=()=>craftBase(10,"sword",unlocked.weapons);
+    document.getElementById("craftArmorBtn").onclick=()=>craftBase(20,"leather",unlocked.armor);
+    document.getElementById("craftFoodBtn").onclick=()=>craftBase(30,"berry",unlocked.food);
+    document.getElementById("craftPotionBtn").onclick=()=>craftBase(40,"vial",unlocked.potions);
+    document.getElementById("craftRangedWeaponBtn").onclick=()=>craftBase(50,"shortbow",rangedUnlocked, true);
+    document.getElementById("rebirthBtn").onclick=rebirth;
+    document.getElementById("fullResetBtn").onclick=showFullResetConfirm;
+    document.getElementById("exchangeEnergyBtn").onclick=exchangeEnergy;
+    document.getElementById("sellItemBtn").onclick=sellSelectedItem;
+    document.getElementById("supportBtn").onclick=support;
+    document.getElementById("refreshNpcBtn").onclick=refreshNPC;
+    document.getElementById("expandStorageBtn").onclick=expandStorage;
+    document.getElementById("weaponSlot").onclick=()=>selectEquipmentSlot('weapon');
+    document.getElementById("rangedSlot").onclick=()=>selectEquipmentSlot('ranged');
+    document.getElementById("equippedWeapon").onclick=()=>equipFromGrid('weapon', weaponChain, 'equippedWeapon');
+    document.getElementById("equippedRanged").onclick=()=>equipFromGrid('ranged', rangedChain, 'equippedRanged');
+    let attackBtn=document.getElementById("attackBtn");
+    attackBtn.addEventListener("mousedown", startCharge); attackBtn.addEventListener("mouseup", endCharge); attackBtn.addEventListener("mouseleave", endCharge);
+    attackBtn.addEventListener("touchstart",(e)=>{ e.preventDefault(); startCharge(); }); attackBtn.addEventListener("touchend",(e)=>{ e.preventDefault(); endCharge(); });
     
-    if user.id != target_id:
-        await query.answer("❌ Это предложение не для вас!", show_alert=True)
-        return
-    
-    proposals = load_proposals()
-    found_proposal = None
-    proposal_key = None
-    
-    for key, prop in proposals.items():
-        if prop["from"] == proposer_id and prop["to"] == target_id:
-            found_proposal = prop
-            proposal_key = key
-            break
-    
-    if not found_proposal:
-        await query.answer("❌ Предложение уже не активно", show_alert=True)
-        await query.message.delete()
-        return
-    
-    proposer_name = found_proposal.get("from_name", str(proposer_id))
-    target_name = found_proposal.get("to_name", str(target_id))
-    
-    if action == "accept":
-        if is_married(target_id) or is_married(proposer_id):
-            await query.answer("❌ Кто-то из вас уже в браке", show_alert=True)
-            await query.message.delete()
-            proposals.pop(proposal_key, None)
-            save_proposals(proposals)
-            return
-        
-        create_marriage(target_id, proposer_id)
-        
-        proposer_name = get_user_display_name(proposer_id)
-        target_name = get_user_display_name(target_id)
-        
-        await query.message.edit_text(
-            f"💎 {target_name} принял(а) предложение о браке.\n"
-            f"❤️ С сегодняшнего дня {proposer_name} и {target_name} состоят в браке\n\n"
-            f"📅 Дата: {datetime.now().strftime('%d.%m.%Y')}"
-        )
-        await query.answer("🎉 Поздравляем с браком!")
-        
-    elif action == "decline":
-        await query.message.edit_text(f"❌ {target_name} отклонил(а) предложение.")
-        await query.answer("💔 Предложение отклонено")
-    
-    proposals.pop(proposal_key, None)
-    save_proposals(proposals)
-
-async def handle_divorce_response(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    query = update.callback_query
-    await query.answer()
-    
-    data = query.data
-    user = query.from_user
-    
-    parts = data.split("_")
-    action = parts[1]
-    requester_id = int(parts[2])
-    spouse_id = int(parts[3])
-    chat_id = int(parts[4])
-    
-    if user.id != spouse_id:
-        await query.answer("❌ Это не для вас!", show_alert=True)
-        return
-    
-    requests = load_divorce_requests()
-    found_request = None
-    request_key = None
-    
-    for key, req in requests.items():
-        if req["from"] == requester_id and req["to"] == spouse_id:
-            found_request = req
-            request_key = key
-            break
-    
-    if not found_request:
-        await query.answer("❌ Запрос на развод уже не активен", show_alert=True)
-        await query.message.delete()
-        return
-    
-    requester_name = found_request.get("from_name", str(requester_id))
-    spouse_name = found_request.get("to_name", str(spouse_id))
-    
-    if action == "accept":
-        if not is_married(spouse_id) or get_spouse(spouse_id) != requester_id:
-            await query.answer("❌ Брак уже расторгнут", show_alert=True)
-            await query.message.delete()
-            requests.pop(request_key, None)
-            save_divorce_requests(requests)
-            return
-        
-        requester_name = get_user_display_name(requester_id)
-        spouse_name = get_user_display_name(spouse_id)
-        
-        delete_marriage(spouse_id)
-        
-        await query.message.edit_text(
-            f"💔 Брак между {requester_name} и {spouse_name} расторгнут.\n"
-            f"✅ Теперь вы можете снова подать заявку на брак через 'брак'"
-        )
-        await query.answer("💔 Брак расторгнут")
-        
-    elif action == "decline":
-        await query.message.edit_text(
-            f"❌ {spouse_name} отказался(ась) от развода.\n"
-            f"Брак сохранён."
-        )
-        await query.answer("✅ Брак сохранён")
-    
-    requests.pop(request_key, None)
-    save_divorce_requests(requests)
-
-# ========== РП КОМАНДЫ ==========
-async def handle_rp_command(message, user, display_name, text, context, is_group=False):
-    original_text = text.strip().lower()
-    
-    if original_text == "брак":
-        return await cmd_propose(message, user, display_name, context)
-    elif original_text == "развод":
-        return await cmd_divorce(message, user, display_name, context)
-    elif original_text == "мой брак":
-        return await cmd_my_marriage(message, user, display_name, context)
-    elif original_text == "браки":
-        return await cmd_all_marriages(message, user, display_name, context)
-    elif original_text.startswith("поженить"):
-        return await cmd_marry(message, user, display_name, text, context)
-    
-    command = None
-    target_user = None
-    
-    for keyword in KEYWORDS:
-        if original_text.startswith(keyword.lower()):
-            command = keyword
-            rest = text[len(keyword):].strip()
-            mention_match = re.search(r'@(\w+)', rest)
-            if mention_match:
-                username = mention_match.group(1)
-                for uid, info in users_db.items():
-                    if info.get("username") == username:
-                        target_user = type('User', (), {'id': uid, 'username': username, 'first_name': info.get('name')})()
-                        break
-            break
-    
-    if not command:
-        words = original_text.split()
-        if len(words) >= 1 and words[0] in KEYWORDS:
-            command = words[0]
-            if len(words) > 1:
-                username = words[1].replace("@", "")
-                for uid, info in users_db.items():
-                    if info.get("username") == username:
-                        target_user = type('User', (), {'id': uid, 'username': username, 'first_name': info.get('name')})()
-                        break
-    
-    if message.reply_to_message:
-        target_user = message.reply_to_message.from_user
-        if not command:
-            for keyword in KEYWORDS:
-                if original_text == keyword.lower():
-                    command = keyword
-                    break
-    
-    if not command:
-        return False
-    
-    if not target_user:
-        await message.reply_text(
-            f"ℹ️ Чтобы использовать команду '{command}', ответьте на сообщение пользователя или напишите: `{command} @username`",
-            parse_mode="Markdown"
-        )
-        return True
-    
-    target_name = f"@{target_user.username}" if hasattr(target_user, 'username') and target_user.username else target_user.first_name
-    
-    response_text = RESPONSES[command].format(user=display_name, target=target_name)
-    await message.reply_text(response_text)
-    
-    return True
-
-# ========== ОСТАЛЬНОЙ КОД ==========
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
-
-users_db = {}
-user_last_message_time = {}
-user_last_reminder_time = {}
-last_active_user = {}
-user_selected_admin = {}
-user_selected_theme = {}
-
-def get_recipient_admin(user_id):
-    selected = user_selected_admin.get(user_id)
-    if selected:
-        return selected
-    return ADMIN_IDS[0]
-
-def get_all_admins():
-    return ADMIN_IDS
-
-async def send_to_admins(context, user_id, display_name, content, photo=None, voice=None):
-    recipient = get_recipient_admin(user_id)
-    await context.bot.send_message(
-        chat_id=recipient,
-        text=f"📨 {display_name}:\n{content}"
-    )
-    if photo:
-        await context.bot.send_photo(
-            chat_id=recipient,
-            photo=photo,
-            caption=f"📷 Фото от {display_name}"
-        )
-    elif voice:
-        await context.bot.send_voice(
-            chat_id=recipient,
-            voice=voice,
-            caption=f"🎤 Голосовое от {display_name}"
-        )
-
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    query = update.callback_query
-    user = query.from_user
-    await query.answer()
-    users_db[user.id] = {"name": user.first_name, "username": user.username, "id": user.id}
-    display_name = f"@{user.username}" if user.username else user.first_name
-    
-    # Обработка выбора темы
-    if query.data.startswith("theme_"):
-        parts = query.data.split("_")
-        theme_key = parts[1]
-        target_user_id = int(parts[2])
-        theme_map = {"psychologist": "психолог", "friend": "друг", "girl": "девушка", "boy": "парень"}
-        theme = theme_map.get(theme_key)
-        if theme:
-            user_selected_theme[target_user_id] = theme
-            await query.edit_message_text(f"✅ Принято, тема: {theme}\n\nВы всегда можете поменять тему при вводе команды /start.")
-            await send_to_admins(context, target_user_id, display_name, f"выбрал тему: {theme}")
-            
-            # После выбора темы показываем выбор админа
-            keyboard = []
-            for admin_id, admin_name in ADMINS.items():
-                keyboard.append([InlineKeyboardButton(f"👑 {admin_name}", callback_data=f"admin_select_{admin_id}_{target_user_id}")])
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await context.bot.send_message(
-                chat_id=target_user_id,
-                text="👥 *Теперь выберите администратора:*\n\nКому будут пересылаться ваши сообщения?",
-                parse_mode="Markdown",
-                reply_markup=reply_markup
-            )
-        return
-    
-    # Обработка выбора админа
-    if query.data.startswith("admin_select_"):
-        parts = query.data.split("_")
-        admin_id = int(parts[2])
-        target_user_id = int(parts[3])
-        user_selected_admin[target_user_id] = admin_id
-        admin_name = ADMINS.get(admin_id, "Админ")
-        await query.edit_message_text(
-            f"✅ *Админ выбран: {admin_name}*\n\n"
-            f"Вы всегда можете поменять админа при вводе команды /admin.\n"
-            f"Или напишите `позови {admin_name}` в любой момент.",
-            parse_mode="Markdown"
-        )
-        return
-
-async def handle_group_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    message = update.message
-    if not message or not message.text:
-        return
-    
-    # Только команда /words работает в группе
-    if message.text.startswith('/'):
-        if message.text.startswith('/words'):
-            await words_command(update, context)
-        return
-    
-    # Остальные сообщения в группе игнорируем (без РП команд)
-    return
-
-async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    message = update.message
-    current_time = time.time()
-    
-    if await check_caesar_message(message):
-        return
-    
-    if user.id not in users_db:
-        users_db[user.id] = {"name": user.first_name, "username": user.username, "id": user.id}
-    
-    if message.text:
-        text_lower = message.text.lower().strip()
-        
-        # Проверка на смену админа через "позови"
-        if await change_admin_by_mention(message, user, context):
-            return
-        
-        if text_lower == "/hello":
-            await hello(update, context)
-            return
-        elif text_lower.startswith("/words"):
-            await words_command(update, context)
-            return
-        elif text_lower.startswith("/prom"):
-            await prom_command(update, context)
-            return
-        elif text_lower.startswith("/start"):
-            await start(update, context)
-            return
-        elif text_lower.startswith("/admin"):
-            await admin_command(update, context)
-            return
-    
-    user_last_message_time[user.id] = current_time
-    
-    if message.text:
-        content = message.text
-    elif message.photo:
-        content = "📷 Отправил(а) фото"
-    elif message.voice:
-        content = "🎤 Отправил(а) голосовое"
-    else:
-        content = "📎 Отправил(а) файл"
-    
-    display_name = f"@{user.username}" if user.username else user.name
-    
-    # Сначала проверяем РП команды (если это не админ)
-    if message.text and user.id not in get_all_admins():
-        rp_handled = await handle_rp_command(message, user, display_name, message.text, context, is_group=False)
-        if rp_handled:
-            return
-    
-    # Если админ отвечает пользователю
-    if user.id in get_all_admins():
-        target_user_id = None
-        if message.reply_to_message:
-            original_message = message.reply_to_message
-            original_text = original_message.text
-            match = re.search(r'📨 @(\w+):', original_text)
-            if not match:
-                match = re.search(r'Новый пользователь: @?(\w+)', original_text)
-            if match:
-                username = match.group(1)
-                for uid, info in users_db.items():
-                    if info.get("username") == username:
-                        target_user_id = uid
-                        break
-        
-        if not target_user_id and message.text and message.text.startswith("@"):
-            parts = message.text.split(" ", 1)
-            username = parts[0].replace("@", "")
-            user_text = parts[1] if len(parts) > 1 else ""
-            if user_text:
-                for uid, info in users_db.items():
-                    if info.get("username") == username:
-                        target_user_id = uid
-                        message.text = user_text
-                        break
-        
-        if target_user_id:
-            try:
-                await context.bot.send_message(chat_id=target_user_id, text=message.text)
-                username = users_db.get(target_user_id, {}).get("username", str(target_user_id))
-                await message.reply_text(f"✅ Ответ отправлен @{username}")
-                last_active_user[user.id] = target_user_id
-            except Exception as e:
-                await message.reply_text(f"❌ Ошибка: {e}")
-        else:
-            await message.reply_text(f"✅ Сообщение принято")
-        return
-    
-    # Обычный пользователь отправляет сообщение админу
-    if message.text and message.text.strip().lower() == "бот":
-        await message.reply_text("На месте! 🖐")
-        return
-    
-    await send_to_admins(context, user.id, display_name, content, 
-                         message.photo[-1].file_id if message.photo else None,
-                         message.voice.file_id if message.voice else None)
-    
-    last_active_user[get_recipient_admin(user.id)] = user.id
-
-async def handle_group_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    message = update.message
-    if not message:
-        return
-    for new_member in message.new_chat_members:
-        if new_member.id == context.bot.id:
-            await message.reply_text("Всем привет, кого не видел! 👋")
-            break
-
-def main():
-    application = Application.builder().token(BOT_TOKEN).build()
-    
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("hello", hello))
-    application.add_handler(CommandHandler("words", words_command))
-    application.add_handler(CommandHandler("prom", prom_command))
-    application.add_handler(CommandHandler("admin", admin_command))
-    
-    application.add_handler(CallbackQueryHandler(handle_marriage_response, pattern="^marry_"))
-    application.add_handler(CallbackQueryHandler(handle_divorce_response, pattern="^divorce_"))
-    application.add_handler(CallbackQueryHandler(button_handler, pattern="^theme_"))
-    application.add_handler(CallbackQueryHandler(button_handler, pattern="^admin_select_"))
-    
-    application.add_handler(MessageHandler(filters.TEXT & filters.ChatType.GROUPS, handle_group_message))
-    application.add_handler(MessageHandler(filters.TEXT & filters.ChatType.SUPERGROUP, handle_group_message))
-    application.add_handler(MessageHandler(filters.TEXT & filters.ChatType.PRIVATE, handle_private_message))
-    application.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, handle_private_message))
-    application.add_handler(MessageHandler(filters.VOICE & filters.ChatType.PRIVATE, handle_private_message))
-    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, handle_group_join))
-    
-    print("🚀 Бот запущен!")
-    print(f"👑 Админы: {', '.join(ADMINS.values())}")
-    print(f"🤖 Bot username: @{BOT_USERNAME}")
-    application.run_polling()
-
-if __name__ == "__main__":
-    main()
+    let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); },60000);
+</script>
+</body>
+</html>

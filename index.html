@@ -66,7 +66,7 @@
         .promo-group input { width: 90px; padding: 5px 8px; border-radius: 30px; border: none; font-size: 11px; background: #2a2a1e; color: #f9efc0; }
         .promo-group input::placeholder { color: #aa9f7b; }
         .promo-group button { background: #c9a03d; padding: 5px 12px; font-size: 11px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #1f2c18cc; padding: 10px; border-radius: 20px; margin: 0; overflow-x: auto; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: #1f2c18cc; padding: 10px; border-radius: 20px; margin: 0; overflow-x: auto; }
         .cell { background: #5e3a2b; background-image: radial-gradient(circle at 25% 30%, #7e5a45, #3f2a1d); aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; box-shadow: 0 2px 0 #2c1a10; border: 1px solid #c7a15e; text-align: center; word-break: break-word; padding: 2px; }
         .cell.selected { border: 3px solid #ffd966; box-shadow: 0 2px 0 #2c1a10; }
         .cell.empty { color: #aa9f7b; font-size: 16px; }
@@ -261,7 +261,7 @@
     let unlocked = { weapons:false, armor:false, food:false, potions:false };
     let unlocksCount = { weapons:0, armor:0, food:0, potions:0 };
     let coins = 200, energy = 0;
-    let grid = Array(20).fill(null);
+    let grid = Array(25).fill(null);
     let selectedIndex = null;
     let rebirthLevel = 0;
     let enchantWeapons = 0, enchantRanged = 0;
@@ -278,14 +278,14 @@
     const BONUS_COOLDOWN_MS = 24 * 60 * 60 * 1000;
     let lastBonusTime = 0;
     
-    // Для магазина предметов - какие предметы можно купить (первые N из каждой цепочки)
-    let availableForPurchase = {
-        materials: 1,
-        weapons: 0,
-        armor: 0,
-        food: 0,
-        potions: 0,
-        ranged: 0
+    // Для магазина предметов - какие предметы можно купить (открываются при достижении последнего тира)
+    let shopUnlockedItems = {
+        materials: ["grass"],
+        weapons: [],
+        armor: [],
+        food: [],
+        potions: [],
+        ranged: []
     };
     
     const backgrounds = [
@@ -353,52 +353,70 @@
     function discoverItem(item) { 
         if(item && !discoveredItems.has(item)) { 
             discoveredItems.add(item); 
-            updateAvailablePurchases(); // Обновляем доступные для покупки предметы
+            checkAndUnlockShopItems(); // Проверяем, нужно ли открыть новые предметы в магазине
             renderCollection(); 
             renderItemShop(); // Обновляем магазин если открыт
         } 
     }
     
-    // Обновление доступных для покупки предметов на основе открытых
-    function updateAvailablePurchases() {
-        // Материалы: открываем по мере открытия предметов
-        for(let i = 0; i < materialChain.length; i++) {
-            if(discoveredItems.has(materialChain[i])) {
-                availableForPurchase.materials = Math.max(availableForPurchase.materials, i + 1);
-            }
+    // Проверка: если игрок скрафтил последний предмет в категории, открывается следующий начальный предмет для покупки
+    function checkAndUnlockShopItems() {
+        // Материалы: если открыт эфир (последний), открываем бревно и т.д.
+        if(discoveredItems.has("aether")) {
+            if(!shopUnlockedItems.materials.includes("wood")) shopUnlockedItems.materials.push("wood");
+            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("stone")) shopUnlockedItems.materials.push("stone");
+            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("iron")) shopUnlockedItems.materials.push("iron");
+            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("gold")) shopUnlockedItems.materials.push("gold");
+            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("diamond")) shopUnlockedItems.materials.push("diamond");
+            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("nerite")) shopUnlockedItems.materials.push("nerite");
+            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("mithril")) shopUnlockedItems.materials.push("mithril");
+            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("adamant")) shopUnlockedItems.materials.push("adamant");
+            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("aether")) shopUnlockedItems.materials.push("aether");
         }
+        
         // Оружие
-        for(let i = 0; i < weaponChain.length; i++) {
-            if(discoveredItems.has(weaponChain[i]) && unlocked.weapons) {
-                availableForPurchase.weapons = Math.max(availableForPurchase.weapons, i + 1);
-            }
+        if(discoveredItems.has("legendary_blade") && unlocked.weapons) {
+            if(!shopUnlockedItems.weapons.includes("sword")) shopUnlockedItems.weapons.push("sword");
+            if(!shopUnlockedItems.weapons.includes("greatsword")) shopUnlockedItems.weapons.push("greatsword");
+            if(!shopUnlockedItems.weapons.includes("spear")) shopUnlockedItems.weapons.push("spear");
+            if(!shopUnlockedItems.weapons.includes("axe")) shopUnlockedItems.weapons.push("axe");
+            if(!shopUnlockedItems.weapons.includes("dagger")) shopUnlockedItems.weapons.push("dagger");
+            if(!shopUnlockedItems.weapons.includes("battle_axe")) shopUnlockedItems.weapons.push("battle_axe");
+            if(!shopUnlockedItems.weapons.includes("claymore")) shopUnlockedItems.weapons.push("claymore");
+            if(!shopUnlockedItems.weapons.includes("halberd")) shopUnlockedItems.weapons.push("halberd");
+            if(!shopUnlockedItems.weapons.includes("excalibur")) shopUnlockedItems.weapons.push("excalibur");
+            if(!shopUnlockedItems.weapons.includes("legendary_blade")) shopUnlockedItems.weapons.push("legendary_blade");
         }
+        
         // Броня
-        for(let i = 0; i < armorChain.length; i++) {
-            if(discoveredItems.has(armorChain[i]) && unlocked.armor) {
-                availableForPurchase.armor = Math.max(availableForPurchase.armor, i + 1);
+        if(discoveredItems.has("legendary_armor") && unlocked.armor) {
+            for(let item of armorChain) {
+                if(!shopUnlockedItems.armor.includes(item)) shopUnlockedItems.armor.push(item);
             }
         }
+        
         // Еда
-        for(let i = 0; i < foodChain.length; i++) {
-            if(discoveredItems.has(foodChain[i]) && unlocked.food) {
-                availableForPurchase.food = Math.max(availableForPurchase.food, i + 1);
+        if(discoveredItems.has("ambrosia") && unlocked.food) {
+            for(let item of foodChain) {
+                if(!shopUnlockedItems.food.includes(item)) shopUnlockedItems.food.push(item);
             }
         }
+        
         // Зелья
-        for(let i = 0; i < potionChain.length; i++) {
-            if(discoveredItems.has(potionChain[i]) && unlocked.potions) {
-                availableForPurchase.potions = Math.max(availableForPurchase.potions, i + 1);
+        if(discoveredItems.has("immortality") && unlocked.potions) {
+            for(let item of potionChain) {
+                if(!shopUnlockedItems.potions.includes(item)) shopUnlockedItems.potions.push(item);
             }
         }
+        
         // Луки
-        if(rangedUnlocked) {
-            for(let i = 0; i < rangedChain.length; i++) {
-                if(discoveredItems.has(rangedChain[i])) {
-                    availableForPurchase.ranged = Math.max(availableForPurchase.ranged, i + 1);
-                }
+        if(discoveredItems.has("celestial_bow") && rangedUnlocked) {
+            for(let item of rangedChain) {
+                if(!shopUnlockedItems.ranged.includes(item)) shopUnlockedItems.ranged.push(item);
             }
         }
+        
+        renderItemShop();
     }
     
     function addToGridAndDiscover(itemId) { 
@@ -578,7 +596,7 @@
     function refundEnchant(type) { let currentLevel = (type === 'weapon') ? enchantWeapons : enchantRanged; if(currentLevel === 0) { alert("Нет чарок для снятия"); return; } let refund = getRefundCost(currentLevel - 1); if(type === 'weapon') enchantWeapons--; else enchantRanged--; coins += refund; updateUI(); renderEnchantShop(); saveGame(); alert(`Чара снята! Возвращено ${refund} монет (80% стоимости)`); }
     function renderEnchantShop() { let cont = document.getElementById("enchantShopContainer"); if(!cont) return; if(rebirthLevel===0){ cont.innerHTML="<div class='badge'>🔒 Переродитесь (1M монет)</div>"; return; } cont.innerHTML = `<div><b>⚔️ ОРУЖИЕ</b> (${enchantWeapons}/10) ${enchantWeapons<10 ? `<button class="enchant-btn" onclick="window.applyEnchant('weapon')">Купить чару ${getEnchantCost(enchantWeapons)}🪙 (+1 урон)</button>` : '✅ MAX'}</div><div><b>🏹 ЛУКИ</b> (${enchantRanged}/10) ${enchantRanged<10 ? `<button class="enchant-btn" onclick="window.applyEnchant('ranged')">Купить чару ${getEnchantCost(enchantRanged)}🪙 (+1 урон)</button>` : '✅ MAX'}</div><div><button class="refund-btn" onclick="window.refundEnchant('weapon')">Снять последнюю чару с оружия (+${enchantWeapons>0?getRefundCost(enchantWeapons-1):0}🪙)</button><button class="refund-btn" onclick="window.refundEnchant('ranged')">Снять последнюю чару с луков (+${enchantRanged>0?getRefundCost(enchantRanged-1):0}🪙)</button></div>`; }
     window.applyEnchant = applyEnchant; window.refundEnchant = refundEnchant;
-    function unlockCategory(cat, display){ let cost=1000+(unlocksCount[cat]*150); if(unlocked[cat]){ alert("Уже открыто"); return; } if(coins>=cost){ coins-=cost; unlocked[cat]=true; unlocksCount[cat]++; updateCraftBtns(); renderShop(); updateUI(); updateAllNpcWishlists(); updateAvailablePurchases(); alert(`${display} разблокирована!`); saveGame();} else alert(`Нужно ${cost} монет`); }
+    function unlockCategory(cat, display){ let cost=1000+(unlocksCount[cat]*150); if(unlocked[cat]){ alert("Уже открыто"); return; } if(coins>=cost){ coins-=cost; unlocked[cat]=true; unlocksCount[cat]++; updateCraftBtns(); renderShop(); updateUI(); updateAllNpcWishlists(); checkAndUnlockShopItems(); alert(`${display} разблокирована!`); saveGame();} else alert(`Нужно ${cost} монет`); }
     function updateCraftBtns(){ 
         document.getElementById("craftWeaponBtn").disabled=!unlocked.weapons; 
         document.getElementById("craftArmorBtn").disabled=!unlocked.armor; 
@@ -612,7 +630,7 @@
         else { 
             rangedBtn.className="unlock-btn"; 
             rangedBtn.innerHTML=`<span>🏹 ЛУКИ</span><span>1000🪙</span>`; 
-            rangedBtn.onclick=()=>{ if(coins>=1000 && rebirthLevel>=1 && !rangedUnlocked){ coins-=1000; rangedUnlocked=true; updateCraftBtns(); renderShop(); updateUI(); updateAllNpcWishlists(); updateAvailablePurchases(); saveGame(); alert("Луки разблокированы!"); } else alert("Нужно 1000 монет и перерождение"); }; 
+            rangedBtn.onclick=()=>{ if(coins>=1000 && rebirthLevel>=1 && !rangedUnlocked){ coins-=1000; rangedUnlocked=true; updateCraftBtns(); renderShop(); updateUI(); updateAllNpcWishlists(); checkAndUnlockShopItems(); saveGame(); alert("Луки разблокированы!"); } else alert("Нужно 1000 монет и перерождение"); }; 
         } 
         cont.appendChild(rangedBtn); 
     }
@@ -620,7 +638,6 @@
     function renderStorage(){ let cont=document.getElementById("storageContainer"); cont.innerHTML="<div style='display:flex; flex-wrap:wrap; gap:6px;'>"; for(let i=0;i<storage.length;i++){ let item=storage[i]; cont.innerHTML+=`<div class="storage-slot" style="flex:1; min-width:80px;"><div class="storage-item">${item?itemNames[item]:"⬚ пусто"}</div>${item?`<button class="storage-remove" onclick="window.removeFromStorage(${i})">✖</button>`:""}</div>`; } cont.innerHTML+="</div><button onclick='window.addToStorage()' style='margin-top:4px;'>📦 В хранилище</button>"; } window.addToStorage=addToStorage; window.removeFromStorage=removeFromStorage;
     function renderNPC(){ let cont=document.getElementById("npcSingleContainer"); if(!currentNpc) return; let wishText=currentNpc.wishlist.map(w=>itemNames[w]||w).join(", "); let totalPrice = calculateNpcSellPrice(currentNpc.wishlist); cont.innerHTML=`<div class="npc-name">🧙 ${currentNpc.name}</div><div class="npc-wishlist">📋 ХОЧЕТ КУПИТЬ:<br> ${wishText}</div><div class="badge" style="margin:4px 0;">💰 Предлагает: ${totalPrice}🪙</div><button class="sell-to-npc" id="sellToNpcBtn">💰 ПРОДАТЬ ВСЕ</button>`; document.getElementById("sellToNpcBtn")?.addEventListener("click",sellToNPC); }
     function updateUI(){ document.getElementById("coins").innerText=Math.floor(coins); document.getElementById("energy").innerText=energy; document.getElementById("rebirthWarning").innerHTML=rebirthLevel===0?"⚠️ Перерождение сбросит прогресс (фоны останутся)":""; document.getElementById("enchantBonusInfo").innerHTML=`✨ Чарки: +${enchantWeapons+enchantRanged} урона (всего ${recalcDamage()})`; 
-        // Показываем кнопку магазина предметов только после перерождения
         const shopBtn = document.getElementById("openItemShopBtn");
         if(shopBtn) {
             shopBtn.style.display = rebirthLevel >= 1 ? "block" : "none";
@@ -630,15 +647,6 @@
     function support() { 
         if(window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.openTelegramLink("https://t.me/SunnySide20_bot");
-            // Отправка сообщения от имени пользователя
-            fetch("https://api.telegram.org/bot/YOUR_BOT_TOKEN/sendMessage", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    chat_id: "YOUR_CHAT_ID",
-                    text: "/game_help"
-                })
-            }).catch(e => console.log("Не удалось отправить сообщение"));
         } else {
             window.open("https://t.me/SunnySide20_bot", "_blank");
         }
@@ -666,12 +674,12 @@
         if(!container) return;
         
         let categories = [
-            { name: "🌾 Материалы", items: materialChain, type: "materials", unlocked: true, available: availableForPurchase.materials },
-            { name: "⚔️ Оружие", items: weaponChain, type: "weapons", unlocked: unlocked.weapons, available: availableForPurchase.weapons },
-            { name: "🛡️ Броня", items: armorChain, type: "armor", unlocked: unlocked.armor, available: availableForPurchase.armor },
-            { name: "🍇 Еда", items: foodChain, type: "food", unlocked: unlocked.food, available: availableForPurchase.food },
-            { name: "🧪 Зелья", items: potionChain, type: "potions", unlocked: unlocked.potions, available: availableForPurchase.potions },
-            { name: "🏹 Луки", items: rangedChain, type: "ranged", unlocked: rangedUnlocked, available: availableForPurchase.ranged }
+            { name: "🌾 Материалы", items: materialChain, type: "materials", unlocked: true, available: shopUnlockedItems.materials },
+            { name: "⚔️ Оружие", items: weaponChain, type: "weapons", unlocked: unlocked.weapons, available: shopUnlockedItems.weapons },
+            { name: "🛡️ Броня", items: armorChain, type: "armor", unlocked: unlocked.armor, available: shopUnlockedItems.armor },
+            { name: "🍇 Еда", items: foodChain, type: "food", unlocked: unlocked.food, available: shopUnlockedItems.food },
+            { name: "🧪 Зелья", items: potionChain, type: "potions", unlocked: unlocked.potions, available: shopUnlockedItems.potions },
+            { name: "🏹 Луки", items: rangedChain, type: "ranged", unlocked: rangedUnlocked, available: shopUnlockedItems.ranged }
         ];
         
         container.innerHTML = "";
@@ -685,7 +693,7 @@
             for(let i = 0; i < cat.items.length; i++) {
                 let item = cat.items[i];
                 let price = getItemRealPrice(item);
-                let isAvailable = cat.unlocked && i < cat.available;
+                let isAvailable = cat.unlocked && cat.available.includes(item);
                 let div = document.createElement("div");
                 div.className = `shop-item ${isAvailable ? "unlocked" : "locked"}`;
                 div.innerHTML = `<div class="shop-item-name">${itemNames[item]}</div><div class="shop-item-price">${price}🪙</div>`;
@@ -704,7 +712,7 @@
                 updateUI();
                 saveGame();
                 alert(`✅ Куплено: ${itemNames[item]} за ${price}🪙`);
-                renderItemShopContent(); // Обновляем отображение
+                renderItemShopContent();
             } else {
                 alert("❌ Нет места в инвентаре!");
             }
@@ -714,7 +722,6 @@
     }
     
     function renderItemShop() {
-        // Обновляем содержимое если окно открыто
         let overlay = document.querySelector(".item-shop-overlay");
         if(overlay) {
             renderItemShopContent();
@@ -737,9 +744,9 @@
         container.innerHTML=""; for(let cat of categories){ let catDiv=document.createElement("div"); catDiv.className="collection-category"; catDiv.innerHTML=`<h4>${cat.name}</h4><div class="collection-grid"></div>`; let gridDiv=catDiv.querySelector(".collection-grid"); for(let item of cat.items){ let unlocked=discoveredItems.has(item); let realPrice = cat.basePrice * Math.pow(2, cat.items.indexOf(item)); let div=document.createElement("div"); div.className=`collection-item ${unlocked?"unlocked":"locked"}`; div.innerHTML=`<div style="font-size:14px;">${itemNames[item]?.split(" ")[0]||"?"}</div><div style="font-size:8px;">${realPrice}🪙</div>`; div.onclick=(e)=>{ alert(`${itemNames[item]}\nКрафтится из: ${getCraftFrom(item)}\nСтоимость крафта: ${realPrice}🪙\nЦена удаления: ${getItemSellPrice(item)}🪙\nЦена продажи NPC: ${getItemNpcSellPrice(item)}🪙`); }; gridDiv.appendChild(div); } container.appendChild(catDiv); } 
         let metContainer=document.getElementById("metNpcContainer"); metContainer.innerHTML=""; for(let name of metNpcs){ metContainer.innerHTML+=`<span class="badge">${name}</span>`; } if(metNpcs.size===0) metContainer.innerHTML="<span class='badge'>Пока никого</span>"; }
     function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.clear(); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
-    function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(20).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; killReward = 100; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; availableForPurchase = { materials: 1, weapons: 0, armor: 0, food: 0, potions: 0, ranged: 0 }; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("killRewardBadge").innerHTML = `🏆 Убийство +${killReward}`; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 1000 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlistBalanced(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
-    function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes), killReward, availableForPurchase }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
-    function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; lastBonusTime=s.lastBonusTime||0; usedPromoCodes=new Set(s.usedPromoCodes||[]); killReward=s.killReward||100; availableForPurchase=s.availableForPurchase || { materials:1, weapons:0, armor:0, food:0, potions:0, ranged:0 }; if(grid.length!==20) grid=Array(20).fill(null); applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("killRewardBadge").innerHTML = `🏆 Убийство +${killReward}`; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); updateAvailablePurchases(); return true; } catch(e){ return false; } }
+    function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(25).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; killReward = 100; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; shopUnlockedItems = { materials: ["grass"], weapons: [], armor: [], food: [], potions: [], ranged: [] }; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("killRewardBadge").innerHTML = `🏆 Убийство +${killReward}`; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 1000 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlistBalanced(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
+    function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes), killReward, shopUnlockedItems }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
+    function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; if(grid.length !== 25) grid = Array(25).fill(null); rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; lastBonusTime=s.lastBonusTime||0; usedPromoCodes=new Set(s.usedPromoCodes||[]); killReward=s.killReward||100; shopUnlockedItems=s.shopUnlockedItems || { materials: ["grass"], weapons: [], armor: [], food: [], potions: [], ranged: [] }; applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("killRewardBadge").innerHTML = `🏆 Убийство +${killReward}`; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); checkAndUnlockShopItems(); return true; } catch(e){ return false; } }
     
     // ========== КОНСОЛЬ (ТОЛЬКО ДЛЯ АДМИНА) ==========
     function openDevConsole() {
@@ -798,7 +805,7 @@
             for(let bg of backgrounds) { if(!ownedBgs.includes(bg.id)) ownedBgs.push(bg.id); }
             for(let name of npcNames) { metNpcs.add(name); }
             for(let i = 0; i < materialChain.length; i++) discoverItem(materialChain[i]);
-            updateCraftBtns(); renderShop(); renderEnchantShop(); renderBgShop(); renderCollection(); updateAllNpcWishlists(); updateAvailablePurchases(); saveGame(); 
+            updateCraftBtns(); renderShop(); renderEnchantShop(); renderBgShop(); renderCollection(); updateAllNpcWishlists(); checkAndUnlockShopItems(); saveGame(); 
             alert("Все категории, чарки, фоны и встреченные NPC разблокированы!"); 
         }
         else if(lowerCmd.startsWith("energy ")){ let amount = parseInt(cmd.split(" ")[1]); if(!isNaN(amount) && amount>0){ energy += amount; updateUI(); saveGame(); alert(`+${amount} энергии`); } else alert("Неверная сумма"); }
@@ -881,4 +888,4 @@
     let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); },60000);
 </script>
 </body>
-    </html>
+</html>

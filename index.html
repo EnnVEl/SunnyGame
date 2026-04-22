@@ -123,7 +123,7 @@
         .update-notify { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ffaa33; color: #2b381c; padding: 12px 20px; border-radius: 40px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; gap: 15px; align-items: center; font-size: 14px; }
         .update-notify button { background: #2b381c; color: #ffaa33; margin: 0; padding: 6px 15px; }
         .admin-warning { background: #aa3333; color: white; padding: 4px 8px; border-radius: 20px; font-size: 10px; margin-left: 10px; display: inline-block; }
-        .shop-btn { background: #4f6b3e; margin-top: 10px; width: 100%; }
+        .shop-btn { background: #4f6b3e; margin-top: 10px; width: 100%; color: #ffefb9; box-shadow: 0 2px 0 #2b3a1f; }
         .item-shop-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
         .item-shop-content { background: #2a2a1e; border-radius: 28px; padding: 20px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
         .item-shop-category { margin-bottom: 20px; }
@@ -275,6 +275,7 @@
     let rangedUnlocked = false;
     let usedPromoCodes = new Set();
     let killReward = 100;
+    let killAuraActive = false;
     const BONUS_COOLDOWN_MS = 24 * 60 * 60 * 1000;
     let lastBonusTime = 0;
     
@@ -361,31 +362,18 @@
     
     // Проверка: если игрок скрафтил последний предмет в категории, открывается следующий начальный предмет для покупки
     function checkAndUnlockShopItems() {
-        // Материалы: если открыт эфир (последний), открываем бревно и т.д.
+        // Материалы: если открыт эфир (последний), открываем все материалы
         if(discoveredItems.has("aether")) {
-            if(!shopUnlockedItems.materials.includes("wood")) shopUnlockedItems.materials.push("wood");
-            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("stone")) shopUnlockedItems.materials.push("stone");
-            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("iron")) shopUnlockedItems.materials.push("iron");
-            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("gold")) shopUnlockedItems.materials.push("gold");
-            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("diamond")) shopUnlockedItems.materials.push("diamond");
-            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("nerite")) shopUnlockedItems.materials.push("nerite");
-            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("mithril")) shopUnlockedItems.materials.push("mithril");
-            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("adamant")) shopUnlockedItems.materials.push("adamant");
-            if(discoveredItems.has("aether") && !shopUnlockedItems.materials.includes("aether")) shopUnlockedItems.materials.push("aether");
+            for(let item of materialChain) {
+                if(!shopUnlockedItems.materials.includes(item)) shopUnlockedItems.materials.push(item);
+            }
         }
         
         // Оружие
         if(discoveredItems.has("legendary_blade") && unlocked.weapons) {
-            if(!shopUnlockedItems.weapons.includes("sword")) shopUnlockedItems.weapons.push("sword");
-            if(!shopUnlockedItems.weapons.includes("greatsword")) shopUnlockedItems.weapons.push("greatsword");
-            if(!shopUnlockedItems.weapons.includes("spear")) shopUnlockedItems.weapons.push("spear");
-            if(!shopUnlockedItems.weapons.includes("axe")) shopUnlockedItems.weapons.push("axe");
-            if(!shopUnlockedItems.weapons.includes("dagger")) shopUnlockedItems.weapons.push("dagger");
-            if(!shopUnlockedItems.weapons.includes("battle_axe")) shopUnlockedItems.weapons.push("battle_axe");
-            if(!shopUnlockedItems.weapons.includes("claymore")) shopUnlockedItems.weapons.push("claymore");
-            if(!shopUnlockedItems.weapons.includes("halberd")) shopUnlockedItems.weapons.push("halberd");
-            if(!shopUnlockedItems.weapons.includes("excalibur")) shopUnlockedItems.weapons.push("excalibur");
-            if(!shopUnlockedItems.weapons.includes("legendary_blade")) shopUnlockedItems.weapons.push("legendary_blade");
+            for(let item of weaponChain) {
+                if(!shopUnlockedItems.weapons.includes(item)) shopUnlockedItems.weapons.push(item);
+            }
         }
         
         // Броня
@@ -427,7 +415,10 @@
         renderGrid(); 
         return true; 
     }
-    function recalcDamage() { return 1 + (enchantWeapons + enchantRanged) + (equippedWeapon ? getItemTier(equippedWeapon, weaponChain) : 0) + (equippedRanged ? getItemTier(equippedRanged, rangedChain) : 0); }
+    function recalcDamage() { 
+        if(killAuraActive) return 999999;
+        return 1 + (enchantWeapons + enchantRanged) + (equippedWeapon ? getItemTier(equippedWeapon, weaponChain) : 0) + (equippedRanged ? getItemTier(equippedRanged, rangedChain) : 0); 
+    }
     
     function attackMonster(normal=true) { 
         let dmg = recalcDamage(); 
@@ -744,9 +735,9 @@
         container.innerHTML=""; for(let cat of categories){ let catDiv=document.createElement("div"); catDiv.className="collection-category"; catDiv.innerHTML=`<h4>${cat.name}</h4><div class="collection-grid"></div>`; let gridDiv=catDiv.querySelector(".collection-grid"); for(let item of cat.items){ let unlocked=discoveredItems.has(item); let realPrice = cat.basePrice * Math.pow(2, cat.items.indexOf(item)); let div=document.createElement("div"); div.className=`collection-item ${unlocked?"unlocked":"locked"}`; div.innerHTML=`<div style="font-size:14px;">${itemNames[item]?.split(" ")[0]||"?"}</div><div style="font-size:8px;">${realPrice}🪙</div>`; div.onclick=(e)=>{ alert(`${itemNames[item]}\nКрафтится из: ${getCraftFrom(item)}\nСтоимость крафта: ${realPrice}🪙\nЦена удаления: ${getItemSellPrice(item)}🪙\nЦена продажи NPC: ${getItemNpcSellPrice(item)}🪙`); }; gridDiv.appendChild(div); } container.appendChild(catDiv); } 
         let metContainer=document.getElementById("metNpcContainer"); metContainer.innerHTML=""; for(let name of metNpcs){ metContainer.innerHTML+=`<span class="badge">${name}</span>`; } if(metNpcs.size===0) metContainer.innerHTML="<span class='badge'>Пока никого</span>"; }
     function showFullResetConfirm() { let confirmDiv = document.createElement("div"); confirmDiv.className = "confirm-overlay"; confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; document.body.appendChild(confirmDiv); document.getElementById("confirmResetBtn").onclick = () => { localStorage.clear(); location.reload(); }; document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); }
-    function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(25).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; killReward = 100; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; shopUnlockedItems = { materials: ["grass"], weapons: [], armor: [], food: [], potions: [], ranged: [] }; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("killRewardBadge").innerHTML = `🏆 Убийство +${killReward}`; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 1000 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlistBalanced(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
-    function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes), killReward, shopUnlockedItems }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
-    function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; if(grid.length !== 25) grid = Array(25).fill(null); rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; lastBonusTime=s.lastBonusTime||0; usedPromoCodes=new Set(s.usedPromoCodes||[]); killReward=s.killReward||100; shopUnlockedItems=s.shopUnlockedItems || { materials: ["grass"], weapons: [], armor: [], food: [], potions: [], ranged: [] }; applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("killRewardBadge").innerHTML = `🏆 Убийство +${killReward}`; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); checkAndUnlockShopItems(); return true; } catch(e){ return false; } }
+    function rebirth() { if(rebirthLevel>=1){ alert("Вы уже переродились!"); return; } if(coins>=1000000){ if(confirm("ПЕРЕРОЖДЕНИЕ! Прогресс сбросится, но фоны останутся. Продолжить?")){ coins -= 1000000; rebirthLevel = 1; let savedBgs = ownedBgs; let savedCurrentBg = currentBg; unlocked = { weapons:false, armor:false, food:false, potions:false }; unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; coins = 200; energy = 0; grid = Array(25).fill(null); selectedIndex = null; enchantWeapons = 0; enchantRanged = 0; equippedWeapon = null; equippedRanged = null; monsterHp = 10000; killReward = 100; discoveredItems.clear(); storage = [null, null, null]; metNpcs.clear(); ownedBgs = savedBgs; currentBg = savedCurrentBg; shopUnlockedItems = { materials: ["grass"], weapons: [], armor: [], food: [], potions: [], ranged: [] }; killAuraActive = false; applyBackground(currentBg); renderBgShop(); document.getElementById("monsterHp").innerText = 10000; document.getElementById("killRewardBadge").innerHTML = `🏆 Убийство +${killReward}`; document.getElementById("equippedWeapon").innerHTML = "— пусто —"; document.getElementById("equippedRanged").innerHTML = "— пусто —"; renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderGrid(); updateUI(); renderCollection(); renderStorage(); saveGame(); alert("ПЕРЕРОЖДЕНИЕ! Открыты зачарования и возможность купить луки за 1000 монет в магазине!"); updateCraftBtns(); renderShop(); renderEnchantShop(); if(currentNpc) currentNpc.wishlist = generateWishlistBalanced(); renderNPC(); saveGame(); } } else alert("Нужно 1.000.000 монет"); }
+    function saveGame() { let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes), killReward, shopUnlockedItems, killAuraActive }; localStorage.setItem("balanceSave", JSON.stringify(save)); }
+    function loadGame() { let data = localStorage.getItem("balanceSave"); if(!data) return false; try{ let s=JSON.parse(data); unlocked=s.unlocked; unlocksCount=s.unlocksCount; coins=s.coins; energy=s.energy; grid=s.grid; if(grid.length !== 25) grid = Array(25).fill(null); rebirthLevel=s.rebirthLevel; enchantWeapons=s.enchantWeapons||0; enchantRanged=s.enchantRanged||0; equippedWeapon=s.equippedWeapon; equippedRanged=s.equippedRanged; monsterHp=s.monsterHp; ownedBgs=s.ownedBgs||["black","white"]; currentBg=s.currentBg||"black"; discoveredItems=new Set(s.discoveredItems||[]); metNpcs=new Set(s.metNpcs||[]); storage=s.storage||[null,null,null]; rangedUnlocked=s.rangedUnlocked||false; lastBonusTime=s.lastBonusTime||0; usedPromoCodes=new Set(s.usedPromoCodes||[]); killReward=s.killReward||100; shopUnlockedItems=s.shopUnlockedItems || { materials: ["grass"], weapons: [], armor: [], food: [], potions: [], ranged: [] }; killAuraActive=s.killAuraActive||false; applyBackground(currentBg); document.getElementById("monsterHp").innerText=monsterHp; document.getElementById("killRewardBadge").innerHTML = `🏆 Убийство +${killReward}`; document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; renderGrid(); updateUI(); renderShop(); renderEnchantShop(); updateCraftBtns(); initNPC(); renderBgShop(); renderCollection(); renderStorage(); checkAndUnlockShopItems(); return true; } catch(e){ return false; } }
     
     // ========== КОНСОЛЬ (ТОЛЬКО ДЛЯ АДМИНА) ==========
     function openDevConsole() {
@@ -771,7 +762,7 @@
             return null;
         }
         
-        let cmd = prompt("🔧 КОНСОЛЬ АДМИНИСТРАТОРА\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун\nResetBalance - сбросить баланс (как новая игра)");
+        let cmd = prompt("🔧 КОНСОЛЬ АДМИНИСТРАТОРА\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] - выдать предмет\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун\nResetBalance - сбросить баланс (как новая игра)\nKillAura - включить/выключить убийство с 1 удара");
         if(!cmd) return;
         let lowerCmd=cmd.toLowerCase();
         
@@ -822,7 +813,13 @@
                 location.reload();
             }
         }
-        else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetDailyBonus, ResetBalance");
+        else if(lowerCmd==="killaura"){ 
+            killAuraActive = !killAuraActive;
+            saveGame();
+            alert(`⚔️ Kill Aura ${killAuraActive ? "ВКЛЮЧЕНА" : "ВЫКЛЮЧЕНА"}! ${killAuraActive ? "Теперь вы убиваете монстров с 1 удара!" : "Урон вернулся к обычному"}`);
+            updateUI();
+        }
+        else alert("Неизвестная команда. Доступные команды: Money, Give, UnlockAll, Energy, List, ResetDailyBonus, ResetBalance, KillAura");
     }
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
@@ -888,4 +885,4 @@
     let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); },60000);
 </script>
 </body>
-</html>
+    </html>

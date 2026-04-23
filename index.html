@@ -66,8 +66,35 @@
         .promo-group input { width: 90px; padding: 5px 8px; border-radius: 30px; border: none; font-size: 11px; background: #2a2a1e; color: #f9efc0; }
         .promo-group input::placeholder { color: #aa9f7b; }
         .promo-group button { background: #c9a03d; padding: 5px 12px; font-size: 11px; }
-        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: #1f2c18cc; padding: 10px; border-radius: 20px; margin: 0; overflow-x: auto; }
-        .cell { background: #5e3a2b; background-image: radial-gradient(circle at 25% 30%, #7e5a45, #3f2a1d); aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; box-shadow: 0 2px 0 #2c1a10; border: 1px solid #c7a15e; text-align: center; word-break: break-word; padding: 2px; }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 6px; 
+            background: #1f2c18cc; 
+            padding: 10px; 
+            border-radius: 20px; 
+            margin: 0; 
+            overflow: visible;
+            width: 100%;
+        }
+        .cell { 
+            background: #5e3a2b; 
+            background-image: radial-gradient(circle at 25% 30%, #7e5a45, #3f2a1d); 
+            aspect-ratio: 1; 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 14px; 
+            cursor: pointer; 
+            box-shadow: 0 2px 0 #2c1a10; 
+            border: 1px solid #c7a15e; 
+            text-align: center; 
+            word-break: break-word; 
+            padding: 2px;
+            min-width: 0;
+            width: 100%;
+        }
         .cell.selected { border: 3px solid #ffd966; box-shadow: 0 2px 0 #2c1a10; }
         .cell.empty { color: #aa9f7b; font-size: 16px; }
         .action-bar { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
@@ -134,6 +161,14 @@
         .shop-item.locked { opacity: 0.4; filter: grayscale(0.6); cursor: not-allowed; }
         .shop-item-name { font-size: 12px; font-weight: bold; }
         .shop-item-price { font-size: 10px; color: #ffd966; margin-top: 4px; }
+        
+        /* Фиксированная ширина для контейнера сетки */
+        .craft-col {
+            overflow-x: auto;
+        }
+        .grid {
+            min-width: 280px;
+        }
     </style>
 </head>
 <body class="bg-black">
@@ -354,50 +389,43 @@
     function discoverItem(item) { 
         if(item && !discoveredItems.has(item)) { 
             discoveredItems.add(item); 
-            checkAndUnlockShopItems(); // Проверяем, нужно ли открыть новые предметы в магазине
+            checkAndUnlockShopItems();
             renderCollection(); 
-            renderItemShop(); // Обновляем магазин если открыт
+            renderItemShop();
         } 
     }
     
-    // Проверка: если игрок скрафтил последний предмет в категории, открывается следующий начальный предмет для покупки
     function checkAndUnlockShopItems() {
-        // Материалы: если открыт эфир (последний), открываем все материалы
         if(discoveredItems.has("aether")) {
             for(let item of materialChain) {
                 if(!shopUnlockedItems.materials.includes(item)) shopUnlockedItems.materials.push(item);
             }
         }
         
-        // Оружие
         if(discoveredItems.has("legendary_blade") && unlocked.weapons) {
             for(let item of weaponChain) {
                 if(!shopUnlockedItems.weapons.includes(item)) shopUnlockedItems.weapons.push(item);
             }
         }
         
-        // Броня
         if(discoveredItems.has("legendary_armor") && unlocked.armor) {
             for(let item of armorChain) {
                 if(!shopUnlockedItems.armor.includes(item)) shopUnlockedItems.armor.push(item);
             }
         }
         
-        // Еда
         if(discoveredItems.has("ambrosia") && unlocked.food) {
             for(let item of foodChain) {
                 if(!shopUnlockedItems.food.includes(item)) shopUnlockedItems.food.push(item);
             }
         }
         
-        // Зелья
         if(discoveredItems.has("immortality") && unlocked.potions) {
             for(let item of potionChain) {
                 if(!shopUnlockedItems.potions.includes(item)) shopUnlockedItems.potions.push(item);
             }
         }
         
-        // Луки
         if(discoveredItems.has("celestial_bow") && rangedUnlocked) {
             for(let item of rangedChain) {
                 if(!shopUnlockedItems.ranged.includes(item)) shopUnlockedItems.ranged.push(item);
@@ -520,7 +548,6 @@
         } else alert(`Нужно ${cost} монет`); 
     }
     
-    // Обработка клика по ячейке - теперь можно кликать по пустым для перемещения
     function clickCell(idx) {
         if(selectedIndex === null) {
             if(grid[idx] !== null) {
@@ -542,7 +569,6 @@
         let item1 = grid[first];
         let item2 = grid[second];
         
-        // Если оба предмета существуют и одинаковые и их можно объединить
         if(item1 && item2 && item1 === item2 && getMergeResult(item1)) {
             let next = getMergeResult(item1);
             lockNpcWishlists(true);
@@ -555,14 +581,12 @@
             lockNpcWishlists(false);
             renderGrid();
         }
-        // Перемещение: если первый предмет существует, а второй пуст
         else if(item1 && item2 === null) {
             grid[second] = item1;
             grid[first] = null;
             renderGrid();
             saveGame();
         }
-        // Обмен местами: если оба предмета существуют и разные
         else if(item1 && item2 && item1 !== item2) {
             grid[first] = item2;
             grid[second] = item1;
@@ -643,7 +667,6 @@
         }
     }
 
-    // МАГАЗИН ПРЕДМЕТОВ
     function openItemShop() {
         let overlay = document.createElement("div");
         overlay.className = "item-shop-overlay";
@@ -885,4 +908,4 @@
     let energyInterval=setInterval(()=>{ energy=Math.min(energy+1,999); updateUI(); saveGame(); },60000);
 </script>
 </body>
-    </html>
+</html>

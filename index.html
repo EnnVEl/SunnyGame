@@ -12,28 +12,28 @@
         
         /* Базовые стили для всех фонов */
         body.bg-white { background: #ffffff; color: #ffffff; }
-        body.bg-red { background: #ff0000; color: #ffcccc; }
-        body.bg-orange { background: #ff8800; color: #fff0e0; }
+        body.bg-red { background: #ff0000; color: #ffb3b3; }
+        body.bg-orange { background: #ff8800; color: #ffddb3; }
         body.bg-yellow { background: #ffdd00; color: #ffffcc; }
-        body.bg-green { background: #33cc33; color: #ccffcc; }
-        body.bg-cyan { background: #00cccc; color: #ccffff; }
-        body.bg-blue { background: #3399ff; color: #cce5ff; }
-        body.bg-purple { background: #9933ff; color: #e6ccff; }
+        body.bg-green { background: #33cc33; color: #b3ffb3; }
+        body.bg-cyan { background: #00cccc; color: #b3ffff; }
+        body.bg-blue { background: #3399ff; color: #b3d9ff; }
+        body.bg-purple { background: #9933ff; color: #d9b3ff; }
         body.bg-black { background: #000000; color: #ffffff; }
         body.bg-stars { background: linear-gradient(135deg, #0a0f2a, #010108), radial-gradient(circle at 20% 30%, white 1px, transparent 1px); background-size: auto, 35px 35px; background-blend-mode: overlay; color: #cceeff; }
         body.bg-fire { background: linear-gradient(45deg, #ff0000, #ff8800, #ffff00); color: #ffffcc; }
-        body.bg-forest { background: linear-gradient(135deg, #228833, #0a3a0a); color: #ccffcc; }
+        body.bg-forest { background: linear-gradient(135deg, #228833, #0a3a0a); color: #b3ffb3; }
         body.bg-castle { background: linear-gradient(145deg, #5a5a6e, #2a2a3a); color: #ddddee; }
-        body.bg-volcano { background: linear-gradient(145deg, #ff3300, #330000), repeating-linear-gradient(45deg, #ff660020 0px, #ff660020 5px, #cc330020 5px, #cc330020 10px); background-blend-mode: overlay; position: relative; color: #ffcccc; }
+        body.bg-volcano { background: linear-gradient(145deg, #ff3300, #330000), repeating-linear-gradient(45deg, #ff660020 0px, #ff660020 5px, #cc330020 5px, #cc330020 10px); background-blend-mode: overlay; position: relative; color: #ffb3b3; }
         body.bg-volcano::after { content: "💥🌋💥"; position: absolute; bottom: 20px; right: 20px; font-size: 45px; opacity: 0.4; pointer-events: none; }
         body.bg-ice { background: repeating-linear-gradient(45deg, #44aacc, #88ddff 30px, #ffffff 60px); color: #ddeeff; }
         body.bg-dark { background: linear-gradient(145deg, #111122, #330066, #6600cc); color: #ccbbff; }
         body.bg-ocean { background: linear-gradient(0deg, #003366, #0066aa, #3399cc), repeating-linear-gradient(90deg, #ffffff20 0px, #ffffff20 2px, transparent 2px, transparent 40px); background-blend-mode: overlay; position: relative; color: #bbddff; }
         body.bg-ocean::after { content: "🌊🌊🌊"; position: absolute; bottom: 15px; left: 0; right: 0; text-align: center; font-size: 35px; opacity: 0.5; pointer-events: none; }
-        body.bg-desert { background: linear-gradient(180deg, #87CEEB 0%, #f4a460 50%, #ccaa44 100%); position: relative; color: #ffffdd; }
-        body.bg-desert::after { content: "🏜️🏜️🏜️\n▲\n▲"; position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 45px; opacity: 0.6; pointer-events: none; white-space: pre; line-height: 1; font-weight: bold; color: #eebb55; text-shadow: 2px 2px 0 #8B5A2B; }
-        body.bg-sunset { background: linear-gradient(135deg, #6a0dad 0%, #ff4500 50%, #1a0a0a 100%); background-attachment: fixed; color: #ffddcc; }
-        body.bg-meadow { background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 50%, #228B22 100%); background-attachment: fixed; position: relative; color: #eeffcc; }
+        body.bg-desert { background: linear-gradient(180deg, #87CEEB 0%, #f4a460 50%, #ccaa44 100%); position: relative; color: #ffffcc; }
+        body.bg-desert::after { content: "🏜️🏜️🏜️\n▲\n▲"; position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 35px; opacity: 0.6; pointer-events: none; white-space: pre; line-height: 1; font-weight: bold; color: #eebb55; text-shadow: 2px 2px 0 #8B5A2B; }
+        body.bg-sunset { background: linear-gradient(135deg, #6a0dad 0%, #ff4500 50%, #1a0a0a 100%); background-attachment: fixed; color: #d9b3ff; }
+        body.bg-meadow { background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 50%, #228B22 100%); background-attachment: fixed; position: relative; color: #b3ffff; }
         body.bg-meadow::before { content: "☁️☁️☁️"; position: absolute; top: 10px; left: 0; right: 0; text-align: center; font-size: 60px; opacity: 0.5; pointer-events: none; white-space: nowrap; }
         
         .game-container { max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); border-radius: 28px; padding: 10px 12px 16px; }
@@ -86,7 +86,6 @@
         .inventory-slot { background: rgba(0, 0, 0, 0.3); border-radius: 18px; padding: 6px; margin: 6px 0; text-align: center; border: 2px solid #c7a15e; cursor: pointer; }
         .slot-item { font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; padding: 2px 6px; background: rgba(0, 0, 0, 0.3); border-radius: 14px; margin-top: 4px; cursor: pointer; }
         .unequip-btn { background: #aa6644; font-size: 9px; padding: 2px 6px; margin-left: 6px; box-shadow: 0 2px 0 #5a3322; }
-        .warning { color: #ffaa66; font-size: 9px; margin-top: 4px; background: rgba(0,0,0,0.7); display: inline-block; padding: 2px 8px; border-radius: 20px; }
         .collection-category { margin-bottom: 12px; }
         .collection-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; max-height: 200px; overflow-y: auto; padding: 6px; background: rgba(0, 0, 0, 0.3); border-radius: 16px; }
         .collection-item { background: rgba(0, 0, 0, 0.5); border-radius: 12px; padding: 4px; text-align: center; font-size: 9px; border: 1px solid gold; cursor: pointer; color: white; }
@@ -116,6 +115,7 @@
         .shop-item-price { font-size: 9px; margin-top: 4px; color: #ffd966; }
         .close-shop-btn { background: #aa4444; color: white; margin-top: 10px; width: 100%; }
         .scroll-btn { background: #4f6b3e; color: white; padding: 4px 12px; font-size: 12px; }
+        .bottom-scroll-btn { background: #4f6b3e; color: white; padding: 8px; font-size: 14px; margin-top: 8px; width: 100%; }
     </style>
 </head>
 <body class="bg-black">
@@ -161,16 +161,30 @@
                     <button id="equipFromGridBtn" class="inline-action-btn">⚔️ Экипировать</button>
                     <button id="toStorageBtn" class="inline-action-btn">📦 В хранилище</button>
                 </div>
-                <div class="warning" id="rebirthWarning"></div>
                 <div id="itemShopPanel" style="display:none; margin-top:10px;">
                     <h4>🛒 МАГАЗИН ПРЕДМЕТОВ</h4>
                     <div class="info-text" style="font-size:11px;">Выберите предмет из списка, кликните на него для покупки</div>
                     <div id="itemShopGrid"></div>
                     <button id="closeShopBtn" class="close-shop-btn">🚪 Выйти из магазина</button>
                 </div>
-                <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 8px;">
-                    <button id="scrollUpBtn" class="scroll-btn">⬆ Вверх</button>
-                    <button id="scrollDownBtn" class="scroll-btn">⬇ Вниз</button>
+                <div class="shop-panel" style="margin-top:12px;">
+                    <h3>🏪 ЛАВКА (ФОНЫ)</h3>
+                    <div id="bgShopContainer" class="bg-shop-row"></div>
+                </div>
+                <div class="npc-section" style="margin-top:12px;">
+                    <h3>📦 ПРОДАЖА NPC</h3>
+                    <div id="npcSingleContainer" class="single-npc-card"></div>
+                    <button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button>
+                </div>
+                <div class="rebirth-container" id="rebirthContainer"><button id="rebirthBtn">🌀 Перерождение 1M</button></div>
+                <div class="action-row" style="margin-top:8px;">
+                    <button id="scrollUpBtn" class="inline-action-btn">⬆ Вверх</button>
+                    <button id="scrollDownBtn" class="inline-action-btn">⬇ Вниз</button>
+                </div>
+                <div class="footer" id="craftFooter">
+                    <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
+                    <button id="supportBtn" class="support-btn">💬 Поддержка</button>
+                    <button id="fullResetBtn" class="full-reset-btn">⚠️ ПОЛНЫЙ СБРОС</button>
                 </div>
             </div>
             <div class="inventory-col" id="inventoryCol">
@@ -183,18 +197,11 @@
                     <div>🏹 ЛУКИ</div>
                     <div class="slot-item" id="equippedRanged">— пусто —</div>
                 </div>
-                <div id="storageContainer"></div>
             </div>
-        </div>
-        <div class="rebirth-container" id="rebirthContainer"><button id="rebirthBtn">🌀 Перерождение 1M</button></div>
-        <div class="footer" id="craftFooter">
-            <button id="fullResetBtn" class="full-reset-btn">⚠️ ПОЛНЫЙ СБРОС</button>
-            <button id="supportBtn" class="support-btn">💬 Поддержка</button>
-            <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
         </div>
     </div>
     
-    <!-- Вкладка Битва (только битва) -->
+    <!-- Вкладка Битва -->
     <div id="battleSection" style="display:none;">
         <div class="battle-panel">
             <h2>🐉 ДРЕВНИЙ МОНСТР</h2>
@@ -204,9 +211,20 @@
             <div id="enchantBonusInfo" style="margin-top:6px; font-size:10px;"></div>
             <div class="badge">⌛ Луки: зажмите 1с для заряда (+5)</div>
         </div>
+        <div class="inventory-col" style="margin-top:12px;">
+            <h3>🎒 ИНВЕНТАРЬ</h3>
+            <div class="inventory-slot" id="weaponSlotBattle">
+                <div>⚔️ ОРУЖИЕ</div>
+                <div class="slot-item" id="equippedWeaponBattle">— пусто —</div>
+            </div>
+            <div class="inventory-slot" id="rangedSlotBattle">
+                <div>🏹 ЛУКИ</div>
+                <div class="slot-item" id="equippedRangedBattle">— пусто —</div>
+            </div>
+        </div>
     </div>
     
-    <!-- Вкладка Коллекция (только коллекция) -->
+    <!-- Вкладка Коллекция -->
     <div id="collectionSection" style="display:none;">
         <div class="shop-panel">
             <h3>📜 КОЛЛЕКЦИЯ</h3>
@@ -233,25 +251,16 @@
         </div>
     </div>
     
-    <!-- Вкладка Лавка (зачарования и фоны) -->
+    <!-- Вкладка Лавка (зачарования) -->
     <div id="enchantTabSection" style="display:none;">
         <div class="shop-panel">
-            <h3>🏪 ЛАВКА</h3>
-            <div class="unlock-buttons" id="shopUnlockList"></div>
-            <button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button>
-            <hr>
             <h3>✨ ЗАЧАРОВАНИЯ</h3>
             <div class="badge">Кликните на чарку для её применения</div>
             <div id="enchantShopContainer" class="enchant-shop"></div>
             <div class="badge">Снятие чарки: возврат 80% стоимости</div>
             <hr>
-            <h3>🎨 ФОНЫ</h3>
-            <div id="bgShopContainer" class="bg-shop-row"></div>
-        </div>
-        <div class="npc-section" style="margin-top:12px;">
-            <h3>📦 ПРОДАЖИ</h3>
-            <div id="npcSingleContainer" class="single-npc-card"></div>
-            <button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button>
+            <div class="unlock-buttons" id="shopUnlockList"></div>
+            <button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button>
         </div>
     </div>
 </div>
@@ -300,37 +309,46 @@
         "vial":"🧴 Бутылёк","weak_potion":"🧪 Малое","medium_potion":"🧪 Среднее","strong_potion":"⚡ Сильное","elixir":"✨ Эликсир","poison":"☠️ Яд","stamina":"💪 Бодрящее","invisibility":"👻 Невидимость","healing":"💚 Лечение","immortality":"🌟 Бессмертие"
     };
     
-    // Отслеживание максимального разблокированного тира для каждой категории (для магазина)
-    let maxUnlockedTier = {
-        materials: 0,
-        weapons: 0,
-        armor: 0,
-        food: 0,
-        potions: 0,
-        ranged: 0
+    // Отслеживание купленных доступов к предметам в магазине
+    let shopUnlocks = {
+        materials: new Set(), // индексы предметов, которые уже можно покупать
+        weapons: new Set(),
+        armor: new Set(),
+        food: new Set(),
+        potions: new Set(),
+        ranged: new Set()
     };
     
-    function updateMaxUnlockedTier() {
-        const categories = [
-            { chain: materialChain, type: 'materials' },
-            { chain: weaponChain, type: 'weapons' },
-            { chain: armorChain, type: 'armor' },
-            { chain: foodChain, type: 'food' },
-            { chain: potionChain, type: 'potions' },
-            { chain: rangedChain, type: 'ranged' }
-        ];
-        
-        for(let cat of categories) {
-            let maxTier = -1;
-            for(let i = 0; i < cat.chain.length; i++) {
-                if(discoveredItems.has(cat.chain[i])) {
-                    maxTier = i;
-                }
+    function getMaxItemPriceInCategory(chain, basePrice) {
+        let maxIdx = chain.length - 1;
+        return basePrice * Math.pow(2, maxIdx);
+    }
+    
+    function unlockShopItem(type, itemIndex) {
+        if(!shopUnlocks[type].has(itemIndex)) {
+            let cost = getMaxItemPriceInCategory(
+                type === 'materials' ? materialChain :
+                type === 'weapons' ? weaponChain :
+                type === 'armor' ? armorChain :
+                type === 'food' ? foodChain :
+                type === 'potions' ? potionChain : rangedChain,
+                baseNpPrice[type]
+            );
+            if(coins >= cost) {
+                coins -= cost;
+                shopUnlocks[type].add(itemIndex);
+                updateUI();
+                saveGame();
+                renderItemShop();
+                renderShopTab();
+                alert(`Открыта покупка предмета! Стоимость открытия: ${cost}🪙`);
+                return true;
+            } else {
+                alert(`Не хватает монет! Нужно ${cost}🪙 для открытия покупки этого предмета.`);
+                return false;
             }
-            // Доступны для покупки предметы с индексом от 0 до maxTier (включительно)
-            // При крафте МАКСИМАЛЬНОГО предмета (последний в цепочке) открывается возможность покупать его и все предыдущие
-            maxUnlockedTier[cat.type] = maxTier;
         }
+        return true;
     }
     
     function getItemCategory(item) {
@@ -346,6 +364,7 @@
     function getItemSellPrice(item) { return Math.floor(getItemRealPrice(item) / 2); }
     function getNpcSellPriceForItem(item) { return Math.floor(getItemRealPrice(item) * 1.3); }
     function getCraftFrom(item) { let cat = getItemCategory(item); if(!cat) return "?"; let idx = cat.chain.indexOf(item); if(idx === 0) return "Начальный"; return `${Math.pow(2, idx)} × ${itemNames[cat.chain[0]]}`; }
+    function getCraftPrice(item) { let cat = getItemCategory(item); if(!cat) return 0; let idx = cat.chain.indexOf(item); return cat.basePrice * Math.pow(2, idx); }
     function getMergeResult(item) { let cat = getItemCategory(item); if(cat){ let i = cat.chain.indexOf(item); if(i < cat.chain.length-1) return cat.chain[i+1]; } return null; }
     function getItemTier(item, chain) { return chain.indexOf(item)+1; }
     function getEnchantCost(level) { return 500 + (level * 500); }
@@ -438,9 +457,6 @@
         if(item && !discoveredItems.has(item)) { 
             discoveredItems.add(item); 
             renderCollection(); 
-            updateMaxUnlockedTier();
-            renderItemShop();
-            renderShopTab();
             saveGame();
         } 
     }
@@ -546,7 +562,6 @@
         let useStorage = false;
         let totalPrice = calculateNpcSellPrice(wishlist);
         
-        // Проверяем, есть ли предметы в хранилище
         let hasInStorage = false;
         for(let item of neededItems) {
             if(storage.includes(item)) hasInStorage = true;
@@ -556,7 +571,6 @@
             useStorage = confirm(`Некоторые предметы находятся в хранилище. Взять их оттуда для продажи?`);
         }
         
-        // Удаляем предметы
         for(let item of neededItems) {
             let found = false;
             for(let i = 0; i < grid.length; i++) {
@@ -645,9 +659,17 @@
         selectedIndex = null;
         renderGrid();
         updateUI();
-        document.getElementById("equippedWeapon").innerHTML = equippedWeapon ? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —";
-        document.getElementById("equippedRanged").innerHTML = equippedRanged ? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —";
+        updateEquippedDisplay();
         saveGame();
+    }
+    
+    function updateEquippedDisplay() {
+        let weaponHtml = equippedWeapon ? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —";
+        let rangedHtml = equippedRanged ? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —";
+        document.getElementById("equippedWeapon").innerHTML = weaponHtml;
+        document.getElementById("equippedRanged").innerHTML = rangedHtml;
+        document.getElementById("equippedWeaponBattle").innerHTML = weaponHtml;
+        document.getElementById("equippedRangedBattle").innerHTML = rangedHtml;
     }
     
     function removeFromStorage(idx) { 
@@ -683,9 +705,6 @@
             if(addToGridAndDiscover(item)) { 
                 updateUI(); 
                 saveGame(); 
-                updateMaxUnlockedTier();
-                renderItemShop();
-                renderShopTab();
             } 
             lockNpcWishlists(false);
         } else alert(`Нужно ${cost} монет`); 
@@ -737,7 +756,8 @@
         let cat = getItemCategory(item); 
         let tier = cat.chain.indexOf(item); 
         let npcPrice = getNpcSellPriceForItem(item);
-        alert(`🔍 ${itemNames[item]}\nСоединение: ${tier+1}\nСостоит из: ${Math.pow(2, tier)} × ${itemNames[cat.chain[0]]}\nСтоимость удаления: ${getItemSellPrice(item)}🪙\nЦена продажи NPC: ${npcPrice}🪙\nЧары: ${(cat.type === 'weapons' ? enchantWeapons : (cat.type === 'ranged' ? enchantRanged : 0))}/10`); 
+        let craftPrice = getCraftPrice(item);
+        alert(`🔍 ${itemNames[item]}\nСоединение: ${tier+1}\nСостоит из: ${Math.pow(2, tier)} × ${itemNames[cat.chain[0]]}\nЦена крафта: ${craftPrice}🪙\nСтоимость удаления: ${getItemSellPrice(item)}🪙\nЦена продажи NPC: ${npcPrice}🪙\nЧары: ${(cat.type === 'weapons' ? enchantWeapons : (cat.type === 'ranged' ? enchantRanged : 0))}/10`); 
     }
     
     function unequipItem(slotType) { 
@@ -764,7 +784,7 @@
             alert("Нет предмета для снятия"); 
             return; 
         } 
-        document.getElementById(slotType === 'weapon' ? 'equippedWeapon' : 'equippedRanged').innerHTML = "— пусто —"; 
+        updateEquippedDisplay();
         renderGrid(); 
         updateUI(); 
         saveGame(); 
@@ -893,12 +913,12 @@
         }
         container.innerHTML = "";
         const categories = [
-            { name: "🌾 Материалы", chain: materialChain, type: 'materials', unlockCondition: () => true },
-            { name: "⚔️ Оружие", chain: weaponChain, type: 'weapons', unlockCondition: () => unlocked.weapons },
-            { name: "🛡️ Броня", chain: armorChain, type: 'armor', unlockCondition: () => unlocked.armor },
-            { name: "🍇 Еда", chain: foodChain, type: 'food', unlockCondition: () => unlocked.food },
-            { name: "🧪 Зелья", chain: potionChain, type: 'potions', unlockCondition: () => unlocked.potions },
-            { name: "🏹 Луки", chain: rangedChain, type: 'ranged', unlockCondition: () => rangedUnlocked }
+            { name: "🌾 Материалы", chain: materialChain, type: 'materials', unlockCondition: () => true, basePrice: baseNpPrice.materials },
+            { name: "⚔️ Оружие", chain: weaponChain, type: 'weapons', unlockCondition: () => unlocked.weapons, basePrice: baseNpPrice.weapons },
+            { name: "🛡️ Броня", chain: armorChain, type: 'armor', unlockCondition: () => unlocked.armor, basePrice: baseNpPrice.armor },
+            { name: "🍇 Еда", chain: foodChain, type: 'food', unlockCondition: () => unlocked.food, basePrice: baseNpPrice.food },
+            { name: "🧪 Зелья", chain: potionChain, type: 'potions', unlockCondition: () => unlocked.potions, basePrice: baseNpPrice.potions },
+            { name: "🏹 Луки", chain: rangedChain, type: 'ranged', unlockCondition: () => rangedUnlocked, basePrice: baseNpPrice.ranged }
         ];
         
         for(let category of categories) {
@@ -910,12 +930,14 @@
             for(let i = 0; i < category.chain.length; i++) {
                 const item = category.chain[i];
                 const isUnlocked = category.unlockCondition();
-                const isAvailableForPurchase = (i <= maxUnlockedTier[category.type]);
+                const isPurchasable = shopUnlocks[category.type].has(i);
                 const price = getItemRealPrice(item);
+                const unlockCost = getMaxItemPriceInCategory(category.chain, category.basePrice);
                 const card = document.createElement("div");
-                card.className = `shop-item-card ${(isUnlocked && isAvailableForPurchase) ? 'unlocked' : 'locked'}`;
-                card.innerHTML = `<div>${itemNames[item]}</div><div class="shop-item-price">${price}🪙</div>`;
-                if(isUnlocked && isAvailableForPurchase) {
+                
+                if(isUnlocked && isPurchasable) {
+                    card.className = "shop-item-card unlocked";
+                    card.innerHTML = `<div>${itemNames[item]}</div><div class="shop-item-price">${price}🪙</div>`;
                     card.onclick = () => {
                         if(coins >= price) {
                             if(addToGridAndDiscover(item)) {
@@ -923,8 +945,6 @@
                                 updateUI();
                                 saveGame();
                                 alert(`Куплено: ${itemNames[item]} за ${price}🪙`);
-                                renderItemShop();
-                                renderShopTab();
                             } else {
                                 alert("Нет места в инвентаре!");
                             }
@@ -932,11 +952,18 @@
                             alert(`Не хватает монет! Нужно ${price}🪙`);
                         }
                     };
-                } else {
+                } else if(isUnlocked && !isPurchasable) {
+                    card.className = "shop-item-card locked";
+                    card.innerHTML = `<div>${itemNames[item]}</div><div class="shop-item-price">🔒 ${unlockCost}🪙</div>`;
                     card.onclick = () => {
-                        if(!isUnlocked) alert("Категория не разблокирована в магазине!");
-                        else if(!isAvailableForPurchase) alert(`Вы ещё не открыли возможность покупать этот предмет!\nНужно скрафтить МАКСИМАЛЬНЫЙ предмет в этой категории.`);
+                        unlockShopItem(category.type, i);
+                        renderItemShop();
+                        renderShopTab();
                     };
+                } else {
+                    card.className = "shop-item-card locked";
+                    card.innerHTML = `<div>${itemNames[item]}</div><div class="shop-item-price">🔒 Категория закрыта</div>`;
+                    card.onclick = () => alert("Категория не разблокирована в магазине!");
                 }
                 gridDiv.appendChild(card);
             }
@@ -952,12 +979,12 @@
         }
         container.innerHTML = "";
         const categories = [
-            { name: "🌾 Материалы", chain: materialChain, type: 'materials', unlockCondition: () => true },
-            { name: "⚔️ Оружие", chain: weaponChain, type: 'weapons', unlockCondition: () => unlocked.weapons },
-            { name: "🛡️ Броня", chain: armorChain, type: 'armor', unlockCondition: () => unlocked.armor },
-            { name: "🍇 Еда", chain: foodChain, type: 'food', unlockCondition: () => unlocked.food },
-            { name: "🧪 Зелья", chain: potionChain, type: 'potions', unlockCondition: () => unlocked.potions },
-            { name: "🏹 Луки", chain: rangedChain, type: 'ranged', unlockCondition: () => rangedUnlocked }
+            { name: "🌾 Материалы", chain: materialChain, type: 'materials', unlockCondition: () => true, basePrice: baseNpPrice.materials },
+            { name: "⚔️ Оружие", chain: weaponChain, type: 'weapons', unlockCondition: () => unlocked.weapons, basePrice: baseNpPrice.weapons },
+            { name: "🛡️ Броня", chain: armorChain, type: 'armor', unlockCondition: () => unlocked.armor, basePrice: baseNpPrice.armor },
+            { name: "🍇 Еда", chain: foodChain, type: 'food', unlockCondition: () => unlocked.food, basePrice: baseNpPrice.food },
+            { name: "🧪 Зелья", chain: potionChain, type: 'potions', unlockCondition: () => unlocked.potions, basePrice: baseNpPrice.potions },
+            { name: "🏹 Луки", chain: rangedChain, type: 'ranged', unlockCondition: () => rangedUnlocked, basePrice: baseNpPrice.ranged }
         ];
         
         for(let category of categories) {
@@ -969,12 +996,14 @@
             for(let i = 0; i < category.chain.length; i++) {
                 const item = category.chain[i];
                 const isUnlocked = category.unlockCondition();
-                const isAvailableForPurchase = (i <= maxUnlockedTier[category.type]);
+                const isPurchasable = shopUnlocks[category.type].has(i);
                 const price = getItemRealPrice(item);
+                const unlockCost = getMaxItemPriceInCategory(category.chain, category.basePrice);
                 const card = document.createElement("div");
-                card.className = `shop-item-card ${(isUnlocked && isAvailableForPurchase) ? 'unlocked' : 'locked'}`;
-                card.innerHTML = `<div>${itemNames[item]}</div><div class="shop-item-price">${price}🪙</div>`;
-                if(isUnlocked && isAvailableForPurchase) {
+                
+                if(isUnlocked && isPurchasable) {
+                    card.className = "shop-item-card unlocked";
+                    card.innerHTML = `<div>${itemNames[item]}</div><div class="shop-item-price">${price}🪙</div>`;
                     card.onclick = () => {
                         if(coins >= price) {
                             if(addToGridAndDiscover(item)) {
@@ -982,8 +1011,6 @@
                                 updateUI();
                                 saveGame();
                                 alert(`Куплено: ${itemNames[item]} за ${price}🪙`);
-                                renderShopTab();
-                                renderItemShop();
                             } else {
                                 alert("Нет места в инвентаре!");
                             }
@@ -991,11 +1018,18 @@
                             alert(`Не хватает монет! Нужно ${price}🪙`);
                         }
                     };
-                } else {
+                } else if(isUnlocked && !isPurchasable) {
+                    card.className = "shop-item-card locked";
+                    card.innerHTML = `<div>${itemNames[item]}</div><div class="shop-item-price">🔒 ${unlockCost}🪙</div>`;
                     card.onclick = () => {
-                        if(!isUnlocked) alert("Категория не разблокирована в магазине!");
-                        else if(!isAvailableForPurchase) alert(`Вы ещё не открыли возможность покупать этот предмет!\nНужно скрафтить МАКСИМАЛЬНЫЙ предмет в этой категории.`);
+                        unlockShopItem(category.type, i);
+                        renderItemShop();
+                        renderShopTab();
                     };
+                } else {
+                    card.className = "shop-item-card locked";
+                    card.innerHTML = `<div>${itemNames[item]}</div><div class="shop-item-price">🔒 Категория закрыта</div>`;
+                    card.onclick = () => alert("Категория не разблокирована в магазине!");
                 }
                 gridDiv.appendChild(card);
             }
@@ -1019,6 +1053,7 @@
     
     function renderStorage(){ 
         let cont=document.getElementById("storageContainer"); 
+        if(!cont) return;
         cont.innerHTML="<div style='display:flex; flex-wrap:wrap; gap:6px;'>"; 
         for(let i=0;i<storage.length;i++){ 
             let item=storage[i]; 
@@ -1052,7 +1087,6 @@
     function updateUI(){ 
         document.getElementById("coins").innerText=Math.floor(coins); 
         document.getElementById("energy").innerText=energy; 
-        document.getElementById("rebirthWarning").innerHTML=rebirthLevel===0?"⚠️ Перерождение сбросит прогресс (фоны останутся)":""; 
         document.getElementById("enchantBonusInfo").innerHTML=`✨ Чарки: +${enchantWeapons+enchantRanged} урона (всего ${recalcDamage()})`; 
         document.getElementById("monsterReward").innerText = currentMonsterReward; 
     }
@@ -1139,10 +1173,11 @@
                 let unlocked=discoveredItems.has(item); 
                 let realPrice = cat.basePrice * Math.pow(2, cat.items.indexOf(item)); 
                 let npcPrice = Math.floor(realPrice * 1.3);
+                let craftPrice = getCraftPrice(item);
                 let div=document.createElement("div"); 
                 div.className=`collection-item ${unlocked?"unlocked":"locked"}`; 
                 div.innerHTML=`<div style="font-size:14px;">${itemNames[item]?.split(" ")[0]||"?"}</div><div style="font-size:8px;">${realPrice}🪙</div>`; 
-                div.onclick=(e)=>{ alert(`${itemNames[item]}\nКрафтится из: ${getCraftFrom(item)}\nСтоимость удаления: ${Math.floor(realPrice/2)}🪙\nЦена продажи NPC: ${npcPrice}🪙`); }; 
+                div.onclick=(e)=>{ alert(`${itemNames[item]}\nКрафтится из: ${getCraftFrom(item)}\nЦена крафта: ${craftPrice}🪙\nСтоимость удаления: ${Math.floor(realPrice/2)}🪙\nЦена продажи NPC: ${npcPrice}🪙`); }; 
                 gridDiv.appendChild(div); 
             } 
             container.appendChild(catDiv); 
@@ -1172,6 +1207,7 @@
                 rebirthLevel = 1; 
                 let savedBgs = ownedBgs; 
                 let savedCurrentBg = currentBg; 
+                let savedShopUnlocks = shopUnlocks;
                 unlocked = { weapons:false, armor:false, food:false, potions:false }; 
                 unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; 
                 coins = 200; 
@@ -1190,11 +1226,11 @@
                 metNpcs.clear(); 
                 ownedBgs = savedBgs; 
                 currentBg = savedCurrentBg; 
+                shopUnlocks = { materials: new Set(), weapons: new Set(), armor: new Set(), food: new Set(), potions: new Set(), ranged: new Set() };
                 applyBackground(currentBg); 
                 renderBgShop(); 
                 document.getElementById("monsterHp").innerText = 10000; 
-                document.getElementById("equippedWeapon").innerHTML = "— пусто —"; 
-                document.getElementById("equippedRanged").innerHTML = "— пусто —"; 
+                updateEquippedDisplay();
                 renderShop(); 
                 renderEnchantShop(); 
                 updateCraftBtns(); 
@@ -1204,7 +1240,6 @@
                 renderCollection(); 
                 renderStorage();
                 renderStorageTab();
-                updateMaxUnlockedTier(); 
                 renderItemShop(); 
                 renderShopTab();
                 saveGame(); 
@@ -1220,7 +1255,7 @@
     }
     
     function saveGame() { 
-        let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes), monsterKills, currentMonsterReward, maxUnlockedTier }; 
+        let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes), monsterKills, currentMonsterReward, shopUnlocks: { materials: Array.from(shopUnlocks.materials), weapons: Array.from(shopUnlocks.weapons), armor: Array.from(shopUnlocks.armor), food: Array.from(shopUnlocks.food), potions: Array.from(shopUnlocks.potions), ranged: Array.from(shopUnlocks.ranged) } }; 
         localStorage.setItem("balanceSave", JSON.stringify(save)); 
     }
     
@@ -1251,12 +1286,17 @@
             usedPromoCodes=new Set(s.usedPromoCodes||[]); 
             monsterKills = s.monsterKills || 0; 
             currentMonsterReward = s.currentMonsterReward || 100; 
-            if(s.maxUnlockedTier) maxUnlockedTier = s.maxUnlockedTier; 
-            else updateMaxUnlockedTier(); 
+            if(s.shopUnlocks) {
+                shopUnlocks.materials = new Set(s.shopUnlocks.materials || []);
+                shopUnlocks.weapons = new Set(s.shopUnlocks.weapons || []);
+                shopUnlocks.armor = new Set(s.shopUnlocks.armor || []);
+                shopUnlocks.food = new Set(s.shopUnlocks.food || []);
+                shopUnlocks.potions = new Set(s.shopUnlocks.potions || []);
+                shopUnlocks.ranged = new Set(s.shopUnlocks.ranged || []);
+            }
             applyBackground(currentBg); 
             document.getElementById("monsterHp").innerText=monsterHp; 
-            document.getElementById("equippedWeapon").innerHTML = equippedWeapon? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —"; 
-            document.getElementById("equippedRanged").innerHTML = equippedRanged? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —"; 
+            updateEquippedDisplay();
             renderGrid(); 
             updateUI(); 
             renderShop(); 
@@ -1267,7 +1307,6 @@
             renderCollection(); 
             renderStorage();
             renderStorageTab();
-            updateMaxUnlockedTier(); 
             renderItemShop(); 
             renderShopTab();
             return true; 
@@ -1347,9 +1386,6 @@
             }
             updateUI(); 
             saveGame();
-            updateMaxUnlockedTier();
-            renderItemShop();
-            renderShopTab();
             alert(`Выдано ${added} предметов`);
         }
         else if(lowerCmd==="unlockall"){ 
@@ -1361,8 +1397,11 @@
             for(let chain of [materialChain, weaponChain, rangedChain, armorChain, foodChain, potionChain]) {
                 for(let item of chain) { discoveredItems.add(item); }
             }
+            for(let type in shopUnlocks) {
+                for(let i = 0; i < 10; i++) shopUnlocks[type].add(i);
+            }
             updateCraftBtns(); renderShop(); renderEnchantShop(); renderBgShop(); renderCollection(); 
-            updateAllNpcWishlists(); updateMaxUnlockedTier(); renderItemShop(); renderShopTab(); saveGame(); 
+            updateAllNpcWishlists(); renderItemShop(); renderShopTab(); saveGame(); 
             alert("Все категории, чарки, фоны и встреченные NPC разблокированы!"); 
         }
         else if(lowerCmd.startsWith("energy ")){ 
@@ -1414,7 +1453,7 @@
             <div class="info-text">✨ <span class="info-highlight">ЗАЧАРОВАНИЯ</span> — 10 чарок на каждое оружие, урон от оружия и луков суммируется</div>
             <div class="info-text">📈 <span class="info-highlight">ПРОГРЕССИЯ</span> — при более высоком соединении оружия или лука даётся +1 урона за каждое соединение</div>
             <div class="info-text">🌀 <span class="info-highlight">ПЕРЕРОЖДЕНИЕ</span> — за 1 млн монет сбрасывает прогресс, открывает луки, зачарования и магазин предметов</div>
-            <div class="info-text">🛒 <span class="info-highlight">МАГАЗИН ПРЕДМЕТОВ</span> — открывается после перерождения. Покупка предметов открывается когда вы скрафтили МАКСИМАЛЬНЫЙ предмет в категории</div>
+            <div class="info-text">🛒 <span class="info-highlight">МАГАЗИН ПРЕДМЕТОВ</span> — открывается после перерождения. Чтобы купить предмет, нужно сначала открыть его за цену крафта максимального предмета в категории</div>
             <hr>
             <div class="info-text">💾 Прогресс сохраняется <span class="info-highlight">на устройстве</span>.</div>
             <button id="closeInfo" style="margin-top:15px;">▶ НАЧАТЬ ИГРУ</button>
@@ -1440,8 +1479,6 @@
     const shopTabSection = document.getElementById("shopTabSection");
     const storageTabSection = document.getElementById("storageTabSection");
     const enchantTabSection = document.getElementById("enchantTabSection");
-    const craftFooter = document.getElementById("craftFooter");
-    const rebirthContainer = document.getElementById("rebirthContainer");
     
     function showTab(tab) {
         craftSection.style.display = "none";
@@ -1451,37 +1488,12 @@
         storageTabSection.style.display = "none";
         enchantTabSection.style.display = "none";
         
-        if(tab === 'craft') {
-            craftSection.style.display = "block";
-            craftFooter.style.display = "flex";
-            rebirthContainer.style.display = "block";
-        } else if(tab === 'battle') {
-            battleSection.style.display = "block";
-            craftFooter.style.display = "none";
-            rebirthContainer.style.display = "none";
-        } else if(tab === 'collection') {
-            collectionSection.style.display = "block";
-            renderCollection();
-            craftFooter.style.display = "none";
-            rebirthContainer.style.display = "none";
-        } else if(tab === 'shop') {
-            shopTabSection.style.display = "block";
-            renderShopTab();
-            craftFooter.style.display = "none";
-            rebirthContainer.style.display = "none";
-        } else if(tab === 'storage') {
-            storageTabSection.style.display = "block";
-            renderStorageTab();
-            craftFooter.style.display = "none";
-            rebirthContainer.style.display = "none";
-        } else if(tab === 'enchant') {
-            enchantTabSection.style.display = "block";
-            renderEnchantShop();
-            renderBgShop();
-            renderShop();
-            craftFooter.style.display = "none";
-            rebirthContainer.style.display = "none";
-        }
+        if(tab === 'craft') craftSection.style.display = "block";
+        else if(tab === 'battle') battleSection.style.display = "block";
+        else if(tab === 'collection') { collectionSection.style.display = "block"; renderCollection(); }
+        else if(tab === 'shop') { shopTabSection.style.display = "block"; renderShopTab(); }
+        else if(tab === 'storage') { storageTabSection.style.display = "block"; renderStorageTab(); }
+        else if(tab === 'enchant') { enchantTabSection.style.display = "block"; renderEnchantShop(); renderBgShop(); renderShop(); }
     }
     
     document.getElementById("tabCraftBtn").onclick = () => showTab('craft');
@@ -1526,6 +1538,8 @@
     
     document.getElementById("weaponSlot").onclick = () => selectEquipmentSlot('weapon');
     document.getElementById("rangedSlot").onclick = () => selectEquipmentSlot('ranged');
+    document.getElementById("weaponSlotBattle").onclick = () => selectEquipmentSlot('weapon');
+    document.getElementById("rangedSlotBattle").onclick = () => selectEquipmentSlot('ranged');
     
     let attackBtn = document.getElementById("attackBtn");
     attackBtn.addEventListener("mousedown", startCharge);
@@ -1535,6 +1549,12 @@
     attackBtn.addEventListener("touchend",(e)=>{ e.preventDefault(); endCharge(); });
     
     let energyInterval = setInterval(()=>{ energy = Math.min(energy+1,999); updateUI(); saveGame(); },60000);
+    
+    // Магазин предметов в крафте
+    const itemShopPanel = document.getElementById("itemShopPanel");
+    const openShopBtn = document.getElementById("openItemShopBtn");
+    if(openShopBtn) openShopBtn.onclick = () => { itemShopPanel.style.display = itemShopPanel.style.display === "none" ? "block" : "none"; renderItemShop(); };
+    document.getElementById("closeShopBtn").onclick = () => { itemShopPanel.style.display = "none"; };
     
     showTab('craft');
 </script>

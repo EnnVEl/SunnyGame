@@ -33,18 +33,18 @@
         body.bg-desert { background: linear-gradient(180deg, #87CEEB 0%, #f4a460 50%, #ccaa44 100%); position: relative; color: #ffffcc; }
         body.bg-desert::after { content: "🏜️🏜️🏜️\n▲\n▲"; position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 35px; opacity: 0.6; pointer-events: none; white-space: pre; line-height: 1; font-weight: bold; color: #eebb55; text-shadow: 2px 2px 0 #8B5A2B; }
         body.bg-sunset { background: linear-gradient(135deg, #6a0dad 0%, #ff4500 50%, #1a0a0a 100%); background-attachment: fixed; color: #d9b3ff; }
-        body.bg-meadow { background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 50%, #228B22 100%); background-attachment: fixed; position: relative; color: #b3ffff; }
+        body.bg-meadow { background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 50%, #228B22 100%); background-attachment: fixed; position: relative; color: #ddeeff; }
         body.bg-meadow::before { content: "☁️☁️☁️"; position: absolute; top: 10px; left: 0; right: 0; text-align: center; font-size: 60px; opacity: 0.5; pointer-events: none; white-space: nowrap; }
         
-        .game-container { max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); border-radius: 28px; padding: 10px 12px 16px; }
+        .game-container { max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); border-radius: 28px; padding: 10px 12px 16px; position: relative; }
         body.bg-white .game-container { background: rgba(0, 0, 0, 0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; background: rgba(0, 0, 0, 0.3); padding: 6px 12px; border-radius: 40px; gap: 8px; }
         .resources { display: flex; gap: 12px; background: rgba(0, 0, 0, 0.3); padding: 4px 12px; border-radius: 30px; align-items: center; }
         .res-item { font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 4px; }
         .title { font-size: 20px; letter-spacing: 1px; }
         .main-row { display: flex; flex-direction: column; gap: 12px; }
-        .craft-col, .inventory-col { width: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px); border-radius: 28px; padding: 10px; }
-        body.bg-white .craft-col, body.bg-white .inventory-col { background: rgba(0, 0, 0, 0.1); }
+        .craft-col { width: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px); border-radius: 28px; padding: 10px; }
+        body.bg-white .craft-col { background: rgba(0, 0, 0, 0.1); }
         .bonus-panel { background: rgba(0, 0, 0, 0.3); border-radius: 28px; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
         .bonus-btn { background: #f5b642; color: #2b381c; padding: 5px 12px; font-size: 12px; border: none; }
         .promo-group { display: flex; gap: 6px; align-items: center; background: rgba(0, 0, 0, 0.3); padding: 4px 12px; border-radius: 30px; }
@@ -64,7 +64,6 @@
         button:active { transform: translateY(2px); }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .tab-btn { background: #ecd67a; color: #2b381c; }
-        .shop-npc-row { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
         .shop-panel, .npc-section { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px); border-radius: 24px; padding: 10px; border: 1px solid #efcd8a; }
         body.bg-white .shop-panel, body.bg-white .npc-section { background: rgba(0, 0, 0, 0.1); }
         .unlock-buttons, .enchant-shop { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; max-height: 180px; overflow-y: auto; }
@@ -99,12 +98,14 @@
         .storage-remove { background: #aa4444; font-size: 9px; padding: 2px 6px; border-radius: 20px; }
         .info-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; color: white; text-align: center; flex-direction: column; }
         .confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
-        .footer { text-align: center; margin-top: 20px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-        .footer-text { font-size: 10px; color: #aa66ff; text-shadow: 1px 1px 0 #000; display: flex; align-items: center; justify-content: center; gap: 4px; }
-        .support-btn { background: #25d366; color: white; width: 100%; }
-        .full-reset-btn { background: #aa3333; color: white; width: 100%; }
+        .footer-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .full-width-btn { width: 100%; background: #4f6b3e; color: white; padding: 8px; font-size: 14px; }
+        .full-width-btn.danger { background: #aa3333; }
+        .full-width-btn.rebirth { background: #c9a03d; color: #2b381c; }
+        .footer-text { font-size: 10px; color: #aa66ff; text-shadow: 1px 1px 0 #000; display: flex; align-items: center; justify-content: center; gap: 4px; margin: 8px 0; }
+        .support-btn { background: #25d366; color: white; width: 100%; padding: 8px; font-size: 14px; }
         .inline-btn { background: #c9a03d; font-size: 10px; padding: 3px 8px; margin-left: 5px; }
-        .rebirth-container { margin-bottom: 10px; text-align: center; }
+        .rebirth-container { margin: 12px 0; }
         .info-text { font-size: 13px; margin: 8px 0; line-height: 1.4; }
         .info-highlight { color: #ffaa66; }
         .craft-btn { background: #ecd67a; color: #2b381c; }
@@ -114,8 +115,8 @@
         .shop-item-card.unlocked { background: #4f6b3e; border-color: #ffd966; }
         .shop-item-price { font-size: 9px; margin-top: 4px; color: #ffd966; }
         .close-shop-btn { background: #aa4444; color: white; margin-top: 10px; width: 100%; }
-        .scroll-btn { background: #4f6b3e; color: white; padding: 4px 12px; font-size: 12px; }
-        .bottom-scroll-btn { background: #4f6b3e; color: white; padding: 8px; font-size: 14px; margin-top: 8px; width: 100%; }
+        .scroll-corner-btn { position: fixed; bottom: 20px; right: 20px; background: #4f6b3e; color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; }
+        .scroll-corner-btn.top { bottom: 80px; }
     </style>
 </head>
 <body class="bg-black">
@@ -168,7 +169,7 @@
                     <button id="closeShopBtn" class="close-shop-btn">🚪 Выйти из магазина</button>
                 </div>
                 <div class="shop-panel" style="margin-top:12px;">
-                    <h3>🏪 ЛАВКА (ФОНЫ)</h3>
+                    <h3>🎨 ФОНЫ</h3>
                     <div id="bgShopContainer" class="bg-shop-row"></div>
                 </div>
                 <div class="npc-section" style="margin-top:12px;">
@@ -176,26 +177,11 @@
                     <div id="npcSingleContainer" class="single-npc-card"></div>
                     <button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button>
                 </div>
-                <div class="rebirth-container" id="rebirthContainer"><button id="rebirthBtn">🌀 Перерождение 1M</button></div>
-                <div class="action-row" style="margin-top:8px;">
-                    <button id="scrollUpBtn" class="inline-action-btn">⬆ Вверх</button>
-                    <button id="scrollDownBtn" class="inline-action-btn">⬇ Вниз</button>
-                </div>
-                <div class="footer" id="craftFooter">
+                <div class="footer-buttons">
+                    <button id="rebirthBtn" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
+                    <button id="fullResetBtn" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
                     <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
                     <button id="supportBtn" class="support-btn">💬 Поддержка</button>
-                    <button id="fullResetBtn" class="full-reset-btn">⚠️ ПОЛНЫЙ СБРОС</button>
-                </div>
-            </div>
-            <div class="inventory-col" id="inventoryCol">
-                <h3>🎒 ИНВЕНТАРЬ</h3>
-                <div class="inventory-slot" id="weaponSlot">
-                    <div>⚔️ ОРУЖИЕ</div>
-                    <div class="slot-item" id="equippedWeapon">— пусто —</div>
-                </div>
-                <div class="inventory-slot" id="rangedSlot">
-                    <div>🏹 ЛУКИ</div>
-                    <div class="slot-item" id="equippedRanged">— пусто —</div>
                 </div>
             </div>
         </div>
@@ -222,6 +208,12 @@
                 <div class="slot-item" id="equippedRangedBattle">— пусто —</div>
             </div>
         </div>
+        <div class="footer-buttons" style="margin-top:12px;">
+            <button id="rebirthBtnBattle" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
+            <button id="fullResetBtnBattle" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
+            <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
+            <button id="supportBtnBattle" class="support-btn">💬 Поддержка</button>
+        </div>
     </div>
     
     <!-- Вкладка Коллекция -->
@@ -232,6 +224,12 @@
             <h3>👥 ВСТРЕЧЕННЫЕ NPC</h3>
             <div id="metNpcContainer" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;"></div>
         </div>
+        <div class="footer-buttons" style="margin-top:12px;">
+            <button id="rebirthBtnCollection" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
+            <button id="fullResetBtnCollection" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
+            <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
+            <button id="supportBtnCollection" class="support-btn">💬 Поддержка</button>
+        </div>
     </div>
     
     <!-- Вкладка Магазин предметов -->
@@ -241,6 +239,12 @@
             <div class="info-text" style="font-size:11px;">Выберите предмет из списка, кликните на него для покупки</div>
             <div id="shopTabGrid"></div>
         </div>
+        <div class="footer-buttons" style="margin-top:12px;">
+            <button id="rebirthBtnShop" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
+            <button id="fullResetBtnShop" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
+            <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
+            <button id="supportBtnShop" class="support-btn">💬 Поддержка</button>
+        </div>
     </div>
     
     <!-- Вкладка Хранилище -->
@@ -248,6 +252,12 @@
         <div class="shop-panel">
             <h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtnTab" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3>
             <div id="storageTabContainer"></div>
+        </div>
+        <div class="footer-buttons" style="margin-top:12px;">
+            <button id="rebirthBtnStorage" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
+            <button id="fullResetBtnStorage" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
+            <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
+            <button id="supportBtnStorage" class="support-btn">💬 Поддержка</button>
         </div>
     </div>
     
@@ -262,9 +272,17 @@
             <div class="unlock-buttons" id="shopUnlockList"></div>
             <button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button>
         </div>
+        <div class="footer-buttons" style="margin-top:12px;">
+            <button id="rebirthBtnEnchant" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
+            <button id="fullResetBtnEnchant" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
+            <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
+            <button id="supportBtnEnchant" class="support-btn">💬 Поддержка</button>
+        </div>
     </div>
 </div>
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
+<button class="scroll-corner-btn" id="scrollUpCorner">⬆</button>
+<button class="scroll-corner-btn top" id="scrollDownCorner">⬇</button>
 
 <script>
     // ========== НАСТРОЙКИ АДМИНИСТРАТОРА ==========
@@ -302,22 +320,34 @@
     
     const itemNames = {
         "grass":"🌱 Трава","wood":"🪵 Бревно","stone":"🪨 Камень","iron":"🔩 Железо","gold":"👑 Золото","diamond":"💎 Алмаз","nerite":"⚜️ Нефрит","mithril":"✨ Мифрил","adamant":"🛡️ Адамантий","aether":"🌀 Эфир",
-        "sword":"⚔️ Меч","greatsword":"🗡️ Двуручник","spear":"🔱 Копьё","axe":"🪓 Секира","dagger":"🔪 Кинжал","battle_axe":"⚔️ Боевой топор","claymore":"🗡️ Клеймор","halberd":"🔱 Алебарда","excalibur":"✨ Экскалибур","legendary_blade":"🌟 Легендарный клинок",
-        "shortbow":"🏹 Короткий лук","longbow":"🏹 Длинный лук","hunting_bow":"🏹 Охотничий","recurve_bow":"🏹 Рекурсивный","compound_bow":"🏹 Блочный","wind_bow":"🌪️ Ветровой","eagle_bow":"🦅 Орлиный","shadow_bow":"🌑 Теневой","dragon_bow":"🐉 Драконий","celestial_bow":"✨ Небесный",
-        "leather":"🧥 Кожа","gambeson":"🧵 Стёганый","chainmail":"🔗 Кольчуга","plate":"🛡️ Латы","chestplate":"❤️ Нагрудник","leggings":"👖 Поножи","helmet":"⛑️ Шлем","boots":"👢 Сапоги","pauldrons":"🏅 Наплечники","legendary_armor":"✨ Легендарный доспех",
-        "berry":"🍓 Ягоды","bread":"🍞 Хлеб","cheese":"🧀 Сыр","meat":"🍗 Мясо","fish":"🐟 Рыба","soup":"🥣 Суп","cake":"🍰 Торт","pie":"🥧 Пирог","elven_bread":"🌿 Эльфийский","ambrosia":"✨ Амброзия",
-        "vial":"🧴 Бутылёк","weak_potion":"🧪 Малое","medium_potion":"🧪 Среднее","strong_potion":"⚡ Сильное","elixir":"✨ Эликсир","poison":"☠️ Яд","stamina":"💪 Бодрящее","invisibility":"👻 Невидимость","healing":"💚 Лечение","immortality":"🌟 Бессмертие"
+        "sword":"⚔️ Меч","greatsword":"🗡️ Двуручник","spear":"🔱 Копьё","axe":"🪓 Топор","dagger":"🔪 Кинжал","battle_axe":"⚔️ Боевой топор","claymore":"🗡️ Клеймор","halberd":"🔱 Алебарда","excalibur":"✨ Экскалибур","legendary_blade":"🌟 Легендарный клинок",
+        "shortbow":"🏹 Короткий лук","longbow":"🏹 Длинный лук","hunting_bow":"🏹 Охотничий лук","recurve_bow":"🏹 Рекурсивный лук","compound_bow":"🏹 Блочный лук","wind_bow":"🌪️ Ветровой лук","eagle_bow":"🦅 Орлиный лук","shadow_bow":"🌑 Теневой лук","dragon_bow":"🐉 Драконий лук","celestial_bow":"✨ Небесный лук",
+        "leather":"🧥 Кожаный доспех","gambeson":"🧵 Стёганый доспех","chainmail":"🔗 Кольчуга","plate":"🛡️ Латы","chestplate":"❤️ Нагрудник","leggings":"👖 Поножи","helmet":"⛑️ Шлем","boots":"👢 Сапоги","pauldrons":"🏅 Наплечники","legendary_armor":"✨ Легендарный доспех",
+        "berry":"🍓 Ягоды","bread":"🍞 Хлеб","cheese":"🧀 Сыр","meat":"🍗 Мясо","fish":"🐟 Рыба","soup":"🥣 Суп","cake":"🍰 Торт","pie":"🥧 Пирог","elven_bread":"🌿 Эльфийский хлеб","ambrosia":"✨ Амброзия",
+        "vial":"🧴 Бутылёк","weak_potion":"🧪 Малое зелье","medium_potion":"🧪 Среднее зелье","strong_potion":"⚡ Сильное зелье","elixir":"✨ Эликсир","poison":"☠️ Яд","stamina":"💪 Бодрящее зелье","invisibility":"👻 Зелье невидимости","healing":"💚 Лечебное зелье","immortality":"🌟 Бессмертие"
     };
     
     // Отслеживание купленных доступов к предметам в магазине
     let shopUnlocks = {
-        materials: new Set(), // индексы предметов, которые уже можно покупать
+        materials: new Set(),
         weapons: new Set(),
         armor: new Set(),
         food: new Set(),
         potions: new Set(),
         ranged: new Set()
     };
+    
+    // Первый предмет в каждой категории доступен сразу при открытии категории
+    function initDefaultShopUnlocks() {
+        if(rebirthLevel >= 1) {
+            if(unlocked.weapons && !shopUnlocks.weapons.has(0)) shopUnlocks.weapons.add(0);
+            if(unlocked.armor && !shopUnlocks.armor.has(0)) shopUnlocks.armor.add(0);
+            if(unlocked.food && !shopUnlocks.food.has(0)) shopUnlocks.food.add(0);
+            if(unlocked.potions && !shopUnlocks.potions.has(0)) shopUnlocks.potions.add(0);
+            if(rangedUnlocked && !shopUnlocks.ranged.has(0)) shopUnlocks.ranged.add(0);
+            if(!shopUnlocks.materials.has(0)) shopUnlocks.materials.add(0);
+        }
+    }
     
     function getMaxItemPriceInCategory(chain, basePrice) {
         let maxIdx = chain.length - 1;
@@ -666,8 +696,6 @@
     function updateEquippedDisplay() {
         let weaponHtml = equippedWeapon ? itemNames[equippedWeapon] + ' <button class="unequip-btn" onclick="window.unequipItem(\'weapon\')">Снять</button>' : "— пусто —";
         let rangedHtml = equippedRanged ? itemNames[equippedRanged] + ' <button class="unequip-btn" onclick="window.unequipItem(\'ranged\')">Снять</button>' : "— пусто —";
-        document.getElementById("equippedWeapon").innerHTML = weaponHtml;
-        document.getElementById("equippedRanged").innerHTML = rangedHtml;
         document.getElementById("equippedWeaponBattle").innerHTML = weaponHtml;
         document.getElementById("equippedRangedBattle").innerHTML = rangedHtml;
     }
@@ -845,12 +873,15 @@
             coins-=cost; 
             unlocked[cat]=true; 
             unlocksCount[cat]++; 
+            initDefaultShopUnlocks();
             updateCraftBtns(); 
             renderShop(); 
             updateUI(); 
             updateAllNpcWishlists(); 
             alert(`${display} разблокирована!`); 
             saveGame();
+            renderItemShop();
+            renderShopTab();
         } else alert(`Нужно ${cost} монет`); 
     }
     
@@ -899,7 +930,7 @@
         else { 
             rangedBtn.className="unlock-btn"; 
             rangedBtn.innerHTML=`<span>🏹 ЛУКИ</span><span>1000🪙</span>`; 
-            rangedBtn.onclick=()=>{ if(coins>=1000 && rebirthLevel>=1 && !rangedUnlocked){ coins-=1000; rangedUnlocked=true; updateCraftBtns(); renderShop(); updateUI(); updateAllNpcWishlists(); saveGame(); alert("Луки разблокированы!"); renderItemShop(); renderShopTab(); } else alert("Нужно 1000 монет и перерождение"); }; 
+            rangedBtn.onclick=()=>{ if(coins>=1000 && rebirthLevel>=1 && !rangedUnlocked){ coins-=1000; rangedUnlocked=true; initDefaultShopUnlocks(); updateCraftBtns(); renderShop(); updateUI(); updateAllNpcWishlists(); saveGame(); alert("Луки разблокированы!"); renderItemShop(); renderShopTab(); } else alert("Нужно 1000 монет и перерождение"); }; 
         } 
         cont.appendChild(rangedBtn); 
     }
@@ -1207,7 +1238,6 @@
                 rebirthLevel = 1; 
                 let savedBgs = ownedBgs; 
                 let savedCurrentBg = currentBg; 
-                let savedShopUnlocks = shopUnlocks;
                 unlocked = { weapons:false, armor:false, food:false, potions:false }; 
                 unlocksCount = { weapons:0, armor:0, food:0, potions:0 }; 
                 coins = 200; 
@@ -1227,6 +1257,7 @@
                 ownedBgs = savedBgs; 
                 currentBg = savedCurrentBg; 
                 shopUnlocks = { materials: new Set(), weapons: new Set(), armor: new Set(), food: new Set(), potions: new Set(), ranged: new Set() };
+                initDefaultShopUnlocks();
                 applyBackground(currentBg); 
                 renderBgShop(); 
                 document.getElementById("monsterHp").innerText = 10000; 
@@ -1294,6 +1325,7 @@
                 shopUnlocks.potions = new Set(s.shopUnlocks.potions || []);
                 shopUnlocks.ranged = new Set(s.shopUnlocks.ranged || []);
             }
+            initDefaultShopUnlocks();
             applyBackground(currentBg); 
             document.getElementById("monsterHp").innerText=monsterHp; 
             updateEquippedDisplay();
@@ -1400,6 +1432,7 @@
             for(let type in shopUnlocks) {
                 for(let i = 0; i < 10; i++) shopUnlocks[type].add(i);
             }
+            initDefaultShopUnlocks();
             updateCraftBtns(); renderShop(); renderEnchantShop(); renderBgShop(); renderCollection(); 
             updateAllNpcWishlists(); renderItemShop(); renderShopTab(); saveGame(); 
             alert("Все категории, чарки, фоны и встреченные NPC разблокированы!"); 
@@ -1472,6 +1505,10 @@
     const devBtn = document.getElementById("devConsoleBtn");
     if (devBtn) devBtn.onclick = openDevConsole;
     
+    // Кнопки скролла по углам
+    document.getElementById("scrollUpCorner").onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById("scrollDownCorner").onclick = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    
     // Переключение вкладок
     const craftSection = document.getElementById("craftSection");
     const battleSection = document.getElementById("battleSection");
@@ -1522,22 +1559,23 @@
     document.getElementById("craftFoodBtn").onclick = () => craftBase(30,"berry",unlocked.food);
     document.getElementById("craftPotionBtn").onclick = () => craftBase(40,"vial",unlocked.potions);
     document.getElementById("craftRangedWeaponBtn").onclick = () => craftBase(50,"shortbow",rangedUnlocked, true);
-    document.getElementById("rebirthBtn").onclick = rebirth;
-    document.getElementById("fullResetBtn").onclick = showFullResetConfirm;
+    
+    // Кнопки во всех вкладках
+    const allRebirthBtns = ["rebirthBtn", "rebirthBtnBattle", "rebirthBtnCollection", "rebirthBtnShop", "rebirthBtnStorage", "rebirthBtnEnchant"];
+    const allResetBtns = ["fullResetBtn", "fullResetBtnBattle", "fullResetBtnCollection", "fullResetBtnShop", "fullResetBtnStorage", "fullResetBtnEnchant"];
+    const allSupportBtns = ["supportBtn", "supportBtnBattle", "supportBtnCollection", "supportBtnShop", "supportBtnStorage", "supportBtnEnchant"];
+    
+    allRebirthBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = rebirth; });
+    allResetBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = showFullResetConfirm; });
+    allSupportBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = support; });
+    
     document.getElementById("exchangeEnergyBtn").onclick = exchangeEnergy;
-    document.getElementById("supportBtn").onclick = support;
     document.getElementById("refreshNpcBtn").onclick = refreshNPC;
     document.getElementById("expandStorageBtnTab").onclick = expandStorage;
     document.getElementById("sellSelectedBtn").onclick = sellSelectedItem;
     document.getElementById("equipFromGridBtn").onclick = equipFromGridAction;
     document.getElementById("toStorageBtn").onclick = addToStorage;
     
-    // Кнопки скролла
-    document.getElementById("scrollUpBtn").onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-    document.getElementById("scrollDownBtn").onclick = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    
-    document.getElementById("weaponSlot").onclick = () => selectEquipmentSlot('weapon');
-    document.getElementById("rangedSlot").onclick = () => selectEquipmentSlot('ranged');
     document.getElementById("weaponSlotBattle").onclick = () => selectEquipmentSlot('weapon');
     document.getElementById("rangedSlotBattle").onclick = () => selectEquipmentSlot('ranged');
     

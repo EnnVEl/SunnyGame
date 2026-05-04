@@ -100,12 +100,11 @@
         .confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
         .footer-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
         .full-width-btn { width: 100%; background: #4f6b3e; color: white; padding: 8px; font-size: 14px; }
-        .full-width-btn.danger { background: #aa3333; }
-        .full-width-btn.rebirth { background: #c9a03d; color: #2b381c; }
+        .full-width-btn.danger { background: #aa3333; padding: 5px 10px; font-size: 11px; }
+        .full-width-btn.rebirth { background: #c9a03d; color: #2b381c; padding: 8px; font-size: 14px; }
         .footer-text { font-size: 10px; color: #aa66ff; text-shadow: 1px 1px 0 #000; display: flex; align-items: center; justify-content: center; gap: 4px; margin: 8px 0; }
-        .support-btn { background: #25d366; color: white; width: 100%; padding: 8px; font-size: 14px; }
+        .support-btn { background: #25d366; color: white; width: 100%; padding: 5px 10px; font-size: 11px; }
         .inline-btn { background: #c9a03d; font-size: 10px; padding: 3px 8px; margin-left: 5px; }
-        .rebirth-container { margin: 12px 0; }
         .info-text { font-size: 13px; margin: 8px 0; line-height: 1.4; }
         .info-highlight { color: #ffaa66; }
         .craft-btn { background: #ecd67a; color: #2b381c; }
@@ -117,6 +116,8 @@
         .close-shop-btn { background: #aa4444; color: white; margin-top: 10px; width: 100%; }
         .scroll-corner-btn { position: fixed; bottom: 20px; right: 20px; background: #4f6b3e; color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; }
         .scroll-corner-btn.top { bottom: 80px; }
+        .update-notify { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ffaa33; color: #2b381c; padding: 12px 20px; border-radius: 40px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; gap: 15px; align-items: center; font-size: 14px; }
+        .update-notify button { background: #2b381c; color: #ffaa33; margin: 0; padding: 6px 15px; }
     </style>
 </head>
 <body class="bg-black">
@@ -161,6 +162,7 @@
                     <button id="sellSelectedBtn" class="inline-action-btn" style="background:#aa6644;">💸 Продать выбранный</button>
                     <button id="equipFromGridBtn" class="inline-action-btn">⚔️ Экипировать</button>
                     <button id="toStorageBtn" class="inline-action-btn">📦 В хранилище</button>
+                    <button id="exchangeEnergyBtnSmall" class="inline-action-btn" style="background:#c9a03d;">🔄 10⚡ → 10🪙</button>
                 </div>
                 <div id="itemShopPanel" style="display:none; margin-top:10px;">
                     <h4>🛒 МАГАЗИН ПРЕДМЕТОВ</h4>
@@ -168,14 +170,14 @@
                     <div id="itemShopGrid"></div>
                     <button id="closeShopBtn" class="close-shop-btn">🚪 Выйти из магазина</button>
                 </div>
-                <div class="shop-panel" style="margin-top:12px;">
-                    <h3>🎨 ФОНЫ</h3>
-                    <div id="bgShopContainer" class="bg-shop-row"></div>
-                </div>
                 <div class="npc-section" style="margin-top:12px;">
                     <h3>📦 ПРОДАЖА NPC</h3>
                     <div id="npcSingleContainer" class="single-npc-card"></div>
                     <button id="refreshNpcBtn" style="margin-top:6px; background:#4f6b3e;">🔄 Сменить продавца (10🪙)</button>
+                </div>
+                <div class="shop-panel" style="margin-top:12px;">
+                    <h3>🎨 ФОНЫ</h3>
+                    <div id="bgShopContainer" class="bg-shop-row"></div>
                 </div>
                 <div class="footer-buttons">
                     <button id="rebirthBtn" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
@@ -208,12 +210,6 @@
                 <div class="slot-item" id="equippedRangedBattle">— пусто —</div>
             </div>
         </div>
-        <div class="footer-buttons" style="margin-top:12px;">
-            <button id="rebirthBtnBattle" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
-            <button id="fullResetBtnBattle" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
-            <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
-            <button id="supportBtnBattle" class="support-btn">💬 Поддержка</button>
-        </div>
     </div>
     
     <!-- Вкладка Коллекция -->
@@ -224,12 +220,6 @@
             <h3>👥 ВСТРЕЧЕННЫЕ NPC</h3>
             <div id="metNpcContainer" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;"></div>
         </div>
-        <div class="footer-buttons" style="margin-top:12px;">
-            <button id="rebirthBtnCollection" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
-            <button id="fullResetBtnCollection" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
-            <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
-            <button id="supportBtnCollection" class="support-btn">💬 Поддержка</button>
-        </div>
     </div>
     
     <!-- Вкладка Магазин предметов -->
@@ -239,7 +229,7 @@
             <div class="info-text" style="font-size:11px;">Выберите предмет из списка, кликните на него для покупки</div>
             <div id="shopTabGrid"></div>
         </div>
-        <div class="footer-buttons" style="margin-top:12px;">
+        <div class="footer-buttons">
             <button id="rebirthBtnShop" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
             <button id="fullResetBtnShop" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
             <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
@@ -252,12 +242,6 @@
         <div class="shop-panel">
             <h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtnTab" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3>
             <div id="storageTabContainer"></div>
-        </div>
-        <div class="footer-buttons" style="margin-top:12px;">
-            <button id="rebirthBtnStorage" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
-            <button id="fullResetBtnStorage" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
-            <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
-            <button id="supportBtnStorage" class="support-btn">💬 Поддержка</button>
         </div>
     </div>
     
@@ -272,7 +256,7 @@
             <div class="unlock-buttons" id="shopUnlockList"></div>
             <button id="exchangeEnergyBtn" class="exchange-btn">🔄 10⚡ → 10</button>
         </div>
-        <div class="footer-buttons" style="margin-top:12px;">
+        <div class="footer-buttons">
             <button id="rebirthBtnEnchant" class="full-width-btn rebirth">🌀 Перерождение 1M</button>
             <button id="fullResetBtnEnchant" class="full-width-btn danger">⚠️ ПОЛНЫЙ СБРОС</button>
             <div class="footer-text">сделано с любовью <span style="color:#aa66ff;">❤️</span> - EnnVel</div>
@@ -281,10 +265,50 @@
     </div>
 </div>
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
-<button class="scroll-corner-btn" id="scrollUpCorner">⬆</button>
-<button class="scroll-corner-btn top" id="scrollDownCorner">⬇</button>
+<button class="scroll-corner-btn" id="scrollDownCorner">⬇</button>
+<button class="scroll-corner-btn top" id="scrollUpCorner">⬆</button>
 
 <script>
+    // ========== СИСТЕМА АВТООБНОВЛЕНИЙ ==========
+    (function setupAutoUpdate() {
+        const CHECK_INTERVAL = 1000;
+        let updateNotificationShown = false;
+        
+        function checkForUpdates() {
+            fetch(window.location.href + "?v=" + Date.now(), {
+                method: 'HEAD',
+                cache: 'no-store'
+            }).then(response => {
+                const serverEtag = response.headers.get('ETag') || response.headers.get('Last-Modified') || Date.now().toString();
+                const storedEtag = localStorage.getItem('game_etag');
+                if (storedEtag && storedEtag !== serverEtag && !updateNotificationShown) {
+                    updateNotificationShown = true;
+                    showUpdateNotification();
+                }
+                localStorage.setItem('game_etag', serverEtag);
+            }).catch(e => console.log("Update check failed:", e));
+        }
+        
+        function showUpdateNotification() {
+            const notifyDiv = document.createElement('div');
+            notifyDiv.className = 'update-notify';
+            notifyDiv.innerHTML = `
+                🔄 Доступна новая версия игры!
+                <button id="updateNowBtn">Обновить сейчас</button>
+                <button id="updateLaterBtn">Позже</button>
+            `;
+            document.body.appendChild(notifyDiv);
+            document.getElementById('updateNowBtn').onclick = () => {
+                localStorage.removeItem('game_etag');
+                location.reload();
+            };
+            document.getElementById('updateLaterBtn').onclick = () => notifyDiv.remove();
+        }
+        
+        setInterval(checkForUpdates, CHECK_INTERVAL);
+        checkForUpdates();
+    })();
+    
     // ========== НАСТРОЙКИ АДМИНИСТРАТОРА ==========
     const ADMIN_TELEGRAM_ID = 1577899640;
     
@@ -1505,9 +1529,9 @@
     const devBtn = document.getElementById("devConsoleBtn");
     if (devBtn) devBtn.onclick = openDevConsole;
     
-    // Кнопки скролла по углам
-    document.getElementById("scrollUpCorner").onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-    document.getElementById("scrollDownCorner").onclick = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    // Кнопки скролла (поменяны местами: ⬇ сверху, ⬆ снизу)
+    document.getElementById("scrollDownCorner").onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById("scrollUpCorner").onclick = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     
     // Переключение вкладок
     const craftSection = document.getElementById("craftSection");
@@ -1560,14 +1584,17 @@
     document.getElementById("craftPotionBtn").onclick = () => craftBase(40,"vial",unlocked.potions);
     document.getElementById("craftRangedWeaponBtn").onclick = () => craftBase(50,"shortbow",rangedUnlocked, true);
     
-    // Кнопки во всех вкладках
-    const allRebirthBtns = ["rebirthBtn", "rebirthBtnBattle", "rebirthBtnCollection", "rebirthBtnShop", "rebirthBtnStorage", "rebirthBtnEnchant"];
-    const allResetBtns = ["fullResetBtn", "fullResetBtnBattle", "fullResetBtnCollection", "fullResetBtnShop", "fullResetBtnStorage", "fullResetBtnEnchant"];
-    const allSupportBtns = ["supportBtn", "supportBtnBattle", "supportBtnCollection", "supportBtnShop", "supportBtnStorage", "supportBtnEnchant"];
+    // Маленькая кнопка обмена энергии
+    document.getElementById("exchangeEnergyBtnSmall").onclick = exchangeEnergy;
     
-    allRebirthBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = rebirth; });
-    allResetBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = showFullResetConfirm; });
-    allSupportBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = support; });
+    // Кнопки во всех вкладках (только для крафта, магазина и лавки)
+    const rebirthBtns = ["rebirthBtn", "rebirthBtnShop", "rebirthBtnEnchant"];
+    const resetBtns = ["fullResetBtn", "fullResetBtnShop", "fullResetBtnEnchant", "fullResetBtnBattle", "fullResetBtnCollection", "fullResetBtnStorage"];
+    const supportBtns = ["supportBtn", "supportBtnShop", "supportBtnEnchant", "supportBtnBattle", "supportBtnCollection", "supportBtnStorage"];
+    
+    rebirthBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = rebirth; });
+    resetBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = showFullResetConfirm; });
+    supportBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = support; });
     
     document.getElementById("exchangeEnergyBtn").onclick = exchangeEnergy;
     document.getElementById("refreshNpcBtn").onclick = refreshNPC;

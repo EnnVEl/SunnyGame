@@ -114,8 +114,8 @@
         .shop-item-card.unlocked { background: #4f6b3e; border-color: #ffd966; }
         .shop-item-price { font-size: 9px; margin-top: 4px; color: #ffd966; }
         .close-shop-btn { background: #aa4444; color: white; margin-top: 10px; width: 100%; }
-        .scroll-corner-btn { position: fixed; bottom: 20px; right: 20px; background: #4f6b3e; color: white; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; opacity: 0.8; }
-        .scroll-corner-btn.top { bottom: 70px; }
+        .scroll-corner-btn { position: fixed; bottom: 60px; right: 20px; background: #4f6b3e; color: white; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; opacity: 0.8; }
+        .scroll-corner-btn.top { bottom: 110px; }
         .update-notify { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ffaa33; color: #2b381c; padding: 12px 20px; border-radius: 40px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; gap: 15px; align-items: center; font-size: 14px; }
         .update-notify button { background: #2b381c; color: #ffaa33; margin: 0; padding: 6px 15px; }
         .full-energy-btn { background: #c9a03d; color: #2b381c; width: 100%; padding: 6px; font-size: 12px; margin-top: 8px; }
@@ -266,8 +266,8 @@
     </div>
 </div>
 <div class="dev-console" id="devConsoleBtn">🛠️ DEV</div>
-<button class="scroll-corner-btn" id="scrollUpCorner">⬆</button>
-<button class="scroll-corner-btn top" id="scrollDownCorner">⬇</button>
+<button class="scroll-corner-btn" id="scrollDownCorner">⬇</button>
+<button class="scroll-corner-btn top" id="scrollUpCorner">⬆</button>
 
 <script>
     // ========== СИСТЕМА АВТООБНОВЛЕНИЙ ==========
@@ -1530,9 +1530,9 @@
     const devBtn = document.getElementById("devConsoleBtn");
     if (devBtn) devBtn.onclick = openDevConsole;
     
-    // Кнопки скролла (уменьшены и изменена логика: ⬆ - наверх, ⬇ - вниз)
-    document.getElementById("scrollUpCorner").onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Кнопки скролла: ⬇ внизу (ближе к dev), ⬆ выше
     document.getElementById("scrollDownCorner").onclick = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    document.getElementById("scrollUpCorner").onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
     
     // Переключение вкладок
     const craftSection = document.getElementById("craftSection");

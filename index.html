@@ -10,7 +10,6 @@
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Segoe UI', Arial, system-ui; margin: 0; padding: 12px; min-height: 100vh; transition: background 0.4s ease, color 0.3s ease; background: #000000; color: #ffffff; }
         
-        /* Базовые стили для всех фонов */
         body.bg-white { background: #ffffff; color: #ffffff; }
         body.bg-red { background: #ff0000; color: #ffb3b3; }
         body.bg-orange { background: #ff8800; color: #ffddb3; }
@@ -121,9 +120,25 @@
         .update-notify button { background: #2b381c; color: #ffaa33; margin: 0; padding: 6px 15px; }
         .full-energy-btn { background: #c9a03d; color: #2b381c; width: 100%; padding: 6px; font-size: 12px; margin-top: 8px; }
         .rebirth-wrapper { text-align: center; margin: 12px 0 8px 0; }
+        
+        .cloud-status {
+            position: fixed;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.6);
+            color: #aaffaa;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 9px;
+            z-index: 999;
+            display: none;
+        }
+        .cloud-status.visible { display: block; }
+        .cloud-status.error { color: #ffaaaa; }
     </style>
 </head>
 <body class="bg-black">
+<div class="cloud-status" id="cloudStatus">☁️ Загрузка...</div>
 <div class="game-container">
     <div class="header">
         <div class="title">⚖️ SUNNYGAME</div>
@@ -141,7 +156,6 @@
         <button id="tabCollectionBtn" class="tab-btn">📜 Коллекция</button>
     </div>
     
-    <!-- Вкладка Крафт -->
     <div id="craftSection">
         <div class="main-row">
             <div class="craft-col">
@@ -194,7 +208,6 @@
         </div>
     </div>
     
-    <!-- Вкладка Битва -->
     <div id="battleSection" style="display:none;">
         <div class="battle-panel">
             <h2>🐉 ДРЕВНИЙ МОНСТР</h2>
@@ -217,7 +230,6 @@
         </div>
     </div>
     
-    <!-- Вкладка Коллекция -->
     <div id="collectionSection" style="display:none;">
         <div class="shop-panel">
             <h3>📜 КОЛЛЕКЦИЯ</h3>
@@ -227,7 +239,6 @@
         </div>
     </div>
     
-    <!-- Вкладка Магазин предметов -->
     <div id="shopTabSection" style="display:none;">
         <div class="shop-panel">
             <h3>🛒 МАГАЗИН ПРЕДМЕТОВ</h3>
@@ -242,7 +253,6 @@
         </div>
     </div>
     
-    <!-- Вкладка Хранилище -->
     <div id="storageTabSection" style="display:none;">
         <div class="shop-panel">
             <h3>📦 ХРАНИЛИЩЕ <button id="expandStorageBtnTab" class="inline-btn">➕ 1000🪙 (ячейка)</button></h3>
@@ -250,7 +260,6 @@
         </div>
     </div>
     
-    <!-- Вкладка Лавка (зачарования) -->
     <div id="enchantTabSection" style="display:none;">
         <div class="shop-panel">
             <h3>✨ ЗАЧАРОВАНИЯ</h3>
@@ -274,6 +283,102 @@
 <button class="scroll-corner-btn up" id="scrollUpCorner">⬆</button>
 
 <script>
+    // ========== СИСТЕМА СИНХРОНИЗАЦИИ СОХРАНЕНИЙ ==========
+    // Стратегия:
+    // 1. Если Telegram WebApp доступен — используем CloudStorage (облако Telegram, синхронизация между устройствами по аккаунту)
+    // 2. Параллельно дублируем всё в localStorage (быстрый доступ + fallback вне Telegram)
+    // 3. При старте: если CloudStorage пуст, но есть localStorage — мигрируем localStorage в облако
+    // 4. При старте: если CloudStorage не пуст — берём данные из облака (они самые свежие между устройствами)
+    
+    function getTelegramUserId() {
+        try {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+                const user = window.Telegram.WebApp.initDataUnsafe.user;
+                if (user && user.id) return String(user.id);
+            }
+        } catch(e) {}
+        return null;
+    }
+    
+    const TG_USER_ID = getTelegramUserId();
+    const SAVE_KEY = TG_USER_ID ? `balanceSave_tg_${TG_USER_ID}` : 'balanceSave_guest';
+    const PROMO_KEY = TG_USER_ID ? `usedPromoCodes_tg_${TG_USER_ID}` : 'usedPromoCodes_guest';
+    const BONUS_KEY = TG_USER_ID ? `lastBonusTime_tg_${TG_USER_ID}` : 'lastBonusTime_guest';
+    const ETAG_KEY  = TG_USER_ID ? `game_etag_tg_${TG_USER_ID}` : 'game_etag_guest';
+    
+    // Проверка, доступно ли CloudStorage
+    function isCloudStorageAvailable() {
+        try {
+            return !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.CloudStorage && TG_USER_ID);
+        } catch(e) { return false; }
+    }
+    
+    // Обёртка над CloudStorage с Promise
+    function cloudGet(key) {
+        return new Promise((resolve) => {
+            if (!isCloudStorageAvailable()) { resolve(null); return; }
+            try {
+                window.Telegram.WebApp.CloudStorage.getItem(key, (err, value) => {
+                    if (err || !value) resolve(null);
+                    else resolve(value);
+                });
+            } catch(e) { resolve(null); }
+        });
+    }
+    
+    function cloudSet(key, value) {
+        return new Promise((resolve) => {
+            if (!isCloudStorageAvailable()) { resolve(false); return; }
+            try {
+                window.Telegram.WebApp.CloudStorage.setItem(key, value, (err, success) => {
+                    if (err) { console.warn("CloudStorage set error:", err); resolve(false); }
+                    else resolve(success);
+                });
+            } catch(e) { resolve(false); }
+        });
+    }
+    
+    function cloudRemove(key) {
+        return new Promise((resolve) => {
+            if (!isCloudStorageAvailable()) { resolve(false); return; }
+            try {
+                window.Telegram.WebApp.CloudStorage.removeItem(key, (err, success) => {
+                    resolve(!err && success);
+                });
+            } catch(e) { resolve(false); }
+        });
+    }
+    
+    function setCloudStatus(text, isError) {
+        const el = document.getElementById("cloudStatus");
+        if (!el) return;
+        if (isCloudStorageAvailable()) {
+            el.classList.add("visible");
+            el.classList.toggle("error", !!isError);
+            el.textContent = text;
+            if (!isError) {
+                setTimeout(() => { el.classList.remove("visible"); }, 1500);
+            }
+        }
+    }
+    
+    // Сохранение в облако + localStorage (вызывается из saveGame)
+    // Делаем "тихую" запись в облако, чтобы не задерживать UI
+    let cloudSaveInProgress = false;
+    function saveToCloud(key, value) {
+        if (!isCloudStorageAvailable()) return;
+        cloudSet(key, value).then(ok => {
+            if (!ok) {
+                console.warn("⚠️ Не удалось сохранить в облако:", key);
+                setCloudStatus("⚠️ Ошибка синхронизации", true);
+            }
+        });
+    }
+    
+    // ========== ИНИЦИАЛИЗАЦИЯ АККАУНТА ==========
+    console.log("💾 Сохранения привязаны к:", TG_USER_ID ? `Telegram ID ${TG_USER_ID}` : "локальному устройству (вне Telegram)");
+    console.log("☁️ CloudStorage:", isCloudStorageAvailable() ? "доступен" : "недоступен");
+    
     // ========== СИСТЕМА АВТООБНОВЛЕНИЙ ==========
     (function setupAutoUpdate() {
         const CHECK_INTERVAL = 1000;
@@ -285,12 +390,12 @@
                 cache: 'no-store'
             }).then(response => {
                 const serverEtag = response.headers.get('ETag') || response.headers.get('Last-Modified') || Date.now().toString();
-                const storedEtag = localStorage.getItem('game_etag');
+                const storedEtag = localStorage.getItem(ETAG_KEY);
                 if (storedEtag && storedEtag !== serverEtag && !updateNotificationShown) {
                     updateNotificationShown = true;
                     showUpdateNotification();
                 }
-                localStorage.setItem('game_etag', serverEtag);
+                localStorage.setItem(ETAG_KEY, serverEtag);
             }).catch(e => console.log("Update check failed:", e));
         }
         
@@ -304,7 +409,7 @@
             `;
             document.body.appendChild(notifyDiv);
             document.getElementById('updateNowBtn').onclick = () => {
-                localStorage.removeItem('game_etag');
+                localStorage.removeItem(ETAG_KEY);
                 location.reload();
             };
             document.getElementById('updateLaterBtn').onclick = () => notifyDiv.remove();
@@ -356,7 +461,6 @@
         "vial":"🧴 Бутылёк","weak_potion":"🧪 Малое зелье","medium_potion":"🧪 Среднее зелье","strong_potion":"⚡ Сильное зелье","elixir":"✨ Эликсир","poison":"☠️ Яд","stamina":"💪 Бодрящее зелье","invisibility":"👻 Зелье невидимости","healing":"💚 Лечебное зелье","immortality":"🌟 Бессмертие"
     };
     
-    // Отслеживание купленных доступов к предметам в магазине
     let shopUnlocks = {
         materials: new Set(),
         weapons: new Set(),
@@ -366,7 +470,6 @@
         ranged: new Set()
     };
     
-    // Первый предмет в каждой категории доступен сразу при открытии категории
     function initDefaultShopUnlocks() {
         if(rebirthLevel >= 1) {
             if(unlocked.weapons && !shopUnlocks.weapons.has(0)) shopUnlocks.weapons.add(0);
@@ -464,10 +567,18 @@
     ];
     let ownedBgs=["black","white"]; let currentBg="black";
     
-    function loadPromoState() { let saved = localStorage.getItem("usedPromoCodes"); if(saved) usedPromoCodes = new Set(JSON.parse(saved)); }
-    function savePromoState() { localStorage.setItem("usedPromoCodes", JSON.stringify(Array.from(usedPromoCodes))); }
-    function loadBonusState() { let saved = localStorage.getItem("lastBonusTime"); if(saved) lastBonusTime = parseInt(saved); }
-    function saveBonusState() { localStorage.setItem("lastBonusTime", lastBonusTime); }
+    function loadPromoState() { let saved = localStorage.getItem(PROMO_KEY); if(saved) usedPromoCodes = new Set(JSON.parse(saved)); }
+    function savePromoState() { 
+        let data = JSON.stringify(Array.from(usedPromoCodes));
+        localStorage.setItem(PROMO_KEY, data); 
+        saveToCloud(PROMO_KEY, data);
+    }
+    function loadBonusState() { let saved = localStorage.getItem(BONUS_KEY); if(saved) lastBonusTime = parseInt(saved); }
+    function saveBonusState() { 
+        let data = String(lastBonusTime);
+        localStorage.setItem(BONUS_KEY, data); 
+        saveToCloud(BONUS_KEY, data);
+    }
     function resetBonusCooldown() { lastBonusTime = 0; saveBonusState(); alert("Кулдаун ежедневного бонуса сброшен!"); }
     function canGetBonus() { return Date.now() - lastBonusTime >= BONUS_COOLDOWN_MS; }
     
@@ -1255,7 +1366,15 @@
         confirmDiv.className = "confirm-overlay"; 
         confirmDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;"><h2>⚠️ ПОДТВЕРЖДЕНИЕ СБРОСА</h2><p>Вы уверены, что хотите полностью сбросить игру?</p><p>Будут удалены: монеты, энергия, предметы, прогресс крафта, зачарования, разблокировки, хранилище, коллекция, встреченные NPC.</p><p style="color:#ff6666;">Это действие необратимо!</p><div style="display:flex; gap:10px; justify-content:center; margin-top:15px;"><button id="confirmResetBtn" style="background:#aa3333;">✅ ДА, СБРОСИТЬ</button><button id="cancelResetBtn" style="background:#4f6b3e;">❌ ОТМЕНА</button></div></div>`; 
         document.body.appendChild(confirmDiv); 
-        document.getElementById("confirmResetBtn").onclick = () => { localStorage.clear(); location.reload(); }; 
+        document.getElementById("confirmResetBtn").onclick = () => { 
+            localStorage.removeItem(SAVE_KEY); 
+            localStorage.removeItem(PROMO_KEY); 
+            localStorage.removeItem(BONUS_KEY); 
+            cloudRemove(SAVE_KEY);
+            cloudRemove(PROMO_KEY);
+            cloudRemove(BONUS_KEY);
+            location.reload(); 
+        }; 
         document.getElementById("cancelResetBtn").onclick = () => confirmDiv.remove(); 
     }
     
@@ -1314,64 +1433,132 @@
         } else alert("Нужно 1.000.000 монет"); 
     }
     
-    function saveGame() { 
-        let save = { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes), monsterKills, currentMonsterReward, shopUnlocks: { materials: Array.from(shopUnlocks.materials), weapons: Array.from(shopUnlocks.weapons), armor: Array.from(shopUnlocks.armor), food: Array.from(shopUnlocks.food), potions: Array.from(shopUnlocks.potions), ranged: Array.from(shopUnlocks.ranged) } }; 
-        localStorage.setItem("balanceSave", JSON.stringify(save)); 
+    function buildSaveData() {
+        return { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes), monsterKills, currentMonsterReward, shopUnlocks: { materials: Array.from(shopUnlocks.materials), weapons: Array.from(shopUnlocks.weapons), armor: Array.from(shopUnlocks.armor), food: Array.from(shopUnlocks.food), potions: Array.from(shopUnlocks.potions), ranged: Array.from(shopUnlocks.ranged) } };
     }
     
-    function loadGame() { 
-        let data = localStorage.getItem("balanceSave"); 
-        if(!data) return false; 
-        try{ 
-            let s=JSON.parse(data); 
-            unlocked=s.unlocked; 
-            unlocksCount=s.unlocksCount; 
-            coins=s.coins; 
-            energy=s.energy; 
-            grid=s.grid; 
-            if(grid.length !== 16) grid = Array(16).fill(null); 
-            rebirthLevel=s.rebirthLevel; 
-            enchantWeapons=s.enchantWeapons||0; 
-            enchantRanged=s.enchantRanged||0; 
-            equippedWeapon=s.equippedWeapon; 
-            equippedRanged=s.equippedRanged; 
-            monsterHp=s.monsterHp; 
-            ownedBgs=s.ownedBgs||["black","white"]; 
-            currentBg=s.currentBg||"black"; 
-            discoveredItems=new Set(s.discoveredItems||[]); 
-            metNpcs=new Set(s.metNpcs||[]); 
-            storage=s.storage||[null,null,null]; 
-            rangedUnlocked=s.rangedUnlocked||false; 
-            lastBonusTime=s.lastBonusTime||0; 
-            usedPromoCodes=new Set(s.usedPromoCodes||[]); 
-            monsterKills = s.monsterKills || 0; 
-            currentMonsterReward = s.currentMonsterReward || 100; 
-            if(s.shopUnlocks) {
-                shopUnlocks.materials = new Set(s.shopUnlocks.materials || []);
-                shopUnlocks.weapons = new Set(s.shopUnlocks.weapons || []);
-                shopUnlocks.armor = new Set(s.shopUnlocks.armor || []);
-                shopUnlocks.food = new Set(s.shopUnlocks.food || []);
-                shopUnlocks.potions = new Set(s.shopUnlocks.potions || []);
-                shopUnlocks.ranged = new Set(s.shopUnlocks.ranged || []);
+    function saveGame() { 
+        let save = buildSaveData();
+        let json = JSON.stringify(save);
+        // Пишем в localStorage для мгновенного доступа и как fallback
+        localStorage.setItem(SAVE_KEY, json); 
+        // Пишем в облако Telegram для синхронизации между устройствами
+        saveToCloud(SAVE_KEY, json);
+        setCloudStatus("☁️ Сохранено");
+    }
+    
+    function applyLoadedSave(s) {
+        unlocked=s.unlocked; 
+        unlocksCount=s.unlocksCount; 
+        coins=s.coins; 
+        energy=s.energy; 
+        grid=s.grid; 
+        if(grid.length !== 16) grid = Array(16).fill(null); 
+        rebirthLevel=s.rebirthLevel; 
+        enchantWeapons=s.enchantWeapons||0; 
+        enchantRanged=s.enchantRanged||0; 
+        equippedWeapon=s.equippedWeapon; 
+        equippedRanged=s.equippedRanged; 
+        monsterHp=s.monsterHp; 
+        ownedBgs=s.ownedBgs||["black","white"]; 
+        currentBg=s.currentBg||"black"; 
+        discoveredItems=new Set(s.discoveredItems||[]); 
+        metNpcs=new Set(s.metNpcs||[]); 
+        storage=s.storage||[null,null,null]; 
+        rangedUnlocked=s.rangedUnlocked||false; 
+        lastBonusTime=s.lastBonusTime||0; 
+        usedPromoCodes=new Set(s.usedPromoCodes||[]); 
+        monsterKills = s.monsterKills || 0; 
+        currentMonsterReward = s.currentMonsterReward || 100; 
+        if(s.shopUnlocks) {
+            shopUnlocks.materials = new Set(s.shopUnlocks.materials || []);
+            shopUnlocks.weapons = new Set(s.shopUnlocks.weapons || []);
+            shopUnlocks.armor = new Set(s.shopUnlocks.armor || []);
+            shopUnlocks.food = new Set(s.shopUnlocks.food || []);
+            shopUnlocks.potions = new Set(s.shopUnlocks.potions || []);
+            shopUnlocks.ranged = new Set(s.shopUnlocks.ranged || []);
+        }
+        initDefaultShopUnlocks();
+        applyBackground(currentBg); 
+        document.getElementById("monsterHp").innerText=monsterHp; 
+        updateEquippedDisplay();
+        renderGrid(); 
+        updateUI(); 
+        renderShop(); 
+        renderEnchantShop(); 
+        updateCraftBtns(); 
+        initNPC(); 
+        renderBgShop(); 
+        renderCollection(); 
+        renderStorage();
+        renderStorageTab();
+        renderItemShop(); 
+        renderShopTab();
+    }
+    
+    // Асинхронная загрузка с учётом облака
+    async function loadGameAsync() {
+        let localData = localStorage.getItem(SAVE_KEY);
+        let cloudData = null;
+        
+        if (isCloudStorageAvailable()) {
+            setCloudStatus("☁️ Загрузка из облака...");
+            cloudData = await cloudGet(SAVE_KEY);
+        }
+        
+        // Приоритет: облако > localStorage
+        // Если в облаке есть сейв — используем его (это данные с других устройств)
+        // Если в облаке пусто, а локально есть — мигрируем наверх
+        let chosenData = null;
+        let source = "none";
+        
+        if (cloudData) {
+            chosenData = cloudData;
+            source = "cloud";
+        } else if (localData) {
+            chosenData = localData;
+            source = "local";
+            // Миграция: заливаем локальный сейв в облако
+            if (isCloudStorageAvailable()) {
+                console.log("⬆️ Миграция локального сейва в облако Telegram");
+                await cloudSet(SAVE_KEY, localData);
             }
-            initDefaultShopUnlocks();
-            applyBackground(currentBg); 
-            document.getElementById("monsterHp").innerText=monsterHp; 
-            updateEquippedDisplay();
-            renderGrid(); 
-            updateUI(); 
-            renderShop(); 
-            renderEnchantShop(); 
-            updateCraftBtns(); 
-            initNPC(); 
-            renderBgShop(); 
-            renderCollection(); 
-            renderStorage();
-            renderStorageTab();
-            renderItemShop(); 
-            renderShopTab();
-            return true; 
-        } catch(e){ return false; } 
+        }
+        
+        if (!chosenData) {
+            setCloudStatus("🆕 Новая игра");
+            return false;
+        }
+        
+        try {
+            let s = JSON.parse(chosenData);
+            applyLoadedSave(s);
+            // Синхронизируем локальный с localStorage на случай если источник — облако
+            if (source === "cloud") {
+                localStorage.setItem(SAVE_KEY, chosenData);
+            }
+            console.log("✅ Сейв загружен из:", source);
+            setCloudStatus(source === "cloud" ? "☁️ Загружено из облака" : "💾 Загружено локально");
+            return true;
+        } catch(e) {
+            console.error("Ошибка парсинга сейва:", e);
+            return false;
+        }
+    }
+    
+    // Загружаем промо и бонус из облака тоже
+    async function loadPromoAndBonusFromCloud() {
+        if (!isCloudStorageAvailable()) return;
+        try {
+            let [cloudPromo, cloudBonus] = await Promise.all([cloudGet(PROMO_KEY), cloudGet(BONUS_KEY)]);
+            if (cloudPromo) {
+                try { usedPromoCodes = new Set(JSON.parse(cloudPromo)); localStorage.setItem(PROMO_KEY, cloudPromo); } catch(e){}
+            }
+            if (cloudBonus) {
+                let t = parseInt(cloudBonus);
+                if (!isNaN(t)) { lastBonusTime = t; localStorage.setItem(BONUS_KEY, cloudBonus); }
+            }
+        } catch(e) { console.warn("Ошибка загрузки промо/бонуса из облака:", e); }
     }
     
     // ========== КОНСОЛЬ (ТОЛЬКО ДЛЯ АДМИНА) ==========
@@ -1400,7 +1587,7 @@
             return null; 
         }
         
-        let cmd = prompt("🔧 КОНСОЛЬ АДМИНИСТРАТОРА\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] [число] - выдать предмет(ы) (можно через запятую)\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун\nResetBalance - сбросить баланс (как новая игра)\nKillAura - убить монстра с 1 удара");
+        let cmd = prompt("🔧 КОНСОЛЬ АДМИНИСТРАТОРА\n\nДоступные команды:\nMoney [сумма] - добавить монеты\nGive [предмет] [число] - выдать предмет(ы) (можно через запятую)\nUnlockAll - разблокировать всё\nEnergy [кол-во] - добавить энергию\nList - показать список всех предметов\nResetDailyBonus - сбросить кулдаун\nResetBalance - сбросить баланс (как новая игра)\nKillAura - убить монстра с 1 удара\nCloudInfo - статус облака");
         if(!cmd) return;
         let lowerCmd=cmd.toLowerCase();
         
@@ -1484,7 +1671,12 @@
         }
         else if(lowerCmd==="resetbalance"){ 
             if(confirm("⚠️ СБРОС БАЛАНСА: весь прогресс будет удалён. Нажмите ОК для подтверждения.")) {
-                localStorage.clear();
+                localStorage.removeItem(SAVE_KEY);
+                localStorage.removeItem(PROMO_KEY);
+                localStorage.removeItem(BONUS_KEY);
+                cloudRemove(SAVE_KEY);
+                cloudRemove(PROMO_KEY);
+                cloudRemove(BONUS_KEY);
                 location.reload();
             }
         }
@@ -1500,133 +1692,154 @@
             saveGame();
             alert("KillAura активирована! Монстр убит, награда увеличена.");
         }
+        else if(lowerCmd === "cloudinfo") {
+            alert(`☁️ CloudStorage: ${isCloudStorageAvailable() ? "доступен ✅" : "недоступен ❌"}\nTelegram ID: ${TG_USER_ID || "не определён (вне Telegram)"}\nКлюч сохранения: ${SAVE_KEY}`);
+        }
         else alert("Неизвестная команда.");
     }
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
-    if(!localStorage.getItem("balanceSave")) {
-        let infoDiv = document.createElement("div");
-        infoDiv.className = "info-overlay";
-        infoDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
-            <h2>⚖️ SUNNYGAME</h2>
-            <div class="info-text">🔨 <span class="info-highlight">КРАФТ</span> — объединяй 2 одинаковых предмета, чтобы создать более сильный</div>
-            <div class="info-text">⚔️ <span class="info-highlight">БИТВА</span> — атакуй монстра, получай монеты за убийство. Награда растёт с каждым убийством</div>
-            <div class="info-text">🏹 <span class="info-highlight">ЛУКИ</span> — зажми кнопку атаки на 1 секунду для заряженного удара (+5 урона)</div>
-            <div class="info-text">✨ <span class="info-highlight">ЗАЧАРОВАНИЯ</span> — 10 чарок на каждое оружие, урон от оружия и луков суммируется</div>
-            <div class="info-text">📈 <span class="info-highlight">ПРОГРЕССИЯ</span> — при более высоком соединении оружия или лука даётся +1 урона за каждое соединение</div>
-            <div class="info-text">🌀 <span class="info-highlight">ПЕРЕРОЖДЕНИЕ</span> — за 1 млн монет сбрасывает прогресс, открывает луки, зачарования и магазин предметов</div>
-            <div class="info-text">🛒 <span class="info-highlight">МАГАЗИН ПРЕДМЕТОВ</span> — открывается после перерождения. Чтобы купить предмет, нужно сначала открыть его за цену крафта максимального предмета в категории</div>
-            <hr>
-            <div class="info-text">💾 Прогресс сохраняется <span class="info-highlight">на устройстве</span>.</div>
-            <button id="closeInfo" style="margin-top:15px;">▶ НАЧАТЬ ИГРУ</button>
-        </div>`;
-        document.body.appendChild(infoDiv);
-        document.getElementById("closeInfo").onclick = () => infoDiv.remove();
-    }
-    
-    loadPromoState();
-    loadBonusState();
-    if(!loadGame()) {
-        initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); renderStorageTab(); applyBackground("black");
-    }
-    
-    initDevConsole();
-    const devBtn = document.getElementById("devConsoleBtn");
-    if (devBtn) devBtn.onclick = openDevConsole;
-    
-    // Кнопки скролла: ⬇ внизу, ⬆ сверху (у правого края, выше кнопки dev)
-    document.getElementById("scrollUpCorner").onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-    document.getElementById("scrollDownCorner").onclick = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    
-    // Переключение вкладок
-    const craftSection = document.getElementById("craftSection");
-    const battleSection = document.getElementById("battleSection");
-    const collectionSection = document.getElementById("collectionSection");
-    const shopTabSection = document.getElementById("shopTabSection");
-    const storageTabSection = document.getElementById("storageTabSection");
-    const enchantTabSection = document.getElementById("enchantTabSection");
-    
-    function showTab(tab) {
-        craftSection.style.display = "none";
-        battleSection.style.display = "none";
-        collectionSection.style.display = "none";
-        shopTabSection.style.display = "none";
-        storageTabSection.style.display = "none";
-        enchantTabSection.style.display = "none";
-        
-        if(tab === 'craft') craftSection.style.display = "block";
-        else if(tab === 'battle') battleSection.style.display = "block";
-        else if(tab === 'collection') { collectionSection.style.display = "block"; renderCollection(); }
-        else if(tab === 'shop') { shopTabSection.style.display = "block"; renderShopTab(); }
-        else if(tab === 'storage') { storageTabSection.style.display = "block"; renderStorageTab(); }
-        else if(tab === 'enchant') { enchantTabSection.style.display = "block"; renderEnchantShop(); renderBgShop(); renderShop(); }
-    }
-    
-    document.getElementById("tabCraftBtn").onclick = () => showTab('craft');
-    document.getElementById("tabBattleBtn").onclick = () => showTab('battle');
-    document.getElementById("tabCollectionBtn").onclick = () => showTab('collection');
-    document.getElementById("tabShopBtn").onclick = () => showTab('shop');
-    document.getElementById("tabStorageBtn").onclick = () => showTab('storage');
-    document.getElementById("tabEnchantBtn").onclick = () => showTab('enchant');
-    
-    // Обработка кнопки назад на телефоне
-    window.addEventListener('popstate', function(event) {
-        if(craftSection.style.display !== "block") {
-            showTab('craft');
-            event.preventDefault();
-            history.pushState(null, null, location.href);
+    (async function initGame() {
+        if(!localStorage.getItem(SAVE_KEY) && !isCloudStorageAvailable()) {
+            let infoDiv = document.createElement("div");
+            infoDiv.className = "info-overlay";
+            infoDiv.innerHTML = `<div style="background:#1a1a1a; padding:20px; border-radius:30px; max-width:90%;">
+                <h2>⚖️ SUNNYGAME</h2>
+                <div class="info-text">🔨 <span class="info-highlight">КРАФТ</span> — объединяй 2 одинаковых предмета, чтобы создать более сильный</div>
+                <div class="info-text">⚔️ <span class="info-highlight">БИТВА</span> — атакуй монстра, получай монеты за убийство. Награда растёт с каждым убийством</div>
+                <div class="info-text">🏹 <span class="info-highlight">ЛУКИ</span> — зажми кнопку атаки на 1 секунду для заряженного удара (+5 урона)</div>
+                <div class="info-text">✨ <span class="info-highlight">ЗАЧАРОВАНИЯ</span> — 10 чарок на каждое оружие, урон от оружия и луков суммируется</div>
+                <div class="info-text">📈 <span class="info-highlight">ПРОГРЕССИЯ</span> — при более высоком соединении оружия или лука даётся +1 урона за каждое соединение</div>
+                <div class="info-text">🌀 <span class="info-highlight">ПЕРЕРОЖДЕНИЕ</span> — за 1 млн монет сбрасывает прогресс, открывает луки, зачарования и магазин предметов</div>
+                <div class="info-text">🛒 <span class="info-highlight">МАГАЗИН ПРЕДМЕТОВ</span> — открывается после перерождения. Чтобы купить предмет, нужно сначала открыть его за цену крафта максимального предмета в категории</div>
+                <hr>
+                <div class="info-text">💾 Прогресс сохраняется <span class="info-highlight">в облаке Telegram</span> и синхронизируется между всеми вашими устройствами.</div>
+                <button id="closeInfo" style="margin-top:15px;">▶ НАЧАТЬ ИГРУ</button>
+            </div>`;
+            document.body.appendChild(infoDiv);
+            document.getElementById("closeInfo").onclick = () => infoDiv.remove();
         }
-    });
-    history.pushState(null, null, location.href);
-    
-    // Кнопки действий
-    document.getElementById("dailyBonusBtn").onclick = claimDailyBonus;
-    document.getElementById("applyPromoBtn").onclick = applyPromo;
-    document.getElementById("craftResourceBtn").onclick = () => craftBase(5,"grass",true);
-    document.getElementById("craftWeaponBtn").onclick = () => craftBase(10,"sword",unlocked.weapons);
-    document.getElementById("craftArmorBtn").onclick = () => craftBase(20,"leather",unlocked.armor);
-    document.getElementById("craftFoodBtn").onclick = () => craftBase(30,"berry",unlocked.food);
-    document.getElementById("craftPotionBtn").onclick = () => craftBase(40,"vial",unlocked.potions);
-    document.getElementById("craftRangedWeaponBtn").onclick = () => craftBase(50,"shortbow",rangedUnlocked, true);
-    
-    // Маленькая кнопка обмена энергии
-    document.getElementById("exchangeEnergyBtnSmall").onclick = exchangeEnergy;
-    
-    // Кнопки во всех вкладках (только для крафта, магазина и лавки)
-    const rebirthBtns = ["rebirthBtn", "rebirthBtnShop", "rebirthBtnEnchant"];
-    const resetBtns = ["fullResetBtn", "fullResetBtnShop", "fullResetBtnEnchant", "fullResetBtnBattle", "fullResetBtnCollection", "fullResetBtnStorage"];
-    const supportBtns = ["supportBtn", "supportBtnShop", "supportBtnEnchant", "supportBtnBattle", "supportBtnCollection", "supportBtnStorage"];
-    
-    rebirthBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = rebirth; });
-    resetBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = showFullResetConfirm; });
-    supportBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = support; });
-    
-    document.getElementById("exchangeEnergyBtn").onclick = exchangeEnergy;
-    document.getElementById("refreshNpcBtn").onclick = refreshNPC;
-    document.getElementById("expandStorageBtnTab").onclick = expandStorage;
-    document.getElementById("sellSelectedBtn").onclick = sellSelectedItem;
-    document.getElementById("equipFromGridBtn").onclick = equipFromGridAction;
-    document.getElementById("toStorageBtn").onclick = addToStorage;
-    
-    document.getElementById("weaponSlotBattle").onclick = () => selectEquipmentSlot('weapon');
-    document.getElementById("rangedSlotBattle").onclick = () => selectEquipmentSlot('ranged');
-    
-    let attackBtn = document.getElementById("attackBtn");
-    attackBtn.addEventListener("mousedown", startCharge);
-    attackBtn.addEventListener("mouseup", endCharge);
-    attackBtn.addEventListener("mouseleave", endCharge);
-    attackBtn.addEventListener("touchstart",(e)=>{ e.preventDefault(); startCharge(); });
-    attackBtn.addEventListener("touchend",(e)=>{ e.preventDefault(); endCharge(); });
-    
-    let energyInterval = setInterval(()=>{ energy = Math.min(energy+1,999); updateUI(); saveGame(); },60000);
-    
-    // Магазин предметов в крафте
-    const itemShopPanel = document.getElementById("itemShopPanel");
-    const openShopBtn = document.getElementById("openItemShopBtn");
-    if(openShopBtn) openShopBtn.onclick = () => { itemShopPanel.style.display = itemShopPanel.style.display === "none" ? "block" : "none"; renderItemShop(); };
-    document.getElementById("closeShopBtn").onclick = () => { itemShopPanel.style.display = "none"; };
-    
-    showTab('craft');
+        
+        // Загружаем промо/бонус из облака
+        await loadPromoAndBonusFromCloud();
+        loadPromoState();
+        loadBonusState();
+        
+        // Загружаем основной сейв (асинхронно, с облаком)
+        let loaded = await loadGameAsync();
+        
+        if(!loaded) {
+            initNPC(); renderShop(); renderGrid(); updateUI(); renderBgShop(); renderEnchantShop(); updateCraftBtns(); renderCollection(); renderStorage(); renderStorageTab(); applyBackground("black");
+        }
+        
+        initDevConsole();
+        const devBtn = document.getElementById("devConsoleBtn");
+        if (devBtn) devBtn.onclick = openDevConsole;
+        
+        document.getElementById("scrollUpCorner").onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById("scrollDownCorner").onclick = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        
+        const craftSection = document.getElementById("craftSection");
+        const battleSection = document.getElementById("battleSection");
+        const collectionSection = document.getElementById("collectionSection");
+        const shopTabSection = document.getElementById("shopTabSection");
+        const storageTabSection = document.getElementById("storageTabSection");
+        const enchantTabSection = document.getElementById("enchantTabSection");
+        
+        function showTab(tab) {
+            craftSection.style.display = "none";
+            battleSection.style.display = "none";
+            collectionSection.style.display = "none";
+            shopTabSection.style.display = "none";
+            storageTabSection.style.display = "none";
+            enchantTabSection.style.display = "none";
+            
+            if(tab === 'craft') craftSection.style.display = "block";
+            else if(tab === 'battle') battleSection.style.display = "block";
+            else if(tab === 'collection') { collectionSection.style.display = "block"; renderCollection(); }
+            else if(tab === 'shop') { shopTabSection.style.display = "block"; renderShopTab(); }
+            else if(tab === 'storage') { storageTabSection.style.display = "block"; renderStorageTab(); }
+            else if(tab === 'enchant') { enchantTabSection.style.display = "block"; renderEnchantShop(); renderBgShop(); renderShop(); }
+        }
+        
+        document.getElementById("tabCraftBtn").onclick = () => showTab('craft');
+        document.getElementById("tabBattleBtn").onclick = () => showTab('battle');
+        document.getElementById("tabCollectionBtn").onclick = () => showTab('collection');
+        document.getElementById("tabShopBtn").onclick = () => showTab('shop');
+        document.getElementById("tabStorageBtn").onclick = () => showTab('storage');
+        document.getElementById("tabEnchantBtn").onclick = () => showTab('enchant');
+        
+        window.addEventListener('popstate', function(event) {
+            if(craftSection.style.display !== "block") {
+                showTab('craft');
+                event.preventDefault();
+                history.pushState(null, null, location.href);
+            }
+        });
+        history.pushState(null, null, location.href);
+        
+        document.getElementById("dailyBonusBtn").onclick = claimDailyBonus;
+        document.getElementById("applyPromoBtn").onclick = applyPromo;
+        document.getElementById("craftResourceBtn").onclick = () => craftBase(5,"grass",true);
+        document.getElementById("craftWeaponBtn").onclick = () => craftBase(10,"sword",unlocked.weapons);
+        document.getElementById("craftArmorBtn").onclick = () => craftBase(20,"leather",unlocked.armor);
+        document.getElementById("craftFoodBtn").onclick = () => craftBase(30,"berry",unlocked.food);
+        document.getElementById("craftPotionBtn").onclick = () => craftBase(40,"vial",unlocked.potions);
+        document.getElementById("craftRangedWeaponBtn").onclick = () => craftBase(50,"shortbow",rangedUnlocked, true);
+        
+        document.getElementById("exchangeEnergyBtnSmall").onclick = exchangeEnergy;
+        
+        const rebirthBtns = ["rebirthBtn", "rebirthBtnShop", "rebirthBtnEnchant"];
+        const resetBtns = ["fullResetBtn", "fullResetBtnShop", "fullResetBtnEnchant", "fullResetBtnBattle", "fullResetBtnCollection", "fullResetBtnStorage"];
+        const supportBtns = ["supportBtn", "supportBtnShop", "supportBtnEnchant", "supportBtnBattle", "supportBtnCollection", "supportBtnStorage"];
+        
+        rebirthBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = rebirth; });
+        resetBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = showFullResetConfirm; });
+        supportBtns.forEach(id => { const btn = document.getElementById(id); if(btn) btn.onclick = support; });
+        
+        document.getElementById("exchangeEnergyBtn").onclick = exchangeEnergy;
+        document.getElementById("refreshNpcBtn").onclick = refreshNPC;
+        document.getElementById("expandStorageBtnTab").onclick = expandStorage;
+        document.getElementById("sellSelectedBtn").onclick = sellSelectedItem;
+        document.getElementById("equipFromGridBtn").onclick = equipFromGridAction;
+        document.getElementById("toStorageBtn").onclick = addToStorage;
+        
+        document.getElementById("weaponSlotBattle").onclick = () => selectEquipmentSlot('weapon');
+        document.getElementById("rangedSlotBattle").onclick = () => selectEquipmentSlot('ranged');
+        
+        let attackBtn = document.getElementById("attackBtn");
+        attackBtn.addEventListener("mousedown", startCharge);
+        attackBtn.addEventListener("mouseup", endCharge);
+        attackBtn.addEventListener("mouseleave", endCharge);
+        attackBtn.addEventListener("touchstart",(e)=>{ e.preventDefault(); startCharge(); });
+        attackBtn.addEventListener("touchend",(e)=>{ e.preventDefault(); endCharge(); });
+        
+        let energyInterval = setInterval(()=>{ energy = Math.min(energy+1,999); updateUI(); saveGame(); },60000);
+        
+        const itemShopPanel = document.getElementById("itemShopPanel");
+        const openShopBtn = document.getElementById("openItemShopBtn");
+        if(openShopBtn) openShopBtn.onclick = () => { itemShopPanel.style.display = itemShopPanel.style.display === "none" ? "block" : "none"; renderItemShop(); };
+        document.getElementById("closeShopBtn").onclick = () => { itemShopPanel.style.display = "none"; };
+        
+        showTab('craft');
+        
+        // Проверка обновлений с облака при возврате фокуса (если игра открыта в фоне на другом устройстве)
+        document.addEventListener("visibilitychange", async function() {
+            if (!document.hidden && isCloudStorageAvailable()) {
+                let cloudData = await cloudGet(SAVE_KEY);
+                let localData = localStorage.getItem(SAVE_KEY);
+                if (cloudData && cloudData !== localData) {
+                    try {
+                        let s = JSON.parse(cloudData);
+                        applyLoadedSave(s);
+                        localStorage.setItem(SAVE_KEY, cloudData);
+                        console.log("🔄 Синхронизировано из облака после возврата в игру");
+                        setCloudStatus("☁️ Синхронизировано");
+                    } catch(e) { console.warn("Ошибка синхронизации из облака:", e); }
+                }
+            }
+        });
+    })();
 </script>
 </body>
 </html>

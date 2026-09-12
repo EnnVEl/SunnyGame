@@ -285,10 +285,11 @@
 <script>
     // ========== СИСТЕМА СИНХРОНИЗАЦИИ СОХРАНЕНИЙ ==========
     // Стратегия:
-    // 1. Если Telegram WebApp доступен — используем CloudStorage (облако Telegram, синхронизация между устройствами по аккаунту)
-    // 2. Параллельно дублируем всё в localStorage (быстрый доступ + fallback вне Telegram)
-    // 3. При старте: если CloudStorage пуст, но есть localStorage — мигрируем localStorage в облако
-    // 4. При старте: если CloudStorage не пуст — берём данные из облака (они самые свежие между устройствами)
+    // 1. localStorage — синхронный, мгновенный, всегда свежий на этом устройстве.
+    // 2. CloudStorage Telegram — асинхронный, используется для синхронизации между устройствами.
+    // 3. При загрузке сравниваем timestamp (_ts) локального и облачного сейвов и берём СВЕЖЕЙШИЙ,
+    //    чтобы избежать откатов, если облако не успело записаться.
+    // 4. При сворачивании/закрытии принудительно сохраняем.
     
     function getTelegramUserId() {
         try {
@@ -306,14 +307,12 @@
     const BONUS_KEY = TG_USER_ID ? `lastBonusTime_tg_${TG_USER_ID}` : 'lastBonusTime_guest';
     const ETAG_KEY  = TG_USER_ID ? `game_etag_tg_${TG_USER_ID}` : 'game_etag_guest';
     
-    // Проверка, доступно ли CloudStorage
     function isCloudStorageAvailable() {
         try {
             return !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.CloudStorage && TG_USER_ID);
         } catch(e) { return false; }
     }
     
-    // Обёртка над CloudStorage с Promise
     function cloudGet(key) {
         return new Promise((resolve) => {
             if (!isCloudStorageAvailable()) { resolve(null); return; }
@@ -362,9 +361,10 @@
         }
     }
     
-    // Сохранение в облако + localStorage (вызывается из saveGame)
-    // Делаем "тихую" запись в облако, чтобы не задерживать UI
-    let cloudSaveInProgress = false;
+    // Текущее "актуальное" время последнего сохранения в памяти
+    let lastLocalSaveTs = 0;
+    
+    // "Тихая" запись в облако
     function saveToCloud(key, value) {
         if (!isCloudStorageAvailable()) return;
         cloudSet(key, value).then(ok => {
@@ -373,6 +373,43 @@
                 setCloudStatus("⚠️ Ошибка синхронизации", true);
             }
         });
+    }
+    
+    // Синхронная запись только в localStorage (используется при закрытии/сворачивании)
+    function saveLocalOnly() {
+        try {
+            let save = buildSaveData();
+            save._ts = Date.now();
+            let json = JSON.stringify(save);
+            localStorage.setItem(SAVE_KEY, json);
+            lastLocalSaveTs = save._ts;
+        } catch(e) { console.warn("saveLocalOnly error:", e); }
+    }
+    
+    // Полное сохранение: localStorage + облако
+    function saveGame() { 
+        let save = buildSaveData();
+        save._ts = Date.now();
+        lastLocalSaveTs = save._ts;
+        let json = JSON.stringify(save);
+        // 1) Синхронно в localStorage — это наш "источник правды" на устройстве
+        localStorage.setItem(SAVE_KEY, json); 
+        // 2) Асинхронно в облако — для синхронизации между устройствами
+        saveToCloud(SAVE_KEY, json);
+        setCloudStatus("☁️ Сохранено");
+    }
+    
+    // Принудительное сохранение при сворачивании/уходе
+    function forceSaveNow() {
+        // Сначала локально — синхронно и гарантированно
+        saveLocalOnly();
+        // Затем пытаемся отправить в облако (асинхронно, но хотя бы попытка)
+        try {
+            let save = buildSaveData();
+            save._ts = lastLocalSaveTs;
+            let json = JSON.stringify(save);
+            saveToCloud(SAVE_KEY, json);
+        } catch(e) {}
     }
     
     // ========== ИНИЦИАЛИЗАЦИЯ АККАУНТА ==========
@@ -706,19 +743,17 @@
         return allItems;
     }
     
-    // ========== ИЗМЕНЕНО: строгая проверка количества каждого предмета в вишлисте ==========
+    // Строгая проверка количества каждого предмета в вишлисте
     function sellToNPC() { 
         if(!currentNpc) return; 
         let wishlist = currentNpc.wishlist;
         
-        // Считаем, сколько каждого предмета нужно (с учётом дубликатов)
         let requiredCounts = new Map();
         for(let item of wishlist) {
             if(!item) continue;
             requiredCounts.set(item, (requiredCounts.get(item) || 0) + 1);
         }
         
-        // Считаем, сколько каждого предмета есть всего (сетка + хранилище)
         let availableCounts = new Map();
         let allItems = getAllItemsFromGridAndStorage();
         for(let item of allItems) {
@@ -726,7 +761,6 @@
             availableCounts.set(item, (availableCounts.get(item) || 0) + 1);
         }
         
-        // Проверяем, хватает ли каждого предмета ровно в нужном количестве
         let missing = [];
         for(let [item, needCount] of requiredCounts.entries()) {
             let haveCount = availableCounts.get(item) || 0;
@@ -742,7 +776,6 @@
         
         let totalPrice = calculateNpcSellPrice(wishlist);
         
-        // Проверяем, есть ли нужные предметы в хранилище (для подтверждения)
         let hasInStorage = false;
         for(let [item, needCount] of requiredCounts.entries()) {
             let inGrid = grid.filter(x => x === item).length;
@@ -755,20 +788,17 @@
         let useStorage = false;
         if(hasInStorage) {
             useStorage = confirm(`Некоторые предметы находятся в хранилище. Взять их оттуда для продажи?`);
-            if(!useStorage) return; // отказ — не продаём
+            if(!useStorage) return;
         }
         
-        // Списываем нужное количество каждого предмета
         for(let [item, needCount] of requiredCounts.entries()) {
             let remaining = needCount;
-            // Сначала списываем из сетки
             for(let i = 0; i < grid.length && remaining > 0; i++) {
                 if(grid[i] === item) {
                     grid[i] = null;
                     remaining--;
                 }
             }
-            // Если нужно, списываем из хранилища
             if(remaining > 0 && useStorage) {
                 for(let i = 0; i < storage.length && remaining > 0; i++) {
                     if(storage[i] === item) {
@@ -1454,16 +1484,6 @@
         return { unlocked, unlocksCount, coins, energy, grid, rebirthLevel, enchantWeapons, enchantRanged, equippedWeapon, equippedRanged, monsterHp, ownedBgs, currentBg, discoveredItems:Array.from(discoveredItems), metNpcs:Array.from(metNpcs), storage, rangedUnlocked, lastBonusTime, usedPromoCodes:Array.from(usedPromoCodes), monsterKills, currentMonsterReward, shopUnlocks: { materials: Array.from(shopUnlocks.materials), weapons: Array.from(shopUnlocks.weapons), armor: Array.from(shopUnlocks.armor), food: Array.from(shopUnlocks.food), potions: Array.from(shopUnlocks.potions), ranged: Array.from(shopUnlocks.ranged) } };
     }
     
-    function saveGame() { 
-        let save = buildSaveData();
-        let json = JSON.stringify(save);
-        // Пишем в localStorage для мгновенного доступа и как fallback
-        localStorage.setItem(SAVE_KEY, json); 
-        // Пишем в облако Telegram для синхронизации между устройствами
-        saveToCloud(SAVE_KEY, json);
-        setCloudStatus("☁️ Сохранено");
-    }
-    
     function applyLoadedSave(s) {
         unlocked=s.unlocked; 
         unlocksCount=s.unlocksCount; 
@@ -1495,6 +1515,7 @@
             shopUnlocks.potions = new Set(s.shopUnlocks.potions || []);
             shopUnlocks.ranged = new Set(s.shopUnlocks.ranged || []);
         }
+        lastLocalSaveTs = s._ts || 0;
         initDefaultShopUnlocks();
         applyBackground(currentBg); 
         document.getElementById("monsterHp").innerText=monsterHp; 
@@ -1513,7 +1534,7 @@
         renderShopTab();
     }
     
-    // Асинхронная загрузка с учётом облака
+    // Асинхронная загрузка с учётом облака и timestamp
     async function loadGameAsync() {
         let localData = localStorage.getItem(SAVE_KEY);
         let cloudData = null;
@@ -1523,23 +1544,40 @@
             cloudData = await cloudGet(SAVE_KEY);
         }
         
-        // Приоритет: облако > localStorage
-        // Если в облаке есть сейв — используем его (это данные с других устройств)
-        // Если в облаке пусто, а локально есть — мигрируем наверх
+        // Разбираем timestamp обоих сейвов
+        let localTs = 0, cloudTs = 0;
+        if (localData) {
+            try { localTs = JSON.parse(localData)._ts || 0; } catch(e) {}
+        }
+        if (cloudData) {
+            try { cloudTs = JSON.parse(cloudData)._ts || 0; } catch(e) {}
+        }
+        
+        // Выбираем СВЕЖЕЙШИЙ сейв. Если timestamp'ов нет — предпочитаем локальный
+        // (он точно есть на этом устройстве, а облако могло отстать).
         let chosenData = null;
         let source = "none";
-        
-        if (cloudData) {
-            chosenData = cloudData;
-            source = "cloud";
+        if (localData && cloudData) {
+            if (cloudTs > localTs) {
+                chosenData = cloudData;
+                source = "cloud";
+            } else {
+                chosenData = localData;
+                source = "local";
+                // Локальный свежее — заливаем его в облако, чтобы не было рассинхрона
+                if (isCloudStorageAvailable()) {
+                    await cloudSet(SAVE_KEY, localData);
+                }
+            }
         } else if (localData) {
             chosenData = localData;
             source = "local";
-            // Миграция: заливаем локальный сейв в облако
             if (isCloudStorageAvailable()) {
-                console.log("⬆️ Миграция локального сейва в облако Telegram");
                 await cloudSet(SAVE_KEY, localData);
             }
+        } else if (cloudData) {
+            chosenData = cloudData;
+            source = "cloud";
         }
         
         if (!chosenData) {
@@ -1550,11 +1588,10 @@
         try {
             let s = JSON.parse(chosenData);
             applyLoadedSave(s);
-            // Синхронизируем локальный с localStorage на случай если источник — облако
             if (source === "cloud") {
                 localStorage.setItem(SAVE_KEY, chosenData);
             }
-            console.log("✅ Сейв загружен из:", source);
+            console.log("✅ Сейв загружен из:", source, "ts:", s._ts);
             setCloudStatus(source === "cloud" ? "☁️ Загружено из облака" : "💾 Загружено локально");
             return true;
         } catch(e) {
@@ -1563,7 +1600,6 @@
         }
     }
     
-    // Загружаем промо и бонус из облака тоже
     async function loadPromoAndBonusFromCloud() {
         if (!isCloudStorageAvailable()) return;
         try {
@@ -1737,12 +1773,10 @@
             document.getElementById("closeInfo").onclick = () => infoDiv.remove();
         }
         
-        // Загружаем промо/бонус из облака
         await loadPromoAndBonusFromCloud();
         loadPromoState();
         loadBonusState();
         
-        // Загружаем основной сейв (асинхронно, с облаком)
         let loaded = await loadGameAsync();
         
         if(!loaded) {
@@ -1840,21 +1874,47 @@
         
         showTab('craft');
         
-        // Проверка обновлений с облака при возврате фокуса (если игра открыта в фоне на другом устройстве)
-        document.addEventListener("visibilitychange", async function() {
-            if (!document.hidden && isCloudStorageAvailable()) {
-                let cloudData = await cloudGet(SAVE_KEY);
-                let localData = localStorage.getItem(SAVE_KEY);
-                if (cloudData && cloudData !== localData) {
-                    try {
-                        let s = JSON.parse(cloudData);
-                        applyLoadedSave(s);
-                        localStorage.setItem(SAVE_KEY, cloudData);
-                        console.log("🔄 Синхронизировано из облака после возврата в игру");
-                        setCloudStatus("☁️ Синхронизировано");
-                    } catch(e) { console.warn("Ошибка синхронизации из облака:", e); }
+        // ========== ПРИНУДИТЕЛЬНОЕ СОХРАНЕНИЕ ПРИ СВОРАЧИВАНИИ/ЗАКРЫТИИ ==========
+        // visibilitychange срабатывает при сворачивании, переключении вкладок, блокировке экрана
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                // Игра уходит в фон — сохраняем срочно и синхронно локально,
+                // плюс пытаемся отправить в облако.
+                console.log("⏸ Игра свёрнута — принудительное сохранение");
+                forceSaveNow();
+            } else {
+                // Игра возвращается — синхронизируем из облака ТОЛЬКО если облако свежее
+                if (isCloudStorageAvailable()) {
+                    cloudGet(SAVE_KEY).then(cloudData => {
+                        if (!cloudData) return;
+                        let cloudTs = 0;
+                        try { cloudTs = JSON.parse(cloudData)._ts || 0; } catch(e) { return; }
+                        let localData = localStorage.getItem(SAVE_KEY);
+                        let localTs = 0;
+                        try { localTs = JSON.parse(localData)._ts || 0; } catch(e) {}
+                        // Облако свежее — подтягиваем. Иначе игнорируем, у нас локально свежее.
+                        if (cloudTs > localTs) {
+                            try {
+                                let s = JSON.parse(cloudData);
+                                applyLoadedSave(s);
+                                localStorage.setItem(SAVE_KEY, cloudData);
+                                console.log("🔄 Синхронизировано из облака (облако свежее)");
+                                setCloudStatus("☁️ Синхронизировано");
+                            } catch(e) { console.warn("Ошибка применения облачного сейва:", e); }
+                        }
+                    });
                 }
             }
+        });
+        
+        // pagehide/beforeunload — последний шанс сохранить перед закрытием
+        window.addEventListener("pagehide", function() {
+            console.log("🚪 pagehide — принудительное сохранение");
+            forceSaveNow();
+        });
+        window.addEventListener("beforeunload", function() {
+            console.log("🚪 beforeunload — принудительное сохранение");
+            forceSaveNow();
         });
     })();
 </script>

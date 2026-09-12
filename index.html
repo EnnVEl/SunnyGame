@@ -706,56 +706,74 @@
         return allItems;
     }
     
+    // ========== ИЗМЕНЕНО: строгая проверка количества каждого предмета в вишлисте ==========
     function sellToNPC() { 
         if(!currentNpc) return; 
         let wishlist = currentNpc.wishlist;
-        let itemCounts = new Map();
-        let allItems = getAllItemsFromGridAndStorage();
-        for(let item of allItems) {
-            if(item) itemCounts.set(item, (itemCounts.get(item) || 0) + 1);
+        
+        // Считаем, сколько каждого предмета нужно (с учётом дубликатов)
+        let requiredCounts = new Map();
+        for(let item of wishlist) {
+            if(!item) continue;
+            requiredCounts.set(item, (requiredCounts.get(item) || 0) + 1);
         }
         
-        let neededItems = [...wishlist];
-        let canFulfill = true;
-        for(let item of neededItems) {
-            if(!itemCounts.has(item) || itemCounts.get(item) < 1) {
-                canFulfill = false;
+        // Считаем, сколько каждого предмета есть всего (сетка + хранилище)
+        let availableCounts = new Map();
+        let allItems = getAllItemsFromGridAndStorage();
+        for(let item of allItems) {
+            if(!item) continue;
+            availableCounts.set(item, (availableCounts.get(item) || 0) + 1);
+        }
+        
+        // Проверяем, хватает ли каждого предмета ровно в нужном количестве
+        let missing = [];
+        for(let [item, needCount] of requiredCounts.entries()) {
+            let haveCount = availableCounts.get(item) || 0;
+            if(haveCount < needCount) {
+                missing.push(`• ${itemNames[item] || item}: нужно ${needCount}, есть ${haveCount}`);
+            }
+        }
+        
+        if(missing.length > 0) {
+            alert(`❌ Нельзя продать: не хватает предметов!\n\nНе хватает:\n${missing.join("\n")}\n\nНужно иметь ровно столько каждого предмета, сколько просит NPC.`);
+            return;
+        }
+        
+        let totalPrice = calculateNpcSellPrice(wishlist);
+        
+        // Проверяем, есть ли нужные предметы в хранилище (для подтверждения)
+        let hasInStorage = false;
+        for(let [item, needCount] of requiredCounts.entries()) {
+            let inGrid = grid.filter(x => x === item).length;
+            if(inGrid < needCount && storage.includes(item)) {
+                hasInStorage = true;
                 break;
             }
         }
         
-        if(!canFulfill) {
-            alert(`Для продажи нужны все 3 предмета!\nНужно: ${wishlist.map(w=>itemNames[w]).join(", ")}`);
-            return;
-        }
-        
         let useStorage = false;
-        let totalPrice = calculateNpcSellPrice(wishlist);
-        
-        let hasInStorage = false;
-        for(let item of neededItems) {
-            if(storage.includes(item)) hasInStorage = true;
-        }
-        
         if(hasInStorage) {
             useStorage = confirm(`Некоторые предметы находятся в хранилище. Взять их оттуда для продажи?`);
+            if(!useStorage) return; // отказ — не продаём
         }
         
-        for(let item of neededItems) {
-            let found = false;
-            for(let i = 0; i < grid.length; i++) {
-                if(grid[i] === item && !found) {
+        // Списываем нужное количество каждого предмета
+        for(let [item, needCount] of requiredCounts.entries()) {
+            let remaining = needCount;
+            // Сначала списываем из сетки
+            for(let i = 0; i < grid.length && remaining > 0; i++) {
+                if(grid[i] === item) {
                     grid[i] = null;
-                    found = true;
-                    break;
+                    remaining--;
                 }
             }
-            if(!found && useStorage) {
-                for(let i = 0; i < storage.length; i++) {
-                    if(storage[i] === item && !found) {
+            // Если нужно, списываем из хранилища
+            if(remaining > 0 && useStorage) {
+                for(let i = 0; i < storage.length && remaining > 0; i++) {
+                    if(storage[i] === item) {
                         storage[i] = null;
-                        found = true;
-                        break;
+                        remaining--;
                     }
                 }
             }
@@ -771,7 +789,7 @@
         updateAllNpcWishlists();
         nextNPC();
         saveGame();
-        alert(`Продано! Получено ${totalPrice}🪙`);
+        alert(`✅ Продано! Получено ${totalPrice}🪙`);
     }
     
     function sellSelectedItem() { 
